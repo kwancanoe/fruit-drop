@@ -50,20 +50,6 @@
       />
     </div>
 
-    <!-- Quick Action: Scan Customer QR Code -->
-    <div class="q-mb-md">
-      <q-btn
-        color="positive"
-        class="full-width q-py-sm text-weight-bolder text-subtitle2 shadow-2"
-        no-caps
-        rounded
-        icon="qr_code_scanner"
-        to="/admin/scan"
-        data-audit-id="btn-scan-customer-qr"
-      >
-        <span>📷 สแกน QR Code ลูกค้าเพื่อเปิดออเดอร์ & ส่งมอบ</span>
-      </q-btn>
-    </div>
 
     <!-- Time-Slot Filter Tabs & Instant Search -->
     <TimeSlotTabs

@@ -48,3 +48,8 @@
   - Meta Tags (Open Graph / Twitter Card): วันที่ส่งของ จุดนัดรับ พร้อมภาพพรีวิวโลโก้
   - Favicon / Apple Touch Icon: เปลี่ยนเป็นไอคอน Fruit Drop 2.5D แทนโลโก้ Quasar
   - ข้อมูลส่วนหัว/ส่วนท้าย: เป็นแบรนด์ Fruit Drop 100% (ห้ามมีคำว่า สวนบ้านเรา)
+
+## 8. กฎเหล็กการ Bump Version และ Git Commit เสมอ (Automatic Version Bump & Git Commit Discipline)
+- **ต้อง Bump Version เสมอ**: ทุกครั้งที่แก้ไขโค้ด ปรับปรุง UI หรือแก้ไขบั๊กตามคำสั่งเสร็จสิ้น จะต้องปรับเพิ่มเลขเวอร์ชันใน `package.json` และ `.agent_handoff.md` เสมอ (เช่น `0.7.1` -> `0.7.2`)
+- **ต้อง Git Commit ทุกครั้ง**: เมื่อทดสอบ Typecheck / Build ผ่านเรียบร้อยแล้ว ต้องทำการรัน `git add .` และ commit ด้วย Git Commit Message ที่ชัดเจน กระชับ และระบุเลขเวอร์ชันเสมอ ห้ามจบงานโดยไม่ commit เด็ดขาด
+
