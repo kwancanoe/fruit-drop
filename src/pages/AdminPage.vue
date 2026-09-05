@@ -14,13 +14,10 @@
           เข้าสู่ระบบสำหรับแอดมินและผู้ช่วยขาย
         </div>
 
-        <q-btn
-          color="positive"
-          class="full-width q-py-sm text-weight-bold text-subtitle2 shadow-2"
-          icon="login"
+        <GoogleSignInButton
+          theme="light"
+          shape="pill"
           label="เข้าสู่ระบบด้วย Google"
-          no-caps
-          rounded
           :loading="fruitStore.isLoading"
           @click="handleLogin"
         />
@@ -169,6 +166,7 @@ import HarvestSummaryModal from '@/components/admin/HarvestSummaryModal.vue';
 import UserManagementModal from '@/components/admin/UserManagementModal.vue';
 import RoundManagementModal from '@/components/admin/RoundManagementModal.vue';
 import PaymentProofModal from '@/components/admin/PaymentProofModal.vue';
+import GoogleSignInButton from '@/components/auth/GoogleSignInButton.vue';
 
 const $q = useQuasar();
 const fruitStore = useFruitStore();
