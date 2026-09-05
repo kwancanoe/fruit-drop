@@ -350,6 +350,7 @@ export const useFruitStore = defineStore('fruit', () => {
           imageUrl: `/mascots/mascot_${fruit.fruitKey}.png`,
           productType: fruit.productType,
           pricePerKg: fruit.pricePerKg,
+          costPerKg: fruit.costPerKg || 0,
           totalQuotaKg: fruit.totalQuotaKg,
           currentReservedKg: 0,
           minKg: 1,
@@ -409,6 +410,134 @@ export const useFruitStore = defineStore('fruit', () => {
     }
   }
 
+  // Update an existing Preorder Round and its fruit catalog
+  async function updateRound(roundId: string, payload: import('@/types/fruit_app').RoundUpdatePayload): Promise<void> {
+    isLoading.value = true;
+    try {
+      const enabledFruits = payload.fruits.filter(f => f.isEnabled);
+      const fruitNames = enabledFruits.map(f => f.name);
+
+      const roundUpdates = {
+        title: payload.title,
+        pickupDate: payload.pickupDate,
+        pickupLocation: payload.pickupLocation,
+        pickupSlots: payload.pickupSlots,
+        promptPayNumber: payload.promptPayNumber,
+        promptPayName: payload.promptPayName,
+        bankName: payload.bankName || 'KBANK (กสิกรไทย)',
+        bankAccountNumber: payload.bankAccountNumber || '8172235408',
+        bankAccountName: payload.bankAccountName || payload.promptPayName,
+        isOpen: payload.isOpen,
+        fruitSummary: fruitNames,
+        updatedAt: serverTimestamp()
+      };
+
+      // 1. Update round document
+      await updateDoc(doc(db, 'rounds', roundId), roundUpdates);
+
+      // 2. Fetch existing products for this round to preserve currentReservedKg
+      const existingProducts = await getProductsByRoundId(roundId);
+      const existingMap = new Map(existingProducts.map(p => [p.mascotKey, p]));
+
+      // 3. Upsert configured products for this round
+      for (const fruit of payload.fruits) {
+        const prodId = `PROD-${roundId}-${fruit.fruitKey.toUpperCase()}`;
+        const existing = existingMap.get(fruit.fruitKey);
+
+        if (fruit.isEnabled) {
+          const prodItem: ProductItem = {
+            id: prodId,
+            roundId,
+            name: fruit.name,
+            mascotKey: fruit.fruitKey,
+            imageUrl: `/mascots/mascot_${fruit.fruitKey}.png`,
+            productType: fruit.productType,
+            pricePerKg: fruit.pricePerKg,
+            costPerKg: fruit.costPerKg || 0,
+            totalQuotaKg: fruit.totalQuotaKg,
+            currentReservedKg: existing?.currentReservedKg || 0,
+            minKg: 1,
+            stepKg: 1,
+            bundles: fruit.fruitKey === 'ngo' ? [
+              { qtyKg: 3, price: 100, label: 'ชุด 3 กก. (100 บาท)' },
+              { qtyKg: 6, price: 200, label: 'ชุด 6 กก. (200 บาท)' },
+              { qtyKg: 9, price: 300, label: 'ชุด 9 กก. (300 บาท)' }
+            ] : fruit.fruitKey === 'mangkut' ? [
+              { qtyKg: 3, price: 150, label: 'ชุด 3 กก. (150 บาท)' },
+              { qtyKg: 5, price: 240, label: 'ชุด 5 กก. (240 บาท)' }
+            ] : fruit.fruitKey === 'longkong' ? [
+              { qtyKg: 3, price: 130, label: 'ชุด 3 กก. (130 บาท)' }
+            ] : undefined,
+            sizeTiers: fruit.fruitKey === 'thurian' ? [
+              {
+                tierId: 'TIER-SMALL',
+                label: 'ลูกเล็ก (1.8 - 2.0 กก.)',
+                minKg: 1.8,
+                maxKg: 2.0,
+                estimatedPriceMin: Math.round(1.8 * fruit.pricePerKg),
+                estimatedPriceMax: Math.round(2.0 * fruit.pricePerKg),
+                reserveWeightKg: 1.9
+              },
+              {
+                tierId: 'TIER-MEDIUM',
+                label: 'ลูกกลาง (2.1 - 3.0 กก.)',
+                minKg: 2.1,
+                maxKg: 3.0,
+                estimatedPriceMin: Math.round(2.1 * fruit.pricePerKg),
+                estimatedPriceMax: Math.round(3.0 * fruit.pricePerKg),
+                reserveWeightKg: 2.5
+              },
+              {
+                tierId: 'TIER-LARGE',
+                label: 'ลูกใหญ่ (3.1 - 4.0 กก.)',
+                minKg: 3.1,
+                maxKg: 4.0,
+                estimatedPriceMin: Math.round(3.1 * fruit.pricePerKg),
+                estimatedPriceMax: Math.round(4.0 * fruit.pricePerKg),
+                reserveWeightKg: 3.5
+              }
+            ] : undefined
+          };
+          await setDoc(doc(db, 'products', prodId), prodItem);
+        } else if (existing) {
+          // If disabled and previously existed, delete product doc so customer cannot book
+          const { deleteDoc } = await import('firebase/firestore');
+          await deleteDoc(doc(db, 'products', prodId));
+        }
+      }
+
+      // 4. Update local activeRound state if active
+      if (activeRound.value?.roundId === roundId) {
+        activeRound.value = {
+          ...activeRound.value,
+          ...payload,
+          fruitSummary: fruitNames
+        };
+        subscribeToProducts(roundId);
+      }
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Fetch round by ID directly
+  async function getRoundById(roundId: string): Promise<PreorderRound | null> {
+    const { getDoc } = await import('firebase/firestore');
+    const snap = await getDoc(doc(db, 'rounds', roundId));
+    if (snap.exists()) {
+      return { ...snap.data() as PreorderRound, id: snap.id };
+    }
+    return null;
+  }
+
+  // Fetch products by round ID directly
+  async function getProductsByRoundId(roundId: string): Promise<ProductItem[]> {
+    const productsRef = collection(db, 'products');
+    const q = query(productsRef, where('roundId', '==', roundId));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ ...d.data() as ProductItem, id: d.id }));
+  }
+
   // Toggle round open/closed status
   async function toggleRoundStatus(roundId: string, isOpen: boolean) {
     await updateDoc(doc(db, 'rounds', roundId), {
@@ -463,6 +592,9 @@ export const useFruitStore = defineStore('fruit', () => {
     subscribeToOrders,
     selectActiveRound,
     createRound,
+    updateRound,
+    getRoundById,
+    getProductsByRoundId,
     toggleRoundStatus,
     submitOrder,
     updateWeighedFruit,
@@ -483,6 +615,7 @@ function getDefaultProducts(roundId: string): ProductItem[] {
       imageUrl: '/mascots/mascot_ngo.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 35,
+      costPerKg: 20,
       totalQuotaKg: 200,
       currentReservedKg: 0,
       minKg: 1,
@@ -501,6 +634,7 @@ function getDefaultProducts(roundId: string): ProductItem[] {
       imageUrl: '/mascots/mascot_thurian.png',
       productType: 'VARIABLE_WHOLE_FRUIT',
       pricePerKg: 160,
+      costPerKg: 110,
       totalQuotaKg: 150,
       currentReservedKg: 0,
       sizeTiers: [
@@ -541,6 +675,7 @@ function getDefaultProducts(roundId: string): ProductItem[] {
       imageUrl: '/mascots/mascot_mangkut.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 50,
+      costPerKg: 30,
       totalQuotaKg: 100,
       currentReservedKg: 0,
       minKg: 1,
@@ -558,6 +693,7 @@ function getDefaultProducts(roundId: string): ProductItem[] {
       imageUrl: '/mascots/mascot_longkong.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 45,
+      costPerKg: 25,
       totalQuotaKg: 80,
       currentReservedKg: 0,
       minKg: 1,
@@ -574,6 +710,7 @@ function getDefaultProducts(roundId: string): ProductItem[] {
       imageUrl: '/mascots/mascot_langsat.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 40,
+      costPerKg: 20,
       totalQuotaKg: 60,
       currentReservedKg: 0,
       minKg: 1,
@@ -587,6 +724,7 @@ function getDefaultProducts(roundId: string): ProductItem[] {
       imageUrl: '/mascots/mascot_som.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 60,
+      costPerKg: 35,
       totalQuotaKg: 80,
       currentReservedKg: 0,
       minKg: 1,
@@ -600,6 +738,7 @@ function getDefaultProducts(roundId: string): ProductItem[] {
       imageUrl: '/mascots/mascot_mamuang.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 50,
+      costPerKg: 30,
       totalQuotaKg: 80,
       currentReservedKg: 0,
       minKg: 1,

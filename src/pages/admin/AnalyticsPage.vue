@@ -1,0 +1,607 @@
+<template>
+  <!-- Section: Deep Profit & Loss Performance Analytics -->
+  <q-page id="admin-analytics-page" data-audit-id="admin-analytics-page" class="q-pa-md bg-grey-10 text-white" style="max-width: 780px; margin: 0 auto;">
+    <!-- Page Header with Back Navigation -->
+    <div class="row items-center justify-between q-mb-md">
+      <div class="row items-center">
+        <q-btn
+          flat
+          dense
+          round
+          icon="arrow_back"
+          color="white"
+          class="q-mr-sm"
+          data-audit-id="btn-back-to-dispatch"
+          @click="handleBack"
+        >
+          <q-tooltip>กลับโต๊ะจ่ายของท้ายรถ</q-tooltip>
+        </q-btn>
+        <div>
+          <div class="text-h6 text-weight-bolder leading-tight">
+            วิเคราะห์ผลประกอบการ & กำไร-ขาดทุน
+          </div>
+          <div class="text-caption text-grey-4">
+            Deep Profit & Loss Performance Analysis รายการสินค้าและภาพรวม
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters Control Bar -->
+    <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders q-mb-md shadow-2">
+      <div class="row items-center q-col-gutter-none">
+        <!-- Round Filter -->
+        <div class="col-12 col-sm-4 q-pa-xs">
+          <q-select
+            v-model="selectedRoundFilter"
+            :options="roundOptions"
+            emit-value
+            map-options
+            dark
+            outlined
+            dense
+            label="เลือกรอบการจอง"
+            data-audit-id="select-analytics-round"
+          >
+            <template #prepend>
+              <q-icon name="event_note" color="positive" size="18px" />
+            </template>
+          </q-select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="col-12 col-sm-4 q-pa-xs">
+          <q-select
+            v-model="selectedStatusFilter"
+            :options="statusOptions"
+            emit-value
+            map-options
+            dark
+            outlined
+            dense
+            label="สถานะออเดอร์"
+            data-audit-id="select-analytics-status"
+          >
+            <template #prepend>
+              <q-icon name="tune" color="positive" size="18px" />
+            </template>
+          </q-select>
+        </div>
+
+        <!-- Payment Method Filter -->
+        <div class="col-12 col-sm-4 q-pa-xs">
+          <q-select
+            v-model="selectedPaymentFilter"
+            :options="paymentOptions"
+            emit-value
+            map-options
+            dark
+            outlined
+            dense
+            label="วิธีชำระเงิน"
+            data-audit-id="select-analytics-payment"
+          >
+            <template #prepend>
+              <q-icon name="payments" color="positive" size="18px" />
+            </template>
+          </q-select>
+        </div>
+      </div>
+    </q-card>
+
+    <!-- 4 Key Performance Indicator (KPI) Metric Cards -->
+    <div class="row q-mb-md">
+      <!-- 1. Total Gross Revenue -->
+      <div class="col-6 col-sm-3 q-pa-xs">
+        <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders text-center shadow-2" style="height: 100%;">
+          <div class="text-caption text-grey-4">ยอดขายรวม</div>
+          <div class="text-h6 text-weight-bolder text-white q-my-xs">
+            ฿{{ metrics.totalRevenue.toLocaleString() }}
+          </div>
+          <div class="text-caption text-grey-5" style="font-size: 11px;">
+            จาก {{ metrics.filteredOrdersCount }} ออเดอร์
+          </div>
+        </q-card>
+      </div>
+
+      <!-- 2. Total COGS / Fruit Cost -->
+      <div class="col-6 col-sm-3 q-pa-xs">
+        <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders text-center shadow-2" style="height: 100%;">
+          <div class="text-caption text-grey-4">ต้นทุนผลไม้รวม</div>
+          <div class="text-h6 text-weight-bolder text-warning q-my-xs">
+            ฿{{ metrics.totalCost.toLocaleString() }}
+          </div>
+          <div class="text-caption text-grey-5" style="font-size: 11px;">
+            ต้นทุนเฉลี่ย {{ metrics.avgCostPercent }}%
+          </div>
+        </q-card>
+      </div>
+
+      <!-- 3. Gross Profit -->
+      <div class="col-6 col-sm-3 q-pa-xs">
+        <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders text-center shadow-2" style="height: 100%;">
+          <div class="text-caption text-grey-4">กำไรขั้นต้น</div>
+          <div
+            class="text-h6 text-weight-bolder q-my-xs"
+            :class="metrics.grossProfit >= 0 ? 'text-positive' : 'text-negative'"
+          >
+            ฿{{ metrics.grossProfit.toLocaleString() }}
+          </div>
+          <div class="text-caption text-grey-5" style="font-size: 11px;">
+            {{ metrics.grossProfit >= 0 ? 'กำไรสุทธิ' : 'ขาดทุน' }}
+          </div>
+        </q-card>
+      </div>
+
+      <!-- 4. Profit Margin % -->
+      <div class="col-6 col-sm-3 q-pa-xs">
+        <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders text-center shadow-2" style="height: 100%;">
+          <div class="text-caption text-grey-4">อัตรากำไร (Margin)</div>
+          <div
+            class="text-h6 text-weight-bolder q-my-xs"
+            :class="metrics.marginPercent >= 25 ? 'text-positive' : metrics.marginPercent >= 0 ? 'text-info' : 'text-negative'"
+          >
+            {{ metrics.marginPercent }}%
+          </div>
+          <div class="text-caption text-grey-5" style="font-size: 11px;">
+            เป้าหมาย: > 30%
+          </div>
+        </q-card>
+      </div>
+    </div>
+
+    <!-- Section: Fruit Breakdown Analysis -->
+    <q-card class="bg-grey-9 text-white q-pa-md rounded-borders q-mb-md shadow-2">
+      <div class="row items-center justify-between q-mb-sm">
+        <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
+          <q-icon name="pie_chart" size="20px" class="q-mr-xs" />
+          กำไร-ขาดทุน แยกตามชนิดผลไม้
+        </div>
+        <div class="text-caption text-grey-4">
+          รวม {{ fruitStats.length }} ชนิด
+        </div>
+      </div>
+
+      <div v-if="fruitStats.length === 0" class="text-center q-pa-lg text-grey-5">
+        ไม่มีรายการขายผลไม้ในเงื่อนไขการกรองนี้
+      </div>
+
+      <div v-else class="column">
+        <div
+          v-for="stat in fruitStats"
+          :key="stat.mascotKey"
+          class="bg-grey-10 q-pa-sm rounded-borders q-mb-sm shadow-1"
+          :data-audit-id="`stat-row-${stat.mascotKey}`"
+        >
+          <!-- Fruit Header Row -->
+          <div class="row items-center justify-between q-mb-xs">
+            <div class="row items-center">
+              <q-avatar size="34px" class="q-mr-sm bg-grey-9">
+                <q-img :src="`/mascots/mascot_${stat.mascotKey}.png`" fit="contain" />
+              </q-avatar>
+              <div>
+                <div class="text-subtitle2 text-weight-bold leading-tight">
+                  {{ stat.name }}
+                </div>
+                <div class="text-caption text-grey-5" style="font-size: 11px;">
+                  ยอดจำหน่าย: <strong>{{ stat.totalWeightKg.toFixed(1) }} กก.</strong>
+                  <span v-if="stat.durianPieces > 0"> ({{ stat.durianPieces }} ลูก)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profit & Margin -->
+            <div class="text-right">
+              <div
+                class="text-subtitle2 text-weight-bolder leading-tight"
+                :class="stat.profit >= 0 ? 'text-positive' : 'text-negative'"
+              >
+                +฿{{ stat.profit.toLocaleString() }}
+              </div>
+              <q-badge
+                :color="stat.marginPercent >= 25 ? 'positive' : stat.marginPercent >= 0 ? 'info' : 'negative'"
+                class="text-weight-bold"
+                rounded
+                style="font-size: 10px;"
+              >
+                มาร์จิ้น {{ stat.marginPercent }}%
+              </q-badge>
+            </div>
+          </div>
+
+          <!-- Mini Progress Bar / Breakdown Strip -->
+          <div class="row items-center justify-between text-caption text-grey-4 q-pt-xs border-top-grey">
+            <div>
+              ยอดขาย: <strong class="text-white">฿{{ stat.revenue.toLocaleString() }}</strong>
+            </div>
+            <div>
+              ต้นทุน: <strong class="text-warning">฿{{ stat.cost.toLocaleString() }}</strong>
+            </div>
+            <div>
+              กำไร/กก.: <strong class="text-positive">฿{{ stat.profitPerKg.toFixed(1) }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </q-card>
+
+    <!-- Section: Order-Level Profit Breakdown -->
+    <q-card class="bg-grey-9 text-white q-pa-md rounded-borders shadow-2">
+      <div class="row items-center justify-between q-mb-sm">
+        <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
+          <q-icon name="receipt_long" size="20px" class="q-mr-xs" />
+          กำไร-ขาดทุน แยกตามรายออเดอร์
+        </div>
+        <div class="text-caption text-grey-4">
+          แสดง {{ filteredOrders.length }} รายการ
+        </div>
+      </div>
+
+      <div v-if="filteredOrders.length === 0" class="text-center q-pa-lg text-grey-5">
+        ไม่พบออเดอร์ในเงื่อนไขการกรองนี้
+      </div>
+
+      <div v-else class="column">
+        <q-expansion-item
+          v-for="order in orderAnalysisList"
+          :key="order.orderId"
+          class="bg-grey-10 rounded-borders q-mb-sm shadow-1"
+          header-class="q-py-sm"
+          expand-icon-class="text-white"
+          :data-audit-id="`order-analysis-${order.orderId}`"
+        >
+          <template #header>
+            <q-item-section avatar>
+              <q-avatar
+                size="34px"
+                :color="order.profit >= 0 ? 'positive' : 'negative'"
+                text-color="white"
+                icon="account_balance_wallet"
+              />
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label class="text-subtitle2 text-weight-bolder text-white">
+                #{{ order.orderId }} - {{ order.customer.name }}
+              </q-item-label>
+              <q-item-label caption class="text-grey-4">
+                {{ order.customer.shop }} ({{ order.customer.floor }}) | {{ order.pickupSlot }}
+              </q-item-label>
+            </q-item-section>
+
+            <q-item-section side class="text-right">
+              <div class="text-subtitle2 text-weight-bolder text-positive">
+                +฿{{ order.profit.toLocaleString() }}
+              </div>
+              <div class="text-caption text-grey-4" style="font-size: 11px;">
+                ขาย ฿{{ order.revenue }} (มาร์จิ้น {{ order.marginPercent }}%)
+              </div>
+            </q-item-section>
+          </template>
+
+          <q-card class="bg-grey-10 text-white q-px-md q-pb-md">
+            <q-separator color="grey-8" class="q-mb-sm" />
+
+            <!-- Order Item List -->
+            <div class="text-caption text-grey-4 q-mb-xs text-weight-bold">
+              รายการสินค้าและต้นทุนออเดอร์นี้:
+            </div>
+
+            <div
+              v-for="(item, idx) in order.itemsAnalysis"
+              :key="idx"
+              class="row items-center justify-between text-caption text-grey-3 q-py-xs border-top-grey"
+            >
+              <div>
+                <strong>{{ item.productName }}</strong> ({{ item.weightLabel }})
+              </div>
+              <div class="text-right">
+                <span>ขาย ฿{{ item.revenue }} - ทุน ฿{{ item.cost }} = </span>
+                <strong class="text-positive">กำไร ฿{{ item.profit }}</strong>
+              </div>
+            </div>
+
+            <div class="row items-center justify-between text-caption q-mt-sm text-grey-4">
+              <div>
+                วิธีชำระ:
+                <strong class="text-white">{{ order.paymentMethod === 'PAY_AT_CAR' ? '💵 เงินสดท้ายรถ' : '📱 โอนพร้อมเพย์' }}</strong>
+              </div>
+              <div>
+                สถานะ:
+                <q-badge
+                  :color="order.orderStatus === 'COMPLETED' ? 'positive' : order.orderStatus === 'WAITING_PICKUP' ? 'warning' : 'negative'"
+                  rounded
+                >
+                  {{ order.orderStatus === 'COMPLETED' ? 'ส่งมอบแล้ว' : order.orderStatus === 'WAITING_PICKUP' ? 'รอรับของ' : 'ยกเลิก' }}
+                </q-badge>
+              </div>
+            </div>
+          </q-card>
+        </q-expansion-item>
+      </div>
+    </q-card>
+  </q-page>
+</template>
+
+<script setup lang="ts">
+// Deep Profit & Loss Performance Analytics Page: Calculates Revenue, COGS, Gross Profit, and Margins
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useFruitStore } from '@/stores/fruitStore';
+import type { Order, ProductItem } from '@/types/fruit_app';
+
+const router = useRouter();
+const fruitStore = useFruitStore();
+
+// Filters
+const selectedRoundFilter = ref<string>('ALL');
+const selectedStatusFilter = ref<string>('ALL');
+const selectedPaymentFilter = ref<string>('ALL');
+
+// Navigation handler
+function handleBack() {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    void router.push('/admin');
+  }
+}
+
+// Round options
+const roundOptions = computed(() => {
+  const opts = [{ label: 'ทุกรอบการจอง (All Rounds)', value: 'ALL' }];
+  for (const r of fruitStore.allRounds) {
+    opts.push({ label: `${r.title} (${r.pickupDate})`, value: r.roundId });
+  }
+  return opts;
+});
+
+// Status options
+const statusOptions = [
+  { label: 'ทุกสถานะ (All)', value: 'ALL' },
+  { label: 'ส่งมอบแล้ว (Completed)', value: 'COMPLETED' },
+  { label: 'รอรับของ (Waiting Pickup)', value: 'WAITING_PICKUP' },
+  { label: 'ยกเลิก (Cancelled)', value: 'CANCELLED' }
+];
+
+// Payment options
+const paymentOptions = [
+  { label: 'ทุกวิธีชำระ (All)', value: 'ALL' },
+  { label: 'จ่ายเงินสดท้ายรถ (Cash)', value: 'PAY_AT_CAR' },
+  { label: 'โอนล่วงหน้าพร้อมเพย์ (Transfer)', value: 'PROMPTPAY_PREPAID' }
+];
+
+// Product Cost Lookup Map (productId -> costPerKg)
+const productCostMap = computed<Map<string, number>>(() => {
+  const map = new Map<string, number>();
+
+  // Default fallback costs
+  map.set('PROD-NGO', 20);
+  map.set('PROD-ROUND-001-NGO', 20);
+  map.set('PROD-THURIAN', 110);
+  map.set('PROD-ROUND-001-THURIAN', 110);
+  map.set('PROD-MANGKUT', 30);
+  map.set('PROD-ROUND-001-MANGKUT', 30);
+  map.set('PROD-LONGKONG', 25);
+  map.set('PROD-ROUND-001-LONGKONG', 25);
+  map.set('PROD-LANGSAT', 20);
+  map.set('PROD-SOM', 35);
+  map.set('PROD-MAMUANG', 30);
+
+  // Read actual products from fruitStore
+  for (const p of fruitStore.products) {
+    if (p.costPerKg !== undefined && p.costPerKg > 0) {
+      map.set(p.id, p.costPerKg);
+      map.set(p.mascotKey, p.costPerKg);
+    }
+  }
+
+  return map;
+});
+
+// Helper: Estimate weight for an order item
+function getItemWeightKg(item: Order['items'][0]): number {
+  if (item.productType === 'FIXED_WEIGHT') {
+    return item.orderedKg || 1;
+  }
+  if (item.actualWeighedKg) {
+    return item.actualWeighedKg;
+  }
+  if (item.selectedTierId?.includes('SMALL')) return 1.9;
+  if (item.selectedTierId?.includes('MEDIUM')) return 2.5;
+  if (item.selectedTierId?.includes('LARGE')) return 3.5;
+  return 2.5;
+}
+
+// Helper: Get cost per kg for an item
+function getItemCostPerKg(item: Order['items'][0]): number {
+  const byId = productCostMap.value.get(item.productId);
+  if (byId !== undefined) return byId;
+
+  if (item.mascotKey) {
+    const byMascot = productCostMap.value.get(item.mascotKey);
+    if (byMascot !== undefined) return byMascot;
+  }
+
+  // Name fallback
+  if (item.productName.includes('เงาะ')) return 20;
+  if (item.productName.includes('ทุเรียน')) return 110;
+  if (item.productName.includes('มังคุด')) return 30;
+  if (item.productName.includes('ลองกอง')) return 25;
+  if (item.productName.includes('ลางสาด')) return 20;
+  if (item.productName.includes('ส้ม')) return 35;
+  if (item.productName.includes('มะม่วง')) return 30;
+  return 20;
+}
+
+// Filtered Orders
+const filteredOrders = computed<Order[]>(() => {
+  let list = fruitStore.orders;
+
+  // Filter Round
+  if (selectedRoundFilter.value !== 'ALL') {
+    list = list.filter(o => o.roundId === selectedRoundFilter.value);
+  }
+
+  // Filter Status
+  if (selectedStatusFilter.value !== 'ALL') {
+    list = list.filter(o => o.orderStatus === selectedStatusFilter.value);
+  }
+
+  // Filter Payment
+  if (selectedPaymentFilter.value !== 'ALL') {
+    list = list.filter(o => o.paymentMethod === selectedPaymentFilter.value);
+  }
+
+  return list;
+});
+
+// Overall P&L Metrics
+const metrics = computed(() => {
+  let totalRevenue = 0;
+  let totalCost = 0;
+
+  for (const o of filteredOrders.value) {
+    if (o.orderStatus === 'CANCELLED') continue;
+
+    const orderRevenue = o.totalFinalPrice || o.totalEstimatedPrice || 0;
+    totalRevenue += orderRevenue;
+
+    for (const item of o.items) {
+      const kg = getItemWeightKg(item);
+      const costPerKg = getItemCostPerKg(item);
+      totalCost += kg * costPerKg;
+    }
+  }
+
+  const grossProfit = totalRevenue - totalCost;
+  const marginPercent = totalRevenue > 0 ? Math.round((grossProfit / totalRevenue) * 100) : 0;
+  const avgCostPercent = totalRevenue > 0 ? Math.round((totalCost / totalRevenue) * 100) : 0;
+
+  return {
+    filteredOrdersCount: filteredOrders.value.filter(o => o.orderStatus !== 'CANCELLED').length,
+    totalRevenue,
+    totalCost,
+    grossProfit,
+    marginPercent,
+    avgCostPercent
+  };
+});
+
+// Fruit Breakdown Statistics
+interface FruitStat {
+  mascotKey: string;
+  name: string;
+  totalWeightKg: number;
+  durianPieces: number;
+  revenue: number;
+  cost: number;
+  profit: number;
+  profitPerKg: number;
+  marginPercent: number;
+}
+
+const fruitStats = computed<FruitStat[]>(() => {
+  const map: Record<string, {
+    name: string;
+    totalWeightKg: number;
+    durianPieces: number;
+    revenue: number;
+    cost: number;
+  }> = {};
+
+  for (const o of filteredOrders.value) {
+    if (o.orderStatus === 'CANCELLED') continue;
+
+    for (const item of o.items) {
+      const key = item.mascotKey || (item.productName.includes('เงาะ') ? 'ngo' : item.productName.includes('ทุเรียน') ? 'thurian' : 'other');
+      if (!map[key]) {
+        map[key] = {
+          name: item.productName,
+          totalWeightKg: 0,
+          durianPieces: 0,
+          revenue: 0,
+          cost: 0
+        };
+      }
+
+      const kg = getItemWeightKg(item);
+      const costPerKg = getItemCostPerKg(item);
+      const itemRev = item.itemFinalPrice !== undefined ? item.itemFinalPrice : (kg * item.pricePerKg);
+
+      map[key].totalWeightKg += kg;
+      map[key].revenue += itemRev;
+      map[key].cost += kg * costPerKg;
+
+      if (item.productType === 'VARIABLE_WHOLE_FRUIT') {
+        map[key].durianPieces += 1;
+      }
+    }
+  }
+
+  return Object.entries(map).map(([mascotKey, data]) => {
+    const profit = data.revenue - data.cost;
+    const profitPerKg = data.totalWeightKg > 0 ? profit / data.totalWeightKg : 0;
+    const marginPercent = data.revenue > 0 ? Math.round((profit / data.revenue) * 100) : 0;
+
+    return {
+      mascotKey,
+      name: data.name,
+      totalWeightKg: data.totalWeightKg,
+      durianPieces: data.durianPieces,
+      revenue: data.revenue,
+      cost: data.cost,
+      profit,
+      profitPerKg,
+      marginPercent
+    };
+  }).sort((a, b) => b.revenue - a.revenue);
+});
+
+// Order-level analysis
+const orderAnalysisList = computed(() => {
+  return filteredOrders.value.map(order => {
+    const revenue = order.totalFinalPrice || order.totalEstimatedPrice || 0;
+    let cost = 0;
+
+    const itemsAnalysis = order.items.map(item => {
+      const kg = getItemWeightKg(item);
+      const costPerKg = getItemCostPerKg(item);
+      const itemRevenue = item.itemFinalPrice !== undefined ? item.itemFinalPrice : (kg * item.pricePerKg);
+      const itemCost = kg * costPerKg;
+      const itemProfit = itemRevenue - itemCost;
+      cost += itemCost;
+
+      const weightLabel = item.productType === 'VARIABLE_WHOLE_FRUIT'
+        ? (item.actualWeighedKg ? `${item.actualWeighedKg} กก.` : item.selectedTierLabel || 'รอชั่ง')
+        : `${kg} กก.`;
+
+      return {
+        productName: item.productName,
+        weightLabel,
+        revenue: itemRevenue,
+        cost: itemCost,
+        profit: itemProfit
+      };
+    });
+
+    const profit = revenue - cost;
+    const marginPercent = revenue > 0 ? Math.round((profit / revenue) * 100) : 0;
+
+    return {
+      ...order,
+      revenue,
+      cost,
+      profit,
+      marginPercent,
+      itemsAnalysis
+    };
+  });
+});
+</script>
+
+<style scoped>
+.border-top-grey {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+</style>

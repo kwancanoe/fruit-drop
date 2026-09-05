@@ -75,6 +75,7 @@ async function seed() {
     imageUrl: '/mascots/mascot_ngo.png',
     productType: 'FIXED_WEIGHT',
     pricePerKg: 35,
+    costPerKg: 20,
     totalQuotaKg: 200,
     currentReservedKg: 0,
     minKg: 1,
@@ -94,6 +95,7 @@ async function seed() {
     imageUrl: '/mascots/mascot_thurian.png',
     productType: 'VARIABLE_WHOLE_FRUIT',
     pricePerKg: 160,
+    costPerKg: 110,
     totalQuotaKg: 150,
     currentReservedKg: 0,
     sizeTiers: [
@@ -135,6 +137,7 @@ async function seed() {
     imageUrl: '/mascots/mascot_mangkut.png',
     productType: 'FIXED_WEIGHT',
     pricePerKg: 50,
+    costPerKg: 30,
     totalQuotaKg: 100,
     currentReservedKg: 0,
     minKg: 1,
@@ -153,6 +156,7 @@ async function seed() {
     imageUrl: '/mascots/mascot_longkong.png',
     productType: 'FIXED_WEIGHT',
     pricePerKg: 45,
+    costPerKg: 25,
     totalQuotaKg: 80,
     currentReservedKg: 0,
     minKg: 1,
@@ -162,7 +166,193 @@ async function seed() {
     ]
   });
 
-  console.log('Seeding completed successfully!');
+  // 4. Sample Realistic Orders for ROUND-001
+  console.log('4. Seeding sample realistic orders for ROUND-001...');
+  const sampleOrders = [
+    {
+      orderId: 'FD-1001',
+      roundId: 'ROUND-001',
+      customer: {
+        name: 'คุณพิมพ์',
+        phone: '0812345678',
+        floor: 'ชั้น 2',
+        shop: 'บูธ Garmin'
+      },
+      items: [
+        {
+          productId: 'PROD-ROUND-001-NGO',
+          productName: 'เงาะโรงเรียน',
+          productType: 'FIXED_WEIGHT',
+          pricePerKg: 35,
+          mascotKey: 'ngo',
+          orderedBundle: 'ชุด 3 กก. (100 บาท)',
+          orderedKg: 3,
+          itemFinalPrice: 100
+        },
+        {
+          productId: 'PROD-ROUND-001-THURIAN',
+          productName: 'ทุเรียนหมอนทอง',
+          productType: 'VARIABLE_WHOLE_FRUIT',
+          pricePerKg: 160,
+          mascotKey: 'thurian',
+          selectedTierId: 'TIER-SMALL',
+          selectedTierLabel: 'ลูกเล็ก (1.8 - 2.0 กก.)',
+          actualWeighedKg: 1.9,
+          itemFinalPrice: 304
+        }
+      ],
+      pickupSlot: '19:00 - 19:30',
+      orderStatus: 'COMPLETED',
+      paymentMethod: 'PAY_AT_CAR',
+      paymentStatus: 'PAID',
+      totalEstimatedPrice: 404,
+      totalFinalPrice: 404,
+      paidAt: Date.now() - 3600000,
+      completedAt: Date.now() - 3600000,
+      createdAt: Date.now() - 7200000,
+      attribution: {
+        handledByUserId: 'admin-seed',
+        handledByEmail: 'wittinunt.k@gmail.com',
+        handledByName: 'Wittinunt Khansuwan',
+        handledByRole: 'SYSTEM_ADMIN',
+        paymentModeAtHandover: 'CASH',
+        proofCapturedAt: Date.now() - 3600000
+      }
+    },
+    {
+      orderId: 'FD-1002',
+      roundId: 'ROUND-001',
+      customer: {
+        name: 'ช่างเอก',
+        phone: '0898765432',
+        floor: 'ชั้น 3',
+        shop: 'ศูนย์ AIS'
+      },
+      items: [
+        {
+          productId: 'PROD-ROUND-001-NGO',
+          productName: 'เงาะโรงเรียน',
+          productType: 'FIXED_WEIGHT',
+          pricePerKg: 35,
+          mascotKey: 'ngo',
+          orderedBundle: 'ชุด 6 กก. (200 บาท)',
+          orderedKg: 6,
+          itemFinalPrice: 200
+        },
+        {
+          productId: 'PROD-ROUND-001-MANGKUT',
+          productName: 'มังคุด',
+          productType: 'FIXED_WEIGHT',
+          pricePerKg: 50,
+          mascotKey: 'mangkut',
+          orderedBundle: 'ชุด 3 กก. (150 บาท)',
+          orderedKg: 3,
+          itemFinalPrice: 150
+        }
+      ],
+      pickupSlot: '19:30 - 20:00',
+      orderStatus: 'COMPLETED',
+      paymentMethod: 'PROMPTPAY_PREPAID',
+      paymentStatus: 'PAID',
+      totalEstimatedPrice: 350,
+      totalFinalPrice: 350,
+      paidAt: Date.now() - 5400000,
+      completedAt: Date.now() - 3000000,
+      createdAt: Date.now() - 7000000,
+      attribution: {
+        handledByUserId: 'owner-seed',
+        handledByEmail: 'natyabuyna089@gmail.com',
+        handledByName: 'นาตยา บุญณะ',
+        handledByRole: 'SHOP_OWNER',
+        paymentModeAtHandover: 'TRANSFER',
+        proofCapturedAt: Date.now() - 3000000
+      }
+    },
+    {
+      orderId: 'FD-1003',
+      roundId: 'ROUND-001',
+      customer: {
+        name: 'พี่นก',
+        phone: '0861122334',
+        floor: 'ชั้น 1',
+        shop: 'ธนาคารกรุงเทพ'
+      },
+      items: [
+        {
+          productId: 'PROD-ROUND-001-THURIAN',
+          productName: 'ทุเรียนหมอนทอง',
+          productType: 'VARIABLE_WHOLE_FRUIT',
+          pricePerKg: 160,
+          mascotKey: 'thurian',
+          selectedTierId: 'TIER-MEDIUM',
+          selectedTierLabel: 'ลูกกลาง (2.1 - 3.0 กก.)'
+        },
+        {
+          productId: 'PROD-ROUND-001-LONGKONG',
+          productName: 'ลองกอง',
+          productType: 'FIXED_WEIGHT',
+          pricePerKg: 45,
+          mascotKey: 'longkong',
+          orderedBundle: 'ชุด 3 กก. (130 บาท)',
+          orderedKg: 3,
+          itemFinalPrice: 130
+        }
+      ],
+      pickupSlot: '20:00 - 20:30',
+      orderStatus: 'WAITING_PICKUP',
+      paymentMethod: 'PAY_AT_CAR',
+      paymentStatus: 'UNPAID',
+      totalEstimatedPrice: 530,
+      totalFinalPrice: 530,
+      createdAt: Date.now() - 6000000
+    },
+    {
+      orderId: 'FD-1004',
+      roundId: 'ROUND-001',
+      customer: {
+        name: 'น้องเบนซ์',
+        phone: '0859988776',
+        floor: 'ชั้น G',
+        shop: 'ร้านกาแฟ Cafe Ame'
+      },
+      items: [
+        {
+          productId: 'PROD-ROUND-001-NGO',
+          productName: 'เงาะโรงเรียน',
+          productType: 'FIXED_WEIGHT',
+          pricePerKg: 35,
+          mascotKey: 'ngo',
+          orderedBundle: 'ชุด 3 กก. (100 บาท)',
+          orderedKg: 3,
+          itemFinalPrice: 100
+        },
+        {
+          productId: 'PROD-ROUND-001-MANGKUT',
+          productName: 'มังคุด',
+          productType: 'FIXED_WEIGHT',
+          pricePerKg: 50,
+          mascotKey: 'mangkut',
+          orderedBundle: 'ชุด 3 กก. (150 บาท)',
+          orderedKg: 3,
+          itemFinalPrice: 150
+        }
+      ],
+      pickupSlot: '19:00 - 19:30',
+      orderStatus: 'WAITING_PICKUP',
+      paymentMethod: 'PROMPTPAY_PREPAID',
+      paymentStatus: 'PAID',
+      totalEstimatedPrice: 250,
+      totalFinalPrice: 250,
+      paidAt: Date.now() - 4000000,
+      createdAt: Date.now() - 5000000
+    }
+  ];
+
+  for (const ord of sampleOrders) {
+    await setDoc(doc(db, 'orders', ord.orderId), ord);
+  }
+
+  console.log('Seeding completed successfully with 4 sample orders!');
   process.exit(0);
 }
 

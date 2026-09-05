@@ -80,12 +80,13 @@ export interface PreorderRound {
   updatedAt?: number | undefined;
 }
 
-// Data payload for Admin creating a round with selected fruits
+// Data payload for Admin creating/editing a round with selected fruits
 export interface RoundCreationFruitConfig {
   fruitKey: 'ngo' | 'thurian' | 'mangkut' | 'longkong' | 'langsat' | 'som' | 'mamuang';
   name: string;
   productType: ProductType;
   pricePerKg: number;
+  costPerKg: number;          // Cost of goods per kg (for profit-loss analysis)
   totalQuotaKg: number;
   isEnabled: boolean;
 }
@@ -100,6 +101,21 @@ export interface RoundCreationPayload {
   bankName?: string | undefined;
   bankAccountNumber?: string | undefined;
   bankAccountName?: string | undefined;
+  isOpen?: boolean | undefined;
+  fruits: RoundCreationFruitConfig[];
+}
+
+export interface RoundUpdatePayload {
+  title: string;
+  pickupDate: string;
+  pickupLocation: string;
+  pickupSlots: string[];
+  promptPayNumber: string;
+  promptPayName: string;
+  bankName?: string | undefined;
+  bankAccountNumber?: string | undefined;
+  bankAccountName?: string | undefined;
+  isOpen: boolean;
   fruits: RoundCreationFruitConfig[];
 }
 
@@ -107,11 +123,12 @@ export interface RoundCreationPayload {
 export interface ProductItem {
   id: string;
   roundId: string;
-  name: string;                 // "เงาะโรงเรียนหวานกรอบ", "ทุเรียนหมอนทอง"
+  name: string;                 // "เงาะโรงเรียน", "ทุเรียนหมอนทอง"
   mascotKey: 'ngo' | 'thurian' | 'mangkut' | 'longkong' | 'langsat' | 'som' | 'mamuang';
   imageUrl: string;             // Mascot transparent PNG or product image
   productType: ProductType;
   pricePerKg: number;
+  costPerKg?: number | undefined; // Cost price per kg (ต้นทุน)
   totalQuotaKg: number;         // Maximum quota from orchard
   currentReservedKg: number;    // Real-time reserved amount
 

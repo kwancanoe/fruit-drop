@@ -361,6 +361,7 @@ function getInitialFruitConfigs(): RoundCreationFruitConfig[] {
       name: 'เงาะโรงเรียน',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 35,
+      costPerKg: 20,
       totalQuotaKg: 200,
       isEnabled: true
     },
@@ -369,6 +370,7 @@ function getInitialFruitConfigs(): RoundCreationFruitConfig[] {
       name: 'ทุเรียนหมอนทอง',
       productType: 'VARIABLE_WHOLE_FRUIT',
       pricePerKg: 160,
+      costPerKg: 110,
       totalQuotaKg: 150,
       isEnabled: true
     },
@@ -377,6 +379,7 @@ function getInitialFruitConfigs(): RoundCreationFruitConfig[] {
       name: 'มังคุด',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 50,
+      costPerKg: 30,
       totalQuotaKg: 100,
       isEnabled: false
     },
@@ -385,6 +388,7 @@ function getInitialFruitConfigs(): RoundCreationFruitConfig[] {
       name: 'ลองกอง',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 45,
+      costPerKg: 25,
       totalQuotaKg: 80,
       isEnabled: false
     },
@@ -393,6 +397,7 @@ function getInitialFruitConfigs(): RoundCreationFruitConfig[] {
       name: 'ลางสาด',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 40,
+      costPerKg: 20,
       totalQuotaKg: 60,
       isEnabled: false
     },
@@ -401,6 +406,7 @@ function getInitialFruitConfigs(): RoundCreationFruitConfig[] {
       name: 'ส้มสายน้ำผึ้ง',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 60,
+      costPerKg: 35,
       totalQuotaKg: 80,
       isEnabled: false
     },
@@ -409,6 +415,7 @@ function getInitialFruitConfigs(): RoundCreationFruitConfig[] {
       name: 'มะม่วงน้ำดอกไม้',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 50,
+      costPerKg: 30,
       totalQuotaKg: 80,
       isEnabled: false
     }

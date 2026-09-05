@@ -1,13 +1,28 @@
 import type { RouteRecordRaw } from 'vue-router';
 
 const routes: RouteRecordRaw[] = [
+  // Customer Pre-order Flow
   {
     path: '/',
     component: () => import('@/layouts/MainLayout.vue'),
     children: [
       { path: '', component: () => import('@/pages/IndexPage.vue') },
-      { path: 'admin', component: () => import('@/pages/AdminPage.vue') }
     ],
+  },
+
+  // Admin Dedicated Layout & Full Sub-Pages
+  {
+    path: '/admin',
+    component: () => import('@/layouts/AdminLayout.vue'),
+    children: [
+      { path: '', name: 'admin-dispatch', component: () => import('@/pages/admin/DispatchPage.vue') },
+      { path: 'rounds', name: 'admin-rounds', component: () => import('@/pages/admin/RoundsPage.vue') },
+      { path: 'rounds/new', name: 'admin-round-new', component: () => import('@/pages/admin/RoundEditPage.vue') },
+      { path: 'rounds/:roundId/edit', name: 'admin-round-edit', component: () => import('@/pages/admin/RoundEditPage.vue') },
+      { path: 'analytics', name: 'admin-analytics', component: () => import('@/pages/admin/AnalyticsPage.vue') },
+      { path: 'harvest', name: 'admin-harvest', component: () => import('@/pages/admin/HarvestPage.vue') },
+      { path: 'users', name: 'admin-users', component: () => import('@/pages/admin/UsersPage.vue') }
+    ]
   },
 
   // Always leave this as last one,
