@@ -14,7 +14,7 @@
               FRUIT DROP
             </div>
             <div class="text-caption text-grey-7" style="font-size: 11px;">
-              สวนบ้านเรา | สั่งผลไม้สดจากสวน
+              สั่งจองผลไม้สด
             </div>
           </div>
         </router-link>
@@ -52,14 +52,6 @@
     <q-page-container>
       <router-view />
     </q-page-container>
-
-    <!-- White-label Clean Footer -->
-    <q-footer class="bg-grey-9 text-grey-4 text-center q-py-sm text-caption">
-      <div>สวนบ้านเรา | Fruit Drop</div>
-      <div class="text-grey-5" style="font-size: 10px;">
-        ส่งมอบผลไม้สดคุณภาพ นัดรับท้ายรถลานจอดรถห้างสรรพสินค้า
-      </div>
-    </q-footer>
 
     <!-- Customer Order Lookup Modal Component -->
     <OrderLookupModal

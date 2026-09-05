@@ -1,4 +1,4 @@
-﻿# Fruit Drop: Workspace Ironclad Rules (กฎเหล็กประจำโปรเจกต์)
+# Fruit Drop: Workspace Ironclad Rules (กฎเหล็กประจำโปรเจกต์)
 
 กฎเหล่านี้มีผลบังคับใช้สูงสุดตลอดการพัฒนาโปรเจกต์ Fruit Drop เพื่อป้องกันปัญหา Spacing, Layout แตก, CSS มั่ว และทำให้ระบบมีความเสถียร สวยงาม และเข้ากับ Quasar 100%
 
@@ -39,12 +39,12 @@
   - <q-item-section side> สำหรับปุ่มกดหรือข้อความสถานะด้านขวา
 
 ## 6. โลโก้และ Brand Identity (Nano Banana Mascot)
-- ใช้รูปมาสคอต 2.5D (น้องเงาะและน้องทุเรียนในตะกร้าผลไม้ สวนบ้านเรา) เป็น Identity หลักของแอป
+- ใช้รูปมาสคอต 2.5D (น้องเงาะและน้องทุเรียนในตะกร้าผลไม้ Fruit Drop) เป็น Identity หลักของแอป
 - ต้องนำไปติดตั้งเป็น App Icon, Favicon และ PWA Splash Icon ทั้งหมด
 
 ## 7. White-label & Clean Customer Link (ลบร่องรอย Quasar / Vue 100%)
 - ลิงก์และหน้าเว็บที่ลูกค้าเปิดดู ต้องไม่มีร่องรอย Default ของ Quasar หรือ Vue หลงเหลืออยู่:
-  - <title> ต้องเป็น: **สวนบ้านเรา | Fruit Drop - สั่งจองผลไม้สดจากสวน**
-  - Meta Tags (Open Graph / Twitter Card): แนะนำชื่อสวน, วันที่ส่งของ, จุดนัดรับ พร้อมภาพพรีวิวโลโก้
+  - <title> ต้องเป็น: **Fruit Drop - สั่งจองผลไม้สด**
+  - Meta Tags (Open Graph / Twitter Card): วันที่ส่งของ จุดนัดรับ พร้อมภาพพรีวิวโลโก้
   - Favicon / Apple Touch Icon: เปลี่ยนเป็นไอคอน Fruit Drop 2.5D แทนโลโก้ Quasar
-  - ข้อมูลส่วนหัว/ส่วนท้าย: เป็นแบรนด์ สวนบ้านเรา Fruit Drop 100%
+  - ข้อมูลส่วนหัว/ส่วนท้าย: เป็นแบรนด์ Fruit Drop 100% (ห้ามมีคำว่า สวนบ้านเรา)

@@ -1,7 +1,7 @@
 {
-  "name": "สวนบ้านเรา | Fruit Drop",
+  "name": "Fruit Drop",
   "short_name": "Fruit Drop",
-  "description": "ระบบสั่งจองผลไม้สดจากสวนบ้านเรา ส่งมอบท้ายรถลานจอดรถห้างสรรพสินค้า",
+  "description": "Fruit Drop - ระบบสั่งจองผลไม้สด นัดรับท้ายรถ",
   "orientation": "portrait",
   "background_color": "#1E1E1E",
   "theme_color": "#2E7D32",

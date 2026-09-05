@@ -1,64 +1,126 @@
 <template>
   <!-- Section: Admin Tailgate Dispatch Desk & Scale Engine -->
   <q-page id="admin-dispatch-page" data-audit-id="admin-dispatch-page" class="q-pa-md bg-grey-10 text-white" style="min-height: 100vh; max-width: 680px; margin: 0 auto;">
-    <!-- 1. High-Contrast Night Toolbar & Stats -->
-    <AdminHeaderBar
-      :auth-user="fruitStore.authUser"
-      :is-admin="fruitStore.isAdmin"
-      :total-count="ordersCount"
-      :completed-count="completedOrdersCount"
-      :cash-in-hand-total="cashInHandTotal"
-      :prepaid-total="prepaidTotal"
-      @login="handleLogin"
-      @logout="handleLogout"
-      @open-harvest-summary="isHarvestSummaryOpen = true"
-      @open-user-management="isUserManagementOpen = true"
-    />
+    <!-- 1. Login Gate (Unauthenticated State) -->
+    <div v-if="!fruitStore.authUser" class="row justify-center items-center" style="min-height: 80vh;">
+      <q-card class="bg-grey-9 text-white q-pa-lg rounded-borders text-center shadow-4" style="max-width: 420px; width: 100%;">
+        <q-avatar size="96px" class="q-mb-md">
+          <q-img src="/mascots/logo_fruit_drop.png" fit="contain" />
+        </q-avatar>
+        <div class="text-h6 text-weight-bolder q-mb-xs">
+          โต๊ะจ่ายของท้ายรถ Fruit Drop
+        </div>
+        <div class="text-caption text-grey-4 q-mb-lg">
+          เข้าสู่ระบบสำหรับแอดมินและผู้ช่วยขาย
+        </div>
 
-    <!-- Database Seed Action Banner (shown if orders or products are empty) -->
-    <div v-if="fruitStore.products.length === 0" class="bg-grey-9 q-pa-md rounded-borders q-mb-md text-center">
-      <div class="text-subtitle2 text-amber q-mb-xs">ยังไม่มีรายการผลไม้ในฐานข้อมูล</div>
-      <div class="text-caption text-grey-4 q-mb-sm">กดปุ่มด้านล่างเพื่อบันทึกผลไม้และรอบเปิดตัวอย่างลง Firestore</div>
-      <q-btn
-        color="positive"
-        icon="cloud_upload"
-        label="นำเข้าข้อมูลตั้งต้น (Seed Initial Catalog)"
-        no-caps
-        dense
-        class="q-px-md"
-        @click="handleSeedData"
-      />
+        <q-btn
+          color="positive"
+          class="full-width q-py-sm text-weight-bold text-subtitle2 shadow-2"
+          icon="login"
+          label="เข้าสู่ระบบด้วย Google"
+          no-caps
+          rounded
+          :loading="fruitStore.isLoading"
+          @click="handleLogin"
+        />
+      </q-card>
     </div>
 
-    <!-- 2. Time-Slot Filter Tabs & Instant Search -->
-    <TimeSlotTabs
-      :available-slots="availableSlots"
-      v-model:selected-slot="selectedSlot"
-      v-model:search-query="searchQuery"
-      :slot-counts="slotCounts"
-    />
+    <!-- 2. Unauthorized State (Logged in with unauthorized account) -->
+    <div v-else-if="!fruitStore.isAdmin" class="row justify-center items-center" style="min-height: 80vh;">
+      <q-card class="bg-grey-9 text-white q-pa-lg rounded-borders text-center shadow-4" style="max-width: 440px; width: 100%;">
+        <q-icon name="gpp_bad" color="negative" size="64px" class="q-mb-sm" />
+        <div class="text-h6 text-weight-bolder text-negative q-mb-xs">
+          ไม่มีสิทธิ์เข้าใช้งานระบบ
+        </div>
+        <div class="text-body2 text-grey-3 q-mb-xs">
+          บัญชี: <strong>{{ fruitStore.authUser.email }}</strong>
+        </div>
+        <div class="text-caption text-grey-4 q-mb-lg">
+          อีเมลนี้ไม่ได้รับสิทธิ์เข้าใช้งานโต๊ะแอดมิน กรุณาติดต่อผู้ดูแลระบบเพื่อขอเพิ่มสิทธิ์
+        </div>
 
-    <!-- Orders Dispatch List -->
-    <div v-if="filteredOrders.length === 0" class="bg-grey-9 q-pa-xl rounded-borders text-center text-grey-4">
-      <q-icon name="inbox" size="48px" class="q-mb-sm text-grey-6" />
-      <div class="text-subtitle1">ไม่พบรายการออเดอร์</div>
-      <div class="text-caption text-grey-5">ในรอบเวลาหรือคำค้นหานี้</div>
+        <q-btn
+          outline
+          color="white"
+          class="full-width q-py-xs text-weight-bold"
+          icon="logout"
+          label="ออกจากระบบ (Logout)"
+          no-caps
+          rounded
+          @click="handleLogout"
+        />
+      </q-card>
     </div>
 
+    <!-- 3. Authorized Admin Dispatch Desk -->
     <div v-else>
-      <TailgateOrderCard
-        v-for="order in filteredOrders"
-        :key="order.orderId"
-        :order="order"
-        @open-scale="handleOpenScale"
-        @open-proof-modal="handleOpenProofModal"
-        @mark-delivered="handleMarkDelivered"
-        @collect-cash-deliver="handleCollectCashDeliver"
-        @revert-status="handleRevertStatus"
+      <!-- Night Toolbar & Stats -->
+      <AdminHeaderBar
+        :auth-user="fruitStore.authUser"
+        :is-admin="fruitStore.isAdmin"
+        :total-count="ordersCount"
+        :completed-count="completedOrdersCount"
+        :cash-in-hand-total="cashInHandTotal"
+        :prepaid-total="prepaidTotal"
+        @login="handleLogin"
+        @logout="handleLogout"
+        @open-harvest-summary="isHarvestSummaryOpen = true"
+        @open-user-management="isUserManagementOpen = true"
+        @open-round-management="isRoundManagementOpen = true"
       />
+
+      <!-- Active Round Indicator -->
+      <div v-if="fruitStore.activeRound" class="bg-grey-9 q-pa-sm rounded-borders q-mb-md row items-center justify-between">
+        <div class="row items-center">
+          <q-icon name="event_note" color="positive" size="20px" class="q-mr-xs" />
+          <span class="text-caption text-grey-3">
+            รอบปัจจุบัน: <strong>{{ fruitStore.activeRound.title }}</strong> ({{ fruitStore.activeRound.pickupDate }})
+          </span>
+        </div>
+        <q-btn
+          flat
+          dense
+          no-caps
+          color="positive"
+          label="เปลี่ยนรอบ"
+          size="sm"
+          @click="isRoundManagementOpen = true"
+        />
+      </div>
+
+      <!-- Time-Slot Filter Tabs & Instant Search -->
+      <TimeSlotTabs
+        :available-slots="availableSlots"
+        v-model:selected-slot="selectedSlot"
+        v-model:search-query="searchQuery"
+        :slot-counts="slotCounts"
+      />
+
+      <!-- Orders Dispatch List -->
+      <div v-if="filteredOrders.length === 0" class="bg-grey-9 q-pa-xl rounded-borders text-center text-grey-4">
+        <q-icon name="inbox" size="48px" class="q-mb-sm text-grey-6" />
+        <div class="text-subtitle1">ไม่พบรายการออเดอร์</div>
+        <div class="text-caption text-grey-5">ในรอบเวลาหรือคำค้นหานี้</div>
+      </div>
+
+      <div v-else>
+        <TailgateOrderCard
+          v-for="order in filteredOrders"
+          :key="order.orderId"
+          :order="order"
+          @open-scale="handleOpenScale"
+          @open-proof-modal="handleOpenProofModal"
+          @mark-delivered="handleMarkDelivered"
+          @collect-cash-deliver="handleCollectCashDeliver"
+          @revert-status="handleRevertStatus"
+        />
+      </div>
     </div>
 
-    <!-- 3. Durian Digital Scale & Dynamic PromptPay QR Modal -->
+    <!-- Modals -->
+    <!-- Durian Scale Modal -->
     <DurianScaleModal
       v-model:is-open="isScaleModalOpen"
       :order="scaleTargetOrder"
@@ -68,19 +130,24 @@
       @confirm="handleScaleConfirm"
     />
 
-    <!-- 4. One-Click Orchard Harvest Summary Sheet for LINE -->
+    <!-- Harvest Summary Modal -->
     <HarvestSummaryModal
       v-model:is-open="isHarvestSummaryOpen"
       :round="fruitStore.activeRound"
       :orders="fruitStore.orders"
     />
 
-    <!-- 5. User Management & RBAC Modal -->
+    <!-- User Management Modal -->
     <UserManagementModal
       v-model:is-open="isUserManagementOpen"
     />
 
-    <!-- 6. Camera Payment & Handover Proof Modal -->
+    <!-- Round Management Modal -->
+    <RoundManagementModal
+      v-model:is-open="isRoundManagementOpen"
+    />
+
+    <!-- Payment Proof Modal -->
     <PaymentProofModal
       v-model:is-open="isProofModalOpen"
       :order="proofTargetOrder"
@@ -100,6 +167,7 @@ import TailgateOrderCard from '@/components/admin/TailgateOrderCard.vue';
 import DurianScaleModal from '@/components/admin/DurianScaleModal.vue';
 import HarvestSummaryModal from '@/components/admin/HarvestSummaryModal.vue';
 import UserManagementModal from '@/components/admin/UserManagementModal.vue';
+import RoundManagementModal from '@/components/admin/RoundManagementModal.vue';
 import PaymentProofModal from '@/components/admin/PaymentProofModal.vue';
 
 const $q = useQuasar();
@@ -116,6 +184,7 @@ const scaleTargetOrder = ref<Order | null>(null);
 const scaleTargetItemIndex = ref<number>(-1);
 const isHarvestSummaryOpen = ref<boolean>(false);
 const isUserManagementOpen = ref<boolean>(false);
+const isRoundManagementOpen = ref<boolean>(false);
 const isProofModalOpen = ref<boolean>(false);
 const proofTargetOrder = ref<Order | null>(null);
 
@@ -299,6 +368,7 @@ async function handleRevertStatus(orderId: string) {
 }
 
 onMounted(() => {
+  fruitStore.subscribeToAllRounds();
   fruitStore.subscribeToOrders(fruitStore.activeRoundId);
   userStore.subscribeUsers();
 });

@@ -1,5 +1,5 @@
 <template>
-  <!-- Section: Customer Single-Page Ordering Screen -->
+  <!-- Section: Customer Order Page (2-Stage Flow: Active Rounds Overview ➔ Round Booking Screen) -->
   <q-page id="customer-order-page" data-audit-id="customer-order-page" class="q-pa-md" style="max-width: 620px; margin: 0 auto; padding-bottom: 90px;">
     <!-- Active Order Alert Banner (if customer previously placed an order) -->
     <div v-if="activeCustomerOrder" class="q-mb-md">
@@ -25,53 +25,127 @@
       </q-banner>
     </div>
 
-    <!-- 1. Batch Header & Announcement -->
-    <BatchHeaderCard :round="fruitStore.activeRound" />
+    <!-- Stage 1: Active Open Rounds Overview Screen (when no round selected) -->
+    <div v-if="!selectedRoundId || !currentRound">
+      <ActiveRoundsList
+        :rounds="fruitStore.openRounds"
+        @select-round="handleSelectRound"
+      />
+    </div>
 
-    <!-- 2. Dual-Archetype Fruit Selection -->
-    <FruitSelector
-      :products="fruitStore.products"
-      v-model="orderedItems"
-    />
-
-    <!-- 3. Customer Contact & Location in Mall -->
-    <ContactPicker v-model="customerInfo" />
-
-    <!-- 4. Pickup Time-Slot Chips -->
-    <PickupSlotPicker
-      :slots="availablePickupSlots"
-      v-model="selectedSlot"
-    />
-
-    <!-- 5. Payment Method & PromptPay QR -->
-    <PaymentMethodPicker
-      v-model="paymentMethod"
-      :total-amount="totalEstimatedPrice"
-      :prompt-pay-number="fruitStore.activeRound?.promptPayNumber || '081-234-5678'"
-      :prompt-pay-name="fruitStore.activeRound?.promptPayName || 'คุณอ้น (ธ.กสิกรไทย)'"
-    />
-
-    <!-- Sticky Bottom Bar with Large Order Command Button -->
-    <div class="fixed-bottom bg-white shadow-up-3 q-pa-sm row items-center justify-between" style="z-index: 2000;">
-      <div class="col-6 q-pl-md">
-        <div class="text-caption text-grey-7">ยอดประเมินรวม:</div>
-        <div class="text-h6 text-weight-bolder text-primary">
-          {{ totalEstimatedPrice }} บาท
+    <!-- Stage 2: Round Booking Screen (when a specific round is selected) -->
+    <div v-else>
+      <!-- Navigation Back Button & Current Round Indicator -->
+      <div class="row items-center justify-between q-mb-md bg-white q-pa-sm rounded-borders shadow-1">
+        <q-btn
+          flat
+          dense
+          no-caps
+          icon="arrow_back"
+          label="เลือกรอบอื่น"
+          color="primary"
+          class="text-weight-bold"
+          @click="selectedRoundId = null"
+        />
+        <div class="text-caption text-grey-8 ellipsis" style="max-width: 200px;">
+          <strong>{{ currentRound.title }}</strong>
         </div>
       </div>
-      <div class="col-6 q-pr-sm text-right">
+
+      <!-- 1. Batch Header & Announcement -->
+      <BatchHeaderCard :round="currentRound" />
+
+      <!-- 2. Dual-Archetype Fruit Selection -->
+      <FruitSelector
+        :products="fruitStore.products"
+        v-model="orderedItems"
+      />
+
+      <!-- 3. Customer Contact & Location -->
+      <ContactPicker v-model="customerInfo" />
+
+      <!-- 4. Pickup Time-Slot Chips -->
+      <PickupSlotPicker
+        :slots="availablePickupSlots"
+        v-model="selectedSlot"
+      />
+
+      <!-- 5. Payment Method & PromptPay QR -->
+      <PaymentMethodPicker
+        v-model="paymentMethod"
+        :total-amount="totalEstimatedPrice"
+        :prompt-pay-number="currentRound.promptPayNumber || '081-234-5678'"
+        :prompt-pay-name="currentRound.promptPayName || 'คุณอ้น (ธ.กสิกรไทย)'"
+      />
+
+      <!-- 6. Prominent Order Action Section (Impossible to miss at end of form) -->
+      <div class="q-mt-lg q-mb-xl bg-white q-pa-md rounded-borders shadow-2">
+        <div class="row items-center justify-between q-mb-xs">
+          <span class="text-subtitle1 text-weight-bold text-grey-9">ยอดรวมโดยประมาณ:</span>
+          <span class="text-h5 text-weight-bolder text-primary">{{ totalEstimatedPrice }} บาท</span>
+        </div>
+        <div class="text-caption text-grey-7 q-mb-md">
+          เลือกไว้ {{ totalItemCount }} รายการ • นัดรับ: {{ currentRound.pickupDate }} ({{ selectedSlot }})
+        </div>
+
         <q-btn
           color="positive"
-          class="full-width q-py-sm text-weight-bolder text-subtitle2 shadow-2"
+          class="full-width q-py-md text-weight-bolder text-subtitle1 shadow-3"
           no-caps
           rounded
           :loading="fruitStore.isLoading"
           :disable="orderedItems.length === 0 || !isContactValid"
           @click="handlePlaceOrder"
         >
-          <q-icon name="check_circle" class="q-mr-xs" />
-          <span>สั่งจอง ({{ totalItemCount }} รายการ)</span>
+          <q-icon name="check_circle" class="q-mr-xs" size="24px" />
+          <span>ยืนยันการสั่งจอง ({{ totalEstimatedPrice }} บาท)</span>
         </q-btn>
+
+        <div v-if="orderedItems.length === 0" class="text-center text-caption text-negative q-mt-xs">
+          * กรุณาเลือกผลไม้อย่างน้อย 1 รายการ
+        </div>
+        <div v-else-if="!isContactValid" class="text-center text-caption text-negative q-mt-xs">
+          * กรุณากรอกชื่อและเบอร์โทรศัพท์ให้ครบถ้วน
+        </div>
+
+        <div class="q-mt-md text-center">
+          <q-btn
+            flat
+            dense
+            no-caps
+            color="grey-7"
+            icon="arrow_back"
+            label="ย้อนกลับไปหน้ารวมรอบ"
+            @click="selectedRoundId = null"
+          />
+        </div>
+      </div>
+
+      <!-- 7. Sticky Bottom Bar for quick action while scrolling -->
+      <div
+        v-if="orderedItems.length > 0 && isContactValid"
+        class="fixed-bottom bg-white shadow-up-3 q-pa-sm row items-center justify-between"
+        style="z-index: 1000;"
+      >
+        <div class="col-6 q-pl-md">
+          <div class="text-caption text-grey-7">ยอดรวม:</div>
+          <div class="text-h6 text-weight-bolder text-primary">
+            {{ totalEstimatedPrice }} บาท
+          </div>
+        </div>
+        <div class="col-6 q-pr-sm text-right">
+          <q-btn
+            color="positive"
+            class="full-width q-py-sm text-weight-bolder text-subtitle2 shadow-2"
+            no-caps
+            rounded
+            :loading="fruitStore.isLoading"
+            @click="handlePlaceOrder"
+          >
+            <q-icon name="check_circle" class="q-mr-xs" />
+            <span>สั่งจอง ({{ totalItemCount }})</span>
+          </q-btn>
+        </div>
       </div>
     </div>
 
@@ -106,7 +180,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import { useCustomerStorage } from '@/composables/useCustomerStorage';
-import type { OrderItem, CustomerInfo, PaymentMethod, Order } from '@/types/fruit_app';
+import type { OrderItem, CustomerInfo, PaymentMethod, Order, PreorderRound } from '@/types/fruit_app';
+import ActiveRoundsList from '@/components/customer/ActiveRoundsList.vue';
 import BatchHeaderCard from '@/components/customer/BatchHeaderCard.vue';
 import FruitSelector from '@/components/customer/FruitSelector.vue';
 import ContactPicker from '@/components/customer/ContactPicker.vue';
@@ -117,6 +192,21 @@ import OrderQueueCard from '@/components/customer/OrderQueueCard.vue';
 const $q = useQuasar();
 const fruitStore = useFruitStore();
 const { customerProfile, lastOrderId, loadProfile, saveProfile, saveLastOrderId, loadLastOrderId } = useCustomerStorage();
+
+// Flow state: Active Round selection
+const selectedRoundId = ref<string | null>(null);
+const currentRound = computed<PreorderRound | null>(() => {
+  return fruitStore.openRounds.find(r => r.roundId === selectedRoundId.value) || null;
+});
+
+function handleSelectRound(round: PreorderRound) {
+  selectedRoundId.value = round.roundId;
+  fruitStore.selectActiveRound(round);
+  orderedItems.value = [];
+  if (round.pickupSlots && round.pickupSlots.length > 0 && round.pickupSlots[0]) {
+    selectedSlot.value = round.pickupSlots[0];
+  }
+}
 
 // Form states
 const orderedItems = ref<OrderItem[]>([]);
@@ -136,7 +226,7 @@ const completedOrder = ref<Order | null>(null);
 
 // Available pickup slots
 const availablePickupSlots = computed<string[]>(() => {
-  return fruitStore.activeRound?.pickupSlots || [
+  return currentRound.value?.pickupSlots || [
     '19:00 - 19:30',
     '19:30 - 20:00',
     '20:00 - 20:30',
@@ -208,8 +298,9 @@ async function handlePlaceOrder() {
   try {
     saveProfile(customerInfo.value);
 
+    const targetRoundId = currentRound.value?.roundId || fruitStore.activeRoundId;
     const generatedOrderId = await fruitStore.submitOrder({
-      roundId: fruitStore.activeRoundId,
+      roundId: targetRoundId,
       customer: { ...customerInfo.value },
       items: [...orderedItems.value],
       pickupSlot: selectedSlot.value,
@@ -223,7 +314,7 @@ async function handlePlaceOrder() {
     // Prepare completed order preview
     completedOrder.value = {
       orderId: generatedOrderId,
-      roundId: fruitStore.activeRoundId,
+      roundId: targetRoundId,
       customer: { ...customerInfo.value },
       items: [...orderedItems.value],
       pickupSlot: selectedSlot.value,
@@ -259,6 +350,7 @@ function resetOrderForm() {
 }
 
 onMounted(() => {
+  fruitStore.subscribeToOpenRounds();
   const loaded = loadProfile();
   customerInfo.value = { ...loaded };
   loadLastOrderId();

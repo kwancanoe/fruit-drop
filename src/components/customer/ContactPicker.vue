@@ -2,12 +2,9 @@
   <!-- Section: Frictionless Customer Contact & Mall Location Picker -->
   <q-card id="customer-contact-picker" data-audit-id="customer-contact-picker" class="rounded-borders bg-white shadow-1 q-mb-md">
     <q-card-section class="q-pa-md">
-      <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-sm row items-center">
+      <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-md row items-center">
         <q-icon name="storefront" color="primary" class="q-mr-xs" size="22px" />
-        <span>ข้อมูลผู้สั่งและจุดทำงานในห้าง</span>
-      </div>
-      <div class="text-caption text-grey-7 q-mb-md">
-        กรอกเพียงครั้งเดียว ระบบจะจำข้อมูลนี้ไว้ให้อัตโนมัติสำหรับการสั่งครั้งต่อไป
+        <span>ข้อมูลผู้สั่งและจุดนัดรับ</span>
       </div>
 
       <!-- Customer Name -->

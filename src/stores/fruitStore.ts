@@ -31,7 +31,8 @@ import type {
   PaymentMethod,
   PaymentStatus,
   OrderStatus,
-  OrderAttribution
+  OrderAttribution,
+  RoundCreationPayload
 } from '@/types/fruit_app';
 import { ADMIN_WHITELIST_EMAILS } from '@/types/fruit_app';
 import { useUserStore } from '@/stores/userStore';
@@ -39,6 +40,8 @@ import { collectDeviceFingerprint } from '@/utils/deviceTelemetry';
 
 export const useFruitStore = defineStore('fruit', () => {
   // State
+  const openRounds = ref<PreorderRound[]>([]);
+  const allRounds = ref<PreorderRound[]>([]);
   const activeRound = ref<PreorderRound | null>(null);
   const products = ref<ProductItem[]>([]);
   const orders = ref<Order[]>([]);
@@ -46,7 +49,8 @@ export const useFruitStore = defineStore('fruit', () => {
   const authUser = ref<User | null>(null);
 
   // Firestore listeners
-  let unsubscribeRound: Unsubscribe | null = null;
+  let unsubscribeOpenRounds: Unsubscribe | null = null;
+  let unsubscribeAllRounds: Unsubscribe | null = null;
   let unsubscribeProducts: Unsubscribe | null = null;
   let unsubscribeOrders: Unsubscribe | null = null;
 
@@ -87,41 +91,70 @@ export const useFruitStore = defineStore('fruit', () => {
     authUser.value = null;
   }
 
-  // Subscribe to Active Round
-  function subscribeToActiveRound() {
-    if (unsubscribeRound) unsubscribeRound();
+  // Subscribe to Open Rounds (for Customer flow)
+  function subscribeToOpenRounds() {
+    if (unsubscribeOpenRounds) unsubscribeOpenRounds();
 
     const roundsRef = collection(db, 'rounds');
-    const q = query(roundsRef, where('isOpen', '==', true));
+    const q = query(roundsRef, where('isOpen', '==', true), orderBy('createdAt', 'desc'));
 
-    unsubscribeRound = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty && snapshot.docs[0]) {
-        const docSnap = snapshot.docs[0];
-        const data = docSnap.data() as PreorderRound;
-        activeRound.value = { ...data, id: docSnap.id };
-        subscribeToProducts(data.roundId);
+    unsubscribeOpenRounds = onSnapshot(q, (snapshot) => {
+      openRounds.value = snapshot.docs.map(docSnap => ({
+        ...docSnap.data() as PreorderRound,
+        id: docSnap.id
+      }));
+
+      // Automatically select first open round if none selected
+      const firstOpenRound = openRounds.value[0];
+      if (firstOpenRound) {
+        if (!activeRound.value || !openRounds.value.some(r => r.roundId === activeRound.value?.roundId)) {
+          activeRound.value = firstOpenRound;
+          subscribeToProducts(firstOpenRound.roundId);
+        }
       } else {
-        // Fallback default round if none exists in Firestore
-        activeRound.value = {
-          roundId: 'ROUND-001',
-          title: 'เปิดรอบเงาะโรงเรียนหวานกรอบ & ทุเรียนหมอนทองสวนบ้านเรา',
-          pickupDate: 'วันอังคารที่ 8 กันยายน 2569',
-          pickupLocation: 'ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B',
-          pickupSlots: ['19:00 - 19:30', '19:30 - 20:00', '20:00 - 20:30', '21:00+ (หลังห้างปิด)'],
-          promptPayNumber: '081-234-5678',
-          promptPayName: 'คุณอ้น (ธ.กสิกรไทย)',
-          isOpen: true,
-          createdAt: Date.now()
-        };
-        subscribeToProducts('ROUND-001');
+        activeRound.value = null;
+        products.value = [];
       }
     }, (error) => {
-      console.warn('Snapshot active round error, using offline fallback:', error);
+      console.warn('Snapshot open rounds error:', error);
     });
+  }
+
+  // Backward-compatible alias
+  function subscribeToActiveRound() {
+    subscribeToOpenRounds();
+  }
+
+  // Subscribe to All Rounds (for Admin Round Management)
+  function subscribeToAllRounds() {
+    if (unsubscribeAllRounds) unsubscribeAllRounds();
+
+    const roundsRef = collection(db, 'rounds');
+    const q = query(roundsRef, orderBy('createdAt', 'desc'));
+
+    unsubscribeAllRounds = onSnapshot(q, (snapshot) => {
+      allRounds.value = snapshot.docs.map(docSnap => ({
+        ...docSnap.data() as PreorderRound,
+        id: docSnap.id
+      }));
+    }, (error) => {
+      console.warn('Snapshot all rounds error:', error);
+    });
+  }
+
+  // Select active round to view products and orders
+  function selectActiveRound(round: PreorderRound) {
+    activeRound.value = round;
+    subscribeToProducts(round.roundId);
+    subscribeToOrders(round.roundId);
   }
 
   // Subscribe to Products for a round
   function subscribeToProducts(roundId: string) {
+    if (!roundId) {
+      products.value = [];
+      return;
+    }
     if (unsubscribeProducts) unsubscribeProducts();
 
     const productsRef = collection(db, 'products');
@@ -131,12 +164,16 @@ export const useFruitStore = defineStore('fruit', () => {
       if (!snapshot.empty) {
         products.value = snapshot.docs.map(d => ({ ...d.data() as ProductItem, id: d.id }));
       } else {
-        // Default product inventory with official transparent mascots
-        products.value = getDefaultProducts(roundId);
+        // Only provide fallback if it's default initial round
+        if (roundId === 'ROUND-001') {
+          products.value = getDefaultProducts(roundId);
+        } else {
+          products.value = [];
+        }
       }
     }, (error) => {
-      console.warn('Snapshot products error, using offline fallback:', error);
-      products.value = getDefaultProducts(roundId);
+      console.warn('Snapshot products error:', error);
+      products.value = [];
     });
   }
 
@@ -268,18 +305,122 @@ export const useFruitStore = defineStore('fruit', () => {
     }
   }
 
+  // Create and publish a new Preorder Round with selected fruits
+  async function createRound(payload: RoundCreationPayload): Promise<string> {
+    isLoading.value = true;
+    try {
+      const timestamp = Date.now();
+      const roundId = `ROUND-${timestamp.toString().slice(-6)}`;
+      const enabledFruits = payload.fruits.filter(f => f.isEnabled);
+      const fruitNames = enabledFruits.map(f => f.name);
+
+      const newRound: PreorderRound = {
+        roundId,
+        title: payload.title || `รอบส่งผลไม้ ${payload.pickupDate}`,
+        pickupDate: payload.pickupDate,
+        pickupLocation: payload.pickupLocation,
+        pickupSlots: payload.pickupSlots,
+        promptPayNumber: payload.promptPayNumber,
+        promptPayName: payload.promptPayName,
+        isOpen: true,
+        fruitSummary: fruitNames,
+        createdAt: timestamp
+      };
+
+      // 1. Save round document
+      await setDoc(doc(db, 'rounds', roundId), newRound);
+
+      // 2. Save configured products for this round
+      for (const fruit of enabledFruits) {
+        const prodId = `PROD-${roundId}-${fruit.fruitKey.toUpperCase()}`;
+        const prodItem: ProductItem = {
+          id: prodId,
+          roundId,
+          name: fruit.name,
+          mascotKey: fruit.fruitKey,
+          imageUrl: `/mascots/mascot_${fruit.fruitKey}.png`,
+          productType: fruit.productType,
+          pricePerKg: fruit.pricePerKg,
+          totalQuotaKg: fruit.totalQuotaKg,
+          currentReservedKg: 0,
+          minKg: 1,
+          stepKg: 1,
+          bundles: fruit.fruitKey === 'ngo' ? [
+            { qtyKg: 3, price: 100, label: 'ชุด 3 กก. (100 บาท)' },
+            { qtyKg: 6, price: 200, label: 'ชุด 6 กก. (200 บาท)' },
+            { qtyKg: 9, price: 300, label: 'ชุด 9 กก. (300 บาท)' }
+          ] : fruit.fruitKey === 'mangkut' ? [
+            { qtyKg: 3, price: 150, label: 'ชุด 3 กก. (150 บาท)' },
+            { qtyKg: 5, price: 240, label: 'ชุด 5 กก. (240 บาท)' }
+          ] : fruit.fruitKey === 'longkong' ? [
+            { qtyKg: 3, price: 130, label: 'ชุด 3 กก. (130 บาท)' }
+          ] : undefined,
+          sizeTiers: fruit.fruitKey === 'thurian' ? [
+            {
+              tierId: 'TIER-SMALL',
+              label: 'ลูกเล็ก (1.8 - 2.0 กก.)',
+              minKg: 1.8,
+              maxKg: 2.0,
+              estimatedPriceMin: Math.round(1.8 * fruit.pricePerKg),
+              estimatedPriceMax: Math.round(2.0 * fruit.pricePerKg),
+              reserveWeightKg: 1.9
+            },
+            {
+              tierId: 'TIER-MEDIUM',
+              label: 'ลูกกลาง (2.1 - 3.0 กก.) ★ ยอดนิยม',
+              minKg: 2.1,
+              maxKg: 3.0,
+              estimatedPriceMin: Math.round(2.1 * fruit.pricePerKg),
+              estimatedPriceMax: Math.round(3.0 * fruit.pricePerKg),
+              reserveWeightKg: 2.5
+            },
+            {
+              tierId: 'TIER-LARGE',
+              label: 'ลูกใหญ่ (3.1 - 4.0 กก.)',
+              minKg: 3.1,
+              maxKg: 4.0,
+              estimatedPriceMin: Math.round(3.1 * fruit.pricePerKg),
+              estimatedPriceMax: Math.round(4.0 * fruit.pricePerKg),
+              reserveWeightKg: 3.5
+            }
+          ] : undefined
+        };
+
+        await setDoc(doc(db, 'products', prodId), prodItem);
+      }
+
+      // Sync active round immediately
+      activeRound.value = newRound;
+      subscribeToProducts(roundId);
+      subscribeToOrders(roundId);
+
+      return roundId;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Toggle round open/closed status
+  async function toggleRoundStatus(roundId: string, isOpen: boolean) {
+    await updateDoc(doc(db, 'rounds', roundId), {
+      isOpen,
+      updatedAt: serverTimestamp()
+    });
+  }
+
   // Seed default master products to Firestore
   async function seedMasterData() {
     const roundDoc = doc(db, 'rounds', 'ROUND-001');
     const defaultRound: PreorderRound = {
       roundId: 'ROUND-001',
-      title: 'เปิดรอบเงาะโรงเรียนหวานกรอบ & ทุเรียนหมอนทองสวนบ้านเรา',
+      title: 'รอบส่งผลไม้ Fruit Drop',
       pickupDate: 'วันอังคารที่ 8 กันยายน 2569',
       pickupLocation: 'ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B',
       pickupSlots: ['19:00 - 19:30', '19:30 - 20:00', '20:00 - 20:30', '21:00+ (หลังห้างปิด)'],
       promptPayNumber: '081-234-5678',
       promptPayName: 'คุณอ้น (ธ.กสิกรไทย)',
       isOpen: true,
+      fruitSummary: ['เงาะโรงเรียน', 'ทุเรียนหมอนทอง'],
       createdAt: Date.now()
     };
     await setDoc(roundDoc, defaultRound);
@@ -291,6 +432,8 @@ export const useFruitStore = defineStore('fruit', () => {
   }
 
   return {
+    openRounds,
+    allRounds,
     activeRound,
     products,
     orders,
@@ -301,9 +444,14 @@ export const useFruitStore = defineStore('fruit', () => {
     initAuth,
     loginAdmin,
     logoutAdmin,
+    subscribeToOpenRounds,
+    subscribeToAllRounds,
     subscribeToActiveRound,
     subscribeToProducts,
     subscribeToOrders,
+    selectActiveRound,
+    createRound,
+    toggleRoundStatus,
     submitOrder,
     updateWeighedFruit,
     updateOrderStatus,
@@ -312,19 +460,19 @@ export const useFruitStore = defineStore('fruit', () => {
   };
 });
 
-// Default product catalog with transparent PNG mascots
+// Default product catalog templates with transparent PNG mascots
 function getDefaultProducts(roundId: string): ProductItem[] {
   return [
     {
       id: 'PROD-NGO',
       roundId,
-      name: 'เงาะโรงเรียน หวานกรอบ สวนบ้านเรา',
+      name: 'เงาะโรงเรียน',
       mascotKey: 'ngo',
       imageUrl: '/mascots/mascot_ngo.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 35,
       totalQuotaKg: 200,
-      currentReservedKg: 42,
+      currentReservedKg: 0,
       minKg: 1,
       stepKg: 1,
       bundles: [
@@ -336,13 +484,13 @@ function getDefaultProducts(roundId: string): ProductItem[] {
     {
       id: 'PROD-THURIAN',
       roundId,
-      name: 'ทุเรียนหมอนทอง แก่จัดตัดสดจากต้น',
+      name: 'ทุเรียนหมอนทอง',
       mascotKey: 'thurian',
       imageUrl: '/mascots/mascot_thurian.png',
       productType: 'VARIABLE_WHOLE_FRUIT',
       pricePerKg: 160,
       totalQuotaKg: 150,
-      currentReservedKg: 35,
+      currentReservedKg: 0,
       sizeTiers: [
         {
           tierId: 'TIER-SMALL',
@@ -376,30 +524,30 @@ function getDefaultProducts(roundId: string): ProductItem[] {
     {
       id: 'PROD-MANGKUT',
       roundId,
-      name: 'มังคุดคัดเกรด ราชินีผลไม้ ผิวมันหวานอมเปรี้ยว',
+      name: 'มังคุด',
       mascotKey: 'mangkut',
       imageUrl: '/mascots/mascot_mangkut.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 50,
       totalQuotaKg: 100,
-      currentReservedKg: 18,
+      currentReservedKg: 0,
       minKg: 1,
       stepKg: 1,
       bundles: [
-        { qtyKg: 2, price: 100, label: 'ชุด 2 กก. (100 บาท)' },
+        { qtyKg: 3, price: 150, label: 'ชุด 3 กก. (150 บาท)' },
         { qtyKg: 5, price: 240, label: 'ชุด 5 กก. (240 บาท)' }
       ]
     },
     {
       id: 'PROD-LONGKONG',
       roundId,
-      name: 'ลองกองตันหยงมัส ช่อแน่น หวานฉ่ำ',
+      name: 'ลองกอง',
       mascotKey: 'longkong',
       imageUrl: '/mascots/mascot_longkong.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 45,
       totalQuotaKg: 80,
-      currentReservedKg: 15,
+      currentReservedKg: 0,
       minKg: 1,
       stepKg: 1,
       bundles: [
@@ -409,39 +557,39 @@ function getDefaultProducts(roundId: string): ProductItem[] {
     {
       id: 'PROD-LANGSAT',
       roundId,
-      name: 'ลางสาดหวานชื่นใจ ส่งตรงจากสวน',
+      name: 'ลางสาด',
       mascotKey: 'langsat',
       imageUrl: '/mascots/mascot_langsat.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 40,
       totalQuotaKg: 60,
-      currentReservedKg: 8,
+      currentReservedKg: 0,
       minKg: 1,
       stepKg: 1
     },
     {
       id: 'PROD-SOM',
       roundId,
-      name: 'ส้มสายน้ำผึ้ง รสเข้มหวานฉ่ำ',
+      name: 'ส้มสายน้ำผึ้ง',
       mascotKey: 'som',
       imageUrl: '/mascots/mascot_som.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 60,
       totalQuotaKg: 80,
-      currentReservedKg: 12,
+      currentReservedKg: 0,
       minKg: 1,
       stepKg: 1
     },
     {
       id: 'PROD-MAMUANG',
       roundId,
-      name: 'มะม่วงน้ำดอกไม้สีทอง สุกธรรมชาติหอมหวาน',
+      name: 'มะม่วงน้ำดอกไม้',
       mascotKey: 'mamuang',
       imageUrl: '/mascots/mascot_mamuang.png',
       productType: 'FIXED_WEIGHT',
       pricePerKg: 50,
       totalQuotaKg: 80,
-      currentReservedKg: 20,
+      currentReservedKg: 0,
       minKg: 1,
       stepKg: 1
     }

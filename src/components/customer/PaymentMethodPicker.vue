@@ -2,12 +2,9 @@
   <!-- Section: Payment Method Selector with Dynamic PromptPay QR -->
   <q-card id="customer-payment-picker" data-audit-id="customer-payment-picker" class="rounded-borders bg-white shadow-1 q-mb-md">
     <q-card-section class="q-pa-md">
-      <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-xs row items-center">
+      <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-md row items-center">
         <q-icon name="payments" color="primary" class="q-mr-xs" size="22px" />
         <span>วิธีชำระเงิน</span>
-      </div>
-      <div class="text-caption text-grey-7 q-mb-sm">
-        เลือกวิธีที่คุณสะดวก (สามารถเลือกชำระตอนมารับของที่รถได้)
       </div>
 
       <!-- Payment Option 1: Pay at car (Default - Zero friction) -->
@@ -31,7 +28,7 @@
             💵 จ่ายตอนรับของที่รถ (เงินสด / สแกน QR)
           </q-item-label>
           <q-item-label caption class="text-grey-7">
-            มารับของที่ท้ายรถแล้วค่อยจ่ายเงินสด หรือสแกน PromptPay ธนาคารกสิกรไทย
+            จ่ายเงินสด หรือสแกนจ่ายตอนรับผลไม้
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -54,10 +51,10 @@
         </q-item-section>
         <q-item-section>
           <q-item-label class="text-subtitle2 text-weight-bold">
-            📲 โอนเงินล่วงหน้าผ่านพร้อมเพย์ (PromptPay QR)
+            📲 โอนเงินล่วงหน้า (PromptPay QR)
           </q-item-label>
           <q-item-label caption class="text-grey-7">
-            สแกนจ่ายทันทีผ่านแอปธนาคาร เพื่อความสะดวกรวดเร็วในการรับของ
+            สแกน QR จ่ายผ่านแอปธนาคารล่วงหน้า
           </q-item-label>
         </q-item-section>
       </q-item>

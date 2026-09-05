@@ -2,12 +2,9 @@
   <!-- Section: Pickup Time-Slot Picker -->
   <q-card id="customer-pickup-slot-picker" data-audit-id="customer-pickup-slot-picker" class="rounded-borders bg-white shadow-1 q-mb-md">
     <q-card-section class="q-pa-md">
-      <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-xs row items-center">
+      <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-sm row items-center">
         <q-icon name="access_time" color="primary" class="q-mr-xs" size="22px" />
-        <span>เลือกช่วงเวลานัดรับของท้ายรถ</span>
-      </div>
-      <div class="text-caption text-grey-7 q-mb-sm">
-        เลือกรอบเวลาที่สะดวกมารับของที่ลานจอดรถ เพื่อให้แอดมินจัดเตรียมถุงไว้ล่วงหน้า
+        <span>เลือกช่วงเวลานัดรับ</span>
       </div>
 
       <!-- Time Slot Chips -->

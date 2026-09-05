@@ -9,16 +9,27 @@
         </q-avatar>
         <div>
           <div class="text-subtitle1 text-weight-bolder leading-tight">
-            โต๊ะจ่ายของท้ายรถ (Tailgate Desk)
-          </div>
-          <div class="text-caption text-grey-4">
-            สวนบ้านเรา | แอดมินคุณอ้น & ครอบครัว
+            โต๊ะจ่ายของท้ายรถ
           </div>
         </div>
       </div>
 
       <!-- Auth and Action Buttons -->
       <div class="row items-center">
+        <!-- Round Management Button (Visible to System Admin & Shop Owner) -->
+        <q-btn
+          v-if="userStore.canManageUsers"
+          outline
+          dense
+          no-caps
+          color="positive"
+          icon="event_note"
+          label="จัดการรอบจอง"
+          class="q-mr-sm q-px-sm"
+          size="sm"
+          @click="$emit('open-round-management')"
+        />
+
         <!-- User Management Button (Visible only to System Admin & Shop Owner) -->
         <q-btn
           v-if="userStore.canManageUsers"
@@ -39,7 +50,7 @@
           no-caps
           color="accent"
           icon="content_paste"
-          label="สรุปยอดตัดสวน"
+          label="สรุปยอดผลไม้"
           class="q-mr-sm q-px-sm"
           size="sm"
           @click="$emit('open-harvest-summary')"
@@ -136,5 +147,6 @@ defineEmits<{
   (e: 'logout'): void;
   (e: 'open-harvest-summary'): void;
   (e: 'open-user-management'): void;
+  (e: 'open-round-management'): void;
 }>();
 </script>

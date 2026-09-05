@@ -71,7 +71,7 @@ const $q = useQuasar();
 
 // Generate structured harvest text
 const summaryText = computed<string>(() => {
-  const roundTitle = props.round?.title || 'เปิดรอบสวนบ้านเรา';
+  const roundTitle = props.round?.title || 'รอบส่งผลไม้ Fruit Drop';
   const pickupDate = props.round?.pickupDate || 'วันอังคารที่ 8 ก.ย.';
   const pickupLocation = props.round?.pickupLocation || 'ท้ายรถลานจอดรถห้าง';
 
@@ -121,7 +121,7 @@ const summaryText = computed<string>(() => {
   const activeOrdersCount = props.orders.filter(o => o.orderStatus !== 'CANCELLED').length;
 
   let lines = [
-    `📋 สรุปยอดตัดผลไม้สวนบ้านเรา`,
+    `📋 สรุปยอดผลไม้ Fruit Drop`,
     `(${roundTitle} - รอบส่ง: ${pickupDate})`,
     `-----------------------------------`
   ];

@@ -1,7 +1,7 @@
 {
   "name": "fruit-drop",
-  "version": "0.2.0",
-  "description": "สวนบ้านเรา | Fruit Drop - Zero-Friction Pre-order & Car Park Tailgate Dispatch Engine",
+  "version": "0.3.0",
+  "description": "Fruit Drop - Zero-Friction Pre-order & Car Park Tailgate Dispatch Engine",
   "productName": "Fruit Drop",
   "author": "kwancanoe <53270254+kwancanoe@users.noreply.github.com>",
   "type": "module",

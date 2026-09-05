@@ -15,10 +15,7 @@
 
       <!-- Round Title -->
       <div class="text-h6 text-weight-bolder text-primary q-mb-xs">
-        {{ round?.title || 'เปิดรอบสั่งจองผลไม้สดสวนบ้านเรา' }}
-      </div>
-      <div class="text-caption text-grey-8 q-mb-sm">
-        คัดเกรดพรีเมียม สดใหม่ส่งตรงจากสวน ส่งมอบถึงมือคุณ
+        {{ round?.title || 'เปิดรอบสั่งจองผลไม้สด Fruit Drop' }}
       </div>
 
       <q-separator class="q-my-sm" />
