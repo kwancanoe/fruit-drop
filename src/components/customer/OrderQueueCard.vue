@@ -1,0 +1,122 @@
+<template>
+  <!-- Section: Customer Order Queue Card & Confirmation -->
+  <q-card id="customer-order-queue-card" data-audit-id="customer-order-queue-card" class="rounded-borders bg-white shadow-3 q-mb-md">
+    <!-- Card Top Header -->
+    <div class="bg-primary text-white text-center q-pa-md">
+      <q-avatar size="64px" class="bg-white q-mb-xs shadow-1">
+        <q-icon name="check_circle" color="positive" size="48px" />
+      </q-avatar>
+      <div class="text-h6 text-weight-bolder">
+        สั่งจองผลไม้สำเร็จแล้ว!
+      </div>
+      <div class="text-caption text-green-1">
+        กรุณาบันทึกภาพหน้าจอนี้ไว้สำหรับแสดงตอนรับของที่รถ
+      </div>
+    </div>
+
+    <q-card-section class="q-pa-md">
+      <!-- Order ID Banner -->
+      <div class="bg-grey-2 q-pa-md rounded-borders text-center q-mb-md">
+        <div class="text-caption text-grey-8">รหัสออเดอร์ของคุณ</div>
+        <div class="text-h4 text-weight-bolder text-primary tracking-wide q-my-xs">
+          #{{ order.orderId }}
+        </div>
+        <q-btn
+          flat
+          dense
+          no-caps
+          color="primary"
+          icon="content_copy"
+          label="คัดลอกรหัสออเดอร์"
+          size="sm"
+          @click="copyOrderId"
+        />
+      </div>
+
+      <!-- Customer Details -->
+      <div class="text-subtitle2 text-weight-bold text-grey-9 q-mb-xs">ข้อมูลผู้สั่ง:</div>
+      <div class="bg-grey-1 q-pa-sm rounded-borders text-body2 text-grey-9 q-mb-md">
+        <div><strong>ชื่อ:</strong> {{ order.customer.name }}</div>
+        <div><strong>ร้าน/ชั้น:</strong> {{ order.customer.shop }} ({{ order.customer.floor }})</div>
+        <div><strong>เบอร์โทร:</strong> {{ order.customer.phone }}</div>
+      </div>
+
+      <!-- Ordered Items -->
+      <div class="text-subtitle2 text-weight-bold text-grey-9 q-mb-xs">รายการผลไม้:</div>
+      <q-list separator class="bg-grey-1 rounded-borders q-mb-md">
+        <q-item v-for="(item, idx) in order.items" :key="idx" class="q-py-sm">
+          <q-item-section>
+            <q-item-label class="text-weight-bold text-grey-9">
+              {{ item.productName }}
+            </q-item-label>
+            <q-item-label caption class="text-grey-7">
+              <span v-if="item.productType === 'FIXED_WEIGHT'">
+                จำนวน {{ item.orderedKg }} กิโลกรัม {{ item.orderedBundle ? `(${item.orderedBundle})` : '' }}
+              </span>
+              <span v-else>
+                {{ item.selectedTierLabel || 'จอง 1 ลูก' }}
+                <span class="text-orange-9 text-weight-medium">(ชั่งจริงคิดเงินที่รถ)</span>
+              </span>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+
+      <!-- Logistics Appointment -->
+      <div class="text-subtitle2 text-weight-bold text-grey-9 q-mb-xs">เวลานัดรับของ:</div>
+      <div class="bg-green-1 q-pa-sm rounded-borders text-body2 text-primary text-weight-bold q-mb-md row items-center">
+        <q-icon name="schedule" size="20px" class="q-mr-xs" />
+        <span>รอบเวลา {{ order.pickupSlot }} น. (ท้ายรถลานจอดรถห้าง)</span>
+      </div>
+
+      <!-- Payment Summary -->
+      <div class="row justify-between items-center bg-grey-2 q-pa-md rounded-borders q-mb-md">
+        <div class="text-body2 text-grey-9">
+          วิธีชำระเงิน:
+          <span class="text-weight-bold">
+            {{ order.paymentMethod === 'PAY_AT_CAR' ? 'จ่ายตอนรับของที่รถ' : 'โอนล่วงหน้า' }}
+          </span>
+        </div>
+        <div class="text-right">
+          <div class="text-caption text-grey-7">ยอดรวมประมาณ:</div>
+          <div class="text-h6 text-weight-bolder text-primary">
+            {{ order.totalFinalPrice || order.totalEstimatedPrice }} บาท
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Status Badge -->
+      <div class="text-center q-mb-sm">
+        <q-badge
+          :color="order.orderStatus === 'COMPLETED' ? 'positive' : 'warning'"
+          class="text-subtitle2 q-px-md q-py-xs"
+          rounded
+        >
+          <q-icon :name="order.orderStatus === 'COMPLETED' ? 'task_alt' : 'hourglass_empty'" class="q-mr-xs" />
+          {{ order.orderStatus === 'COMPLETED' ? 'ส่งมอบผลไม้เรียบร้อยแล้ว' : 'รอมารับของที่ท้ายรถตามเวลานัด' }}
+        </q-badge>
+      </div>
+    </q-card-section>
+  </q-card>
+</template>
+
+<script setup lang="ts">
+import { useQuasar } from 'quasar';
+import type { Order } from '@/types/fruit_app';
+
+const props = defineProps<{
+  order: Order;
+}>();
+
+const $q = useQuasar();
+
+function copyOrderId() {
+  void navigator.clipboard.writeText(props.order.orderId);
+  $q.notify({
+    type: 'positive',
+    message: `คัดลอกรหัส #${props.order.orderId} แล้ว`,
+    position: 'top',
+    timeout: 1500
+  });
+}
+</script>

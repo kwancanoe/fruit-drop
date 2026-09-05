@@ -1,0 +1,46 @@
+{
+  "name": "fruit-drop",
+  "version": "0.1.0",
+  "description": "สวนบ้านเรา | Fruit Drop - Zero-Friction Pre-order & Car Park Tailgate Dispatch Engine",
+  "productName": "Fruit Drop",
+  "author": "kwancanoe <53270254+kwancanoe@users.noreply.github.com>",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "quasar dev",
+    "build": "quasar build",
+    "typecheck": "vue-tsc --noEmit",
+    "postinstall": "quasar prepare --silent"
+  },
+  "dependencies": {
+    "@quasar/extras": "^2.0.4",
+    "firebase": "^12.18.0",
+    "pinia": "^4.0.2",
+    "promptpay-qr": "^0.5.0",
+    "qrcode": "^1.5.4",
+    "quasar": "^2.29.0",
+    "vue": "^3.5.22",
+    "vue-router": "^5.0.6"
+  },
+  "devDependencies": {
+    "@quasar/app-vite": "^3.8.1",
+    "@types/node": "^22.19.11",
+    "@types/qrcode": "^1.5.6",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "typescript": "^6.0.0",
+    "vue-tsc": "^3.3.3"
+  },
+  "keywords": [
+    "quasar",
+    "quasar-app",
+    "quasar-cli",
+    "quasar-app-vite",
+    "vite",
+    "vue",
+    "vuejs"
+  ],
+  "engines": {
+    "node": ">= 26 || ^24 || ^22.12"
+  }
+}
