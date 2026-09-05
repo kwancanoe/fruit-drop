@@ -16,15 +16,15 @@ import {
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import { defineBoot } from '#q-app';
 
-// Verified Firebase project config for fruit-drop-aon
+// Verified Firebase project config for fruit-drop-aon (fetched via firebase apps:sdkconfig)
 const firebaseConfig = {
-  apiKey: 'AIzaSyBOU4meiip3uy1LRzo4iQ2SHONGZAgBQzg',
+  apiKey: 'AIzaSyBOuMmeEjp3uyTLRzox8q2SHONS3agbQog',
   authDomain: 'fruit-drop-aon.firebaseapp.com',
   projectId: 'fruit-drop-aon',
   storageBucket: 'fruit-drop-aon.firebasestorage.app',
-  messagingSenderId: '660120514649',
-  appId: '1:660120514649:web:d6eae92b24dc81392fbabc',
-  measurementId: 'G-Z6B02G22E6'
+  messagingSenderId: '660120514549',
+  appId: '1:660120514549:web:d5eae93b24dc81392fbabc',
+  measurementId: 'G-Z5B02G22E6'
 };
 
 // Singleton instances
