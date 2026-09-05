@@ -5,6 +5,44 @@ export type PaymentMethod = 'PAY_AT_CAR' | 'PROMPTPAY_PREPAID';
 export type PaymentStatus = 'UNPAID' | 'VERIFYING_SLIP' | 'PAID';
 export type OrderStatus = 'WAITING_PICKUP' | 'COMPLETED' | 'CANCELLED';
 
+// 3-Tier RBAC Roles
+export type UserRole = 'SYSTEM_ADMIN' | 'SHOP_OWNER' | 'SELLER';
+
+// Hardware Device Telemetry Fingerprint (PWA Device UUID & Detected Model)
+export interface DeviceFingerprint {
+  deviceId: string;           // Persistent UUID e.g. "DEV-9c2b48..."
+  deviceModel: string;        // e.g. "SM-S928B" (Galaxy S24), "iPhone", "Pixel 8"
+  platform: string;           // e.g. "Android", "iOS", "Windows"
+  userAgent?: string | undefined;
+}
+
+// System User Profile stored in Firestore 'users' collection
+export interface AppUser {
+  id?: string | undefined;
+  email: string;              // Lowercased email (e.g. "wittinunt.k@gmail.com")
+  displayName: string;        // "Wittinunt Khansuwan"
+  phone: string;              // "0653539941"
+  role: UserRole;             // 'SYSTEM_ADMIN' | 'SHOP_OWNER' | 'SELLER'
+  isActive: boolean;          // Active status
+  uid?: string | undefined;   // Firebase Auth UID
+  createdAt: number;
+  updatedAt?: number | undefined;
+  createdById?: string | undefined;
+  lastLoginAt?: number | undefined;
+  lastLoginDevice?: DeviceFingerprint | undefined;
+}
+
+// Sales & Payment Attribution Audit Trail
+export interface OrderAttribution {
+  handledByUserId?: string | undefined;
+  handledByEmail?: string | undefined;
+  handledByName?: string | undefined;
+  handledByRole?: UserRole | undefined;
+  deviceFingerprint?: DeviceFingerprint | undefined;
+  paymentModeAtHandover?: 'CASH' | 'TRANSFER' | undefined;
+  proofCapturedAt?: number | undefined;
+}
+
 // Wholesale bundle definition (e.g., 3 kg for 100 THB) - Integer kilograms only
 export interface ProductBundle {
   qtyKg: number;
@@ -100,7 +138,8 @@ export interface Order {
 
   paymentMethod: PaymentMethod; // 'PAY_AT_CAR' | 'PROMPTPAY_PREPAID'
   paymentStatus: PaymentStatus; // 'UNPAID' | 'VERIFYING_SLIP' | 'PAID'
-  slipUrl?: string | undefined;
+  slipUrl?: string | undefined; // Customer pre-order slip
+  proofUrl?: string | undefined; // Camera-captured proof photo (slip or cash handover)
 
   totalEstimatedPrice: number;  // Initial estimation at checkout
   totalFinalPrice: number;      // Final price confirmed upon weighing / delivery
@@ -109,13 +148,16 @@ export interface Order {
   completedAt?: number | undefined;
   createdAt: number;
   notes?: string | undefined;
+
+  // Attribution audit trail: who collected payment & what device was used
+  attribution?: OrderAttribution | undefined;
 }
 
-// Admin Whitelist & App Session
+// Bootstrap Whitelist (Admin fallback access)
 export const ADMIN_WHITELIST_EMAILS = [
-  'kwancanoe@gmail.com',
-  'aon.garmin@gmail.com',
-  'thaitravel@gmail.com'
+  'wittinunt.k@gmail.com',
+  'natyabuyna089@gmail.com',
+  'kwancanoe@gmail.com'
 ];
 
 export const MALL_FLOOR_OPTIONS = [

@@ -20,7 +20,8 @@ import {
   onAuthStateChanged,
   type User
 } from 'firebase/auth';
-import { db, auth, googleProvider } from '@/boot/firebase';
+import { ref as sRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, auth, storage, googleProvider } from '@/boot/firebase';
 import type {
   PreorderRound,
   ProductItem,
@@ -29,9 +30,12 @@ import type {
   CustomerInfo,
   PaymentMethod,
   PaymentStatus,
-  OrderStatus
+  OrderStatus,
+  OrderAttribution
 } from '@/types/fruit_app';
 import { ADMIN_WHITELIST_EMAILS } from '@/types/fruit_app';
+import { useUserStore } from '@/stores/userStore';
+import { collectDeviceFingerprint } from '@/utils/deviceTelemetry';
 
 export const useFruitStore = defineStore('fruit', () => {
   // State
@@ -46,18 +50,22 @@ export const useFruitStore = defineStore('fruit', () => {
   let unsubscribeProducts: Unsubscribe | null = null;
   let unsubscribeOrders: Unsubscribe | null = null;
 
-  // Computed
+  // Computed - Allow access if in whitelist or active in users collection
   const isAdmin = computed<boolean>(() => {
     if (!authUser.value || !authUser.value.email) return false;
-    return ADMIN_WHITELIST_EMAILS.includes(authUser.value.email.toLowerCase());
+    const email = authUser.value.email.toLowerCase();
+    const userStore = useUserStore();
+    return ADMIN_WHITELIST_EMAILS.includes(email) || !!userStore.currentAppUser?.isActive;
   });
 
   const activeRoundId = computed<string>(() => activeRound.value?.roundId || 'ROUND-001');
 
-  // Initialize Auth state listener
+  // Initialize Auth state listener and bind userStore profile & device telemetry
   function initAuth() {
+    const userStore = useUserStore();
     onAuthStateChanged(auth, (user) => {
       authUser.value = user;
+      void userStore.bindAuthUser(user?.email || null, user?.uid);
     });
   }
 
@@ -220,10 +228,35 @@ export const useFruitStore = defineStore('fruit', () => {
     }
   }
 
+  // Upload payment or cash handover photo proof to Firebase Storage
+  async function uploadPaymentProof(orderId: string, imageBlob: Blob): Promise<string> {
+    const filename = `payment_proofs/${orderId}_${Date.now()}.jpg`;
+    const fileRef = sRef(storage, filename);
+    await uploadBytes(fileRef, imageBlob, { contentType: 'image/jpeg' });
+    const downloadUrl = await getDownloadURL(fileRef);
+    return downloadUrl;
+  }
+
   // Admin: Update Order Status (Mark delivered, cash collected, etc.)
   async function updateOrderStatus(orderId: string, updates: Partial<Order>) {
     const targetOrder = orders.value.find(o => o.orderId === orderId);
     if (!targetOrder) return;
+
+    // If order is transitioning to COMPLETED, record attribution audit trail
+    if (updates.orderStatus === 'COMPLETED' && !updates.attribution) {
+      const userStore = useUserStore();
+      const fingerprint = await collectDeviceFingerprint();
+      const attribution: OrderAttribution = {
+        handledByUserId: authUser.value?.uid || userStore.currentAppUser?.uid || '',
+        handledByEmail: authUser.value?.email || userStore.currentAppUser?.email || '',
+        handledByName: userStore.currentAppUser?.displayName || authUser.value?.displayName || 'ผู้ช่วยขาย',
+        handledByRole: userStore.currentUserRole || 'SELLER',
+        deviceFingerprint: fingerprint,
+        paymentModeAtHandover: updates.paymentMethod === 'PAY_AT_CAR' || targetOrder.paymentMethod === 'PAY_AT_CAR' ? 'CASH' : 'TRANSFER',
+        proofCapturedAt: Date.now()
+      };
+      updates.attribution = attribution;
+    }
 
     Object.assign(targetOrder, updates);
 
@@ -274,6 +307,7 @@ export const useFruitStore = defineStore('fruit', () => {
     submitOrder,
     updateWeighedFruit,
     updateOrderStatus,
+    uploadPaymentProof,
     seedMasterData
   };
 });

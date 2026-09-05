@@ -117,6 +117,31 @@
         </div>
       </div>
 
+      <!-- Attribution & Proof Audit Row (if available) -->
+      <div v-if="order.attribution || order.proofUrl" class="bg-grey-1 q-pa-xs rounded-borders q-mt-xs row items-center justify-between text-caption" style="font-size: 11px;">
+        <div class="col text-grey-8">
+          <span v-if="order.attribution">
+            👤 ส่งโดย: <strong>{{ order.attribution.handledByName }}</strong> ({{ order.attribution.handledByRole }})
+            <span v-if="order.attribution.deviceFingerprint?.deviceModel" class="text-grey-6 q-ml-xs">
+              • {{ order.attribution.deviceFingerprint.deviceModel }}
+            </span>
+          </span>
+        </div>
+        <div v-if="order.proofUrl" class="col-auto">
+          <q-btn
+            flat
+            dense
+            no-caps
+            color="primary"
+            icon="image"
+            label="ดูรูปหลักฐาน"
+            size="xs"
+            :href="order.proofUrl"
+            target="_blank"
+          />
+        </div>
+      </div>
+
       <q-separator class="q-my-xs" />
 
       <!-- Bottom Action Row -->
@@ -127,6 +152,19 @@
 
         <div class="row items-center">
           <template v-if="order.orderStatus !== 'COMPLETED'">
+            <!-- Camera Proof Button (Mandatory or optional photo attachment) -->
+            <q-btn
+              outline
+              dense
+              no-caps
+              color="primary"
+              icon="photo_camera"
+              label="ถ่ายรูปสลิป/ส่งมอบ"
+              class="q-mr-xs q-px-xs"
+              size="sm"
+              @click="$emit('open-proof-modal', order)"
+            />
+
             <!-- Case A: Ready to deliver after scale or if paid -->
             <q-btn
               v-if="order.paymentStatus === 'PAID'"
@@ -181,6 +219,7 @@ const props = defineProps<{
 
 defineEmits<{
   (e: 'open-scale', payload: { order: Order; itemIndex: number }): void;
+  (e: 'open-proof-modal', order: Order): void;
   (e: 'mark-delivered', orderId: string): void;
   (e: 'collect-cash-deliver', orderId: string): void;
   (e: 'revert-status', orderId: string): void;

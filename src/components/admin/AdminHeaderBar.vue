@@ -19,6 +19,20 @@
 
       <!-- Auth and Action Buttons -->
       <div class="row items-center">
+        <!-- User Management Button (Visible only to System Admin & Shop Owner) -->
+        <q-btn
+          v-if="userStore.canManageUsers"
+          outline
+          dense
+          no-caps
+          color="info"
+          icon="group"
+          label="จัดการผู้ใช้"
+          class="q-mr-sm q-px-sm"
+          size="sm"
+          @click="$emit('open-user-management')"
+        />
+
         <q-btn
           outline
           dense
@@ -34,7 +48,15 @@
         <template v-if="authUser">
           <q-chip dense color="grey-8" text-color="white" class="q-mr-xs">
             <q-avatar icon="person" color="primary" text-color="white" />
-            <span class="text-caption ellipsis" style="max-width: 120px;">{{ authUser.displayName || authUser.email }}</span>
+            <span class="text-caption ellipsis" style="max-width: 110px;">{{ userStore.currentAppUser?.displayName || authUser.displayName || authUser.email }}</span>
+            <q-badge
+              :color="userStore.isSystemAdmin ? 'purple-9' : userStore.isShopOwner ? 'positive' : 'warning'"
+              class="q-ml-xs text-weight-bolder"
+              style="font-size: 10px;"
+              rounded
+            >
+              {{ userStore.isSystemAdmin ? 'Admin' : userStore.isShopOwner ? 'Owner' : 'Seller' }}
+            </q-badge>
           </q-chip>
           <q-btn
             flat
@@ -96,6 +118,9 @@
 
 <script setup lang="ts">
 import type { User } from 'firebase/auth';
+import { useUserStore } from '@/stores/userStore';
+
+const userStore = useUserStore();
 
 defineProps<{
   authUser: User | null;
@@ -110,5 +135,6 @@ defineEmits<{
   (e: 'login'): void;
   (e: 'logout'): void;
   (e: 'open-harvest-summary'): void;
+  (e: 'open-user-management'): void;
 }>();
 </script>

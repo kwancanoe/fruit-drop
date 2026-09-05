@@ -12,6 +12,7 @@
       @login="handleLogin"
       @logout="handleLogout"
       @open-harvest-summary="isHarvestSummaryOpen = true"
+      @open-user-management="isUserManagementOpen = true"
     />
 
     <!-- Database Seed Action Banner (shown if orders or products are empty) -->
@@ -50,6 +51,7 @@
         :key="order.orderId"
         :order="order"
         @open-scale="handleOpenScale"
+        @open-proof-modal="handleOpenProofModal"
         @mark-delivered="handleMarkDelivered"
         @collect-cash-deliver="handleCollectCashDeliver"
         @revert-status="handleRevertStatus"
@@ -72,6 +74,17 @@
       :round="fruitStore.activeRound"
       :orders="fruitStore.orders"
     />
+
+    <!-- 5. User Management & RBAC Modal -->
+    <UserManagementModal
+      v-model:is-open="isUserManagementOpen"
+    />
+
+    <!-- 6. Camera Payment & Handover Proof Modal -->
+    <PaymentProofModal
+      v-model:is-open="isProofModalOpen"
+      :order="proofTargetOrder"
+    />
   </q-page>
 </template>
 
@@ -79,15 +92,19 @@
 import { ref, computed, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
+import { useUserStore } from '@/stores/userStore';
 import type { Order } from '@/types/fruit_app';
 import AdminHeaderBar from '@/components/admin/AdminHeaderBar.vue';
 import TimeSlotTabs from '@/components/admin/TimeSlotTabs.vue';
 import TailgateOrderCard from '@/components/admin/TailgateOrderCard.vue';
 import DurianScaleModal from '@/components/admin/DurianScaleModal.vue';
 import HarvestSummaryModal from '@/components/admin/HarvestSummaryModal.vue';
+import UserManagementModal from '@/components/admin/UserManagementModal.vue';
+import PaymentProofModal from '@/components/admin/PaymentProofModal.vue';
 
 const $q = useQuasar();
 const fruitStore = useFruitStore();
+const userStore = useUserStore();
 
 // Filter states
 const selectedSlot = ref<string>('ALL');
@@ -98,6 +115,14 @@ const isScaleModalOpen = ref<boolean>(false);
 const scaleTargetOrder = ref<Order | null>(null);
 const scaleTargetItemIndex = ref<number>(-1);
 const isHarvestSummaryOpen = ref<boolean>(false);
+const isUserManagementOpen = ref<boolean>(false);
+const isProofModalOpen = ref<boolean>(false);
+const proofTargetOrder = ref<Order | null>(null);
+
+function handleOpenProofModal(order: Order) {
+  proofTargetOrder.value = order;
+  isProofModalOpen.value = true;
+}
 
 // Slots
 const availableSlots = computed<string[]>(() => {
@@ -275,5 +300,6 @@ async function handleRevertStatus(orderId: string) {
 
 onMounted(() => {
   fruitStore.subscribeToOrders(fruitStore.activeRoundId);
+  userStore.subscribeUsers();
 });
 </script>

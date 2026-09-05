@@ -2,36 +2,101 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if user is whitelisted admin
-    function isAdmin() {
-      return request.auth != null && 
-        request.auth.token.email != null &&
-        (request.auth.token.email.lower() in [
-          'kwancanoe@gmail.com',
-          'aon.garmin@gmail.com',
-          'thaitravel@gmail.com'
-        ]);
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // Preorder rounds: Public can read, only admin can manage
+    // Lowercased authenticated email
+    function authEmail() {
+      return request.auth != null && request.auth.token.email != null 
+        ? request.auth.token.email.lower() 
+        : '';
+    }
+
+    // Hardcoded whitelist for emergency access
+    function isWhitelisted() {
+      return authEmail() in [
+        'wittinunt.k@gmail.com',
+        'natyabuyna089@gmail.com',
+        'kwancanoe@gmail.com'
+      ];
+    }
+
+    // Active staff check (whitelisted or active in users collection)
+    function isStaff() {
+      return isWhitelisted() || (
+        isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(authEmail())) &&
+        get(/databases/$(database)/documents/users/$(authEmail())).data.isActive == true
+      );
+    }
+
+    // System Admin role check
+    function isSystemAdmin() {
+      return authEmail() in ['wittinunt.k@gmail.com', 'kwancanoe@gmail.com'] || (
+        isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(authEmail())) &&
+        get(/databases/$(database)/documents/users/$(authEmail())).data.role == 'SYSTEM_ADMIN' &&
+        get(/databases/$(database)/documents/users/$(authEmail())).data.isActive == true
+      );
+    }
+
+    // Shop Owner role check
+    function isShopOwner() {
+      return authEmail() == 'natyabuyna089@gmail.com' || (
+        isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(authEmail())) &&
+        get(/databases/$(database)/documents/users/$(authEmail())).data.role == 'SHOP_OWNER' &&
+        get(/databases/$(database)/documents/users/$(authEmail())).data.isActive == true
+      );
+    }
+
+    // Users collection:
+    // - Authenticated staff can read user directory
+    // - System Admin can create, update, delete any user
+    // - Shop Owner can create, update, delete ONLY users with role == 'SELLER'
+    // - Authenticated user can update their own telemetry (lastLoginAt, lastLoginDevice, uid, updatedAt)
+    match /users/{userEmail} {
+      allow read: if isStaff();
+      
+      allow create: if isSystemAdmin() || (
+        isShopOwner() && request.resource.data.role == 'SELLER'
+      );
+
+      allow update: if isSystemAdmin() || (
+        isShopOwner() && 
+        resource.data.role == 'SELLER' && 
+        request.resource.data.role == 'SELLER'
+      ) || (
+        isAuthenticated() && 
+        authEmail() == userEmail.lower()
+      );
+
+      allow delete: if isSystemAdmin() || (
+        isShopOwner() && resource.data.role == 'SELLER'
+      );
+    }
+
+    // Preorder rounds: Public can read, staff can manage
     match /rounds/{roundId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
-    // Products catalog: Public can read, only admin can manage
+    // Products catalog: Public can read, staff can manage
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isStaff();
     }
 
     // Orders:
     // - Customers can create orders and look up order details
-    // - Admins can read all orders, update status, weigh fruits, or cancel
+    // - Staff can read, update status, weigh fruits, or attach payment proof
     match /orders/{orderId} {
       allow create: if true;
       allow read: if true;
-      allow update, delete: if isAdmin();
+      allow update, delete: if isStaff();
     }
   }
 }
