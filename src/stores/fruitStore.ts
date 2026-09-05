@@ -96,13 +96,16 @@ export const useFruitStore = defineStore('fruit', () => {
     if (unsubscribeOpenRounds) unsubscribeOpenRounds();
 
     const roundsRef = collection(db, 'rounds');
-    const q = query(roundsRef, where('isOpen', '==', true), orderBy('createdAt', 'desc'));
+    // Note: Query isOpen without orderBy to avoid requiring a composite index in Firestore; sort in client memory
+    const q = query(roundsRef, where('isOpen', '==', true));
 
     unsubscribeOpenRounds = onSnapshot(q, (snapshot) => {
-      openRounds.value = snapshot.docs.map(docSnap => ({
+      const fetched = snapshot.docs.map(docSnap => ({
         ...docSnap.data() as PreorderRound,
         id: docSnap.id
       }));
+      fetched.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+      openRounds.value = fetched;
 
       // Automatically select first open round if none selected
       const firstOpenRound = openRounds.value[0];
@@ -182,10 +185,13 @@ export const useFruitStore = defineStore('fruit', () => {
     if (unsubscribeOrders) unsubscribeOrders();
 
     const ordersRef = collection(db, 'orders');
-    const q = query(ordersRef, where('roundId', '==', roundId), orderBy('createdAt', 'desc'));
+    // Note: Query roundId without orderBy to avoid requiring a composite index in Firestore; sort in client memory
+    const q = query(ordersRef, where('roundId', '==', roundId));
 
     unsubscribeOrders = onSnapshot(q, (snapshot) => {
-      orders.value = snapshot.docs.map(d => ({ ...d.data() as Order, id: d.id }));
+      const fetched = snapshot.docs.map(d => ({ ...d.data() as Order, id: d.id }));
+      fetched.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+      orders.value = fetched;
     }, (error) => {
       console.warn('Snapshot orders error:', error);
     });

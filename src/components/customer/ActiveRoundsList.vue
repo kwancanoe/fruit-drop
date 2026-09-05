@@ -1,19 +1,6 @@
 <template>
   <!-- Section: Active Open Rounds Overview Screen -->
   <div id="active-rounds-list" data-audit-id="active-rounds-list">
-    <!-- Brand Mascot Header -->
-    <div class="text-center q-mb-md">
-      <q-avatar size="88px" class="q-mb-sm">
-        <q-img src="/mascots/logo_fruit_drop.png" fit="contain" />
-      </q-avatar>
-      <div class="text-h6 text-weight-bolder text-primary">
-        Fruit Drop
-      </div>
-      <div class="text-caption text-grey-7">
-        เลือกรอบส่งเพื่อสั่งจองผลไม้สด
-      </div>
-    </div>
-
     <!-- Case 1: No Open Rounds Available -->
     <div v-if="rounds.length === 0" class="bg-white q-pa-xl rounded-borders text-center shadow-1">
       <q-icon name="event_busy" size="56px" color="grey-5" class="q-mb-sm" />
