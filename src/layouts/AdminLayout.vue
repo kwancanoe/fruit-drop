@@ -1,21 +1,36 @@
 <template>
-  <!-- Section: Admin Layout & Authentication Gate -->
-  <q-layout id="admin-layout" data-audit-id="admin-layout" view="hHh lpR fFf" class="bg-grey-10 text-white" style="min-height: 100vh;">
-    <!-- 1. Authenticated Top Navigation Header -->
-    <q-header v-if="fruitStore.authUser && fruitStore.isAdmin" elevated class="bg-grey-9 text-white">
-      <q-toolbar class="q-px-md">
+  <!-- Section: Admin Layout & Authentication Gate (Light Theme & Fixed Bottom Navigation) -->
+  <q-layout id="admin-layout" data-audit-id="admin-layout" view="hHh lpR fFf" class="bg-grey-1 text-grey-9" style="min-height: 100vh;">
+    <!-- 1. Authenticated Top App Header -->
+    <q-header v-if="fruitStore.authUser && fruitStore.isAdmin" elevated class="bg-white text-grey-9 shadow-1">
+      <q-toolbar class="q-px-md" style="max-width: 680px; margin: 0 auto;">
         <!-- Brand Identity -->
-        <q-avatar size="36px" class="q-mr-sm">
+        <q-avatar size="34px" class="q-mr-sm">
           <q-img src="/mascots/logo_fruit_drop.png" fit="contain" />
         </q-avatar>
-        <q-toolbar-title class="text-subtitle1 text-weight-bolder">
+        <q-toolbar-title class="text-subtitle1 text-weight-bolder text-grey-9">
           Fruit Drop <span class="text-caption text-positive text-weight-bold">แอดมิน</span>
         </q-toolbar-title>
 
+        <!-- Action: Navigate Back to Customer Storefront -->
+        <q-btn
+          outline
+          color="positive"
+          icon="storefront"
+          label="หน้าร้าน"
+          no-caps
+          dense
+          class="q-px-sm q-mr-sm text-weight-bold"
+          to="/"
+          data-audit-id="btn-nav-to-customer-storefront"
+        >
+          <q-tooltip>ไปยังหน้าสั่งจองของลูกค้า</q-tooltip>
+        </q-btn>
+
         <!-- User Profile Chip & Role Badge -->
-        <q-chip dense color="grey-8" text-color="white" class="q-mr-xs">
+        <q-chip dense color="grey-2" text-color="grey-9" class="q-mr-xs">
           <q-avatar icon="person" color="primary" text-color="white" />
-          <span class="text-caption ellipsis" style="max-width: 100px;">
+          <span class="text-caption ellipsis text-weight-medium" style="max-width: 90px;">
             {{ userStore.currentAppUser?.displayName || fruitStore.authUser.displayName || fruitStore.authUser.email }}
           </span>
           <q-badge
@@ -36,48 +51,135 @@
           icon="logout"
           color="negative"
           size="sm"
+          data-audit-id="btn-admin-logout"
           @click="handleLogout"
         >
           <q-tooltip>ออกจากระบบ</q-tooltip>
         </q-btn>
       </q-toolbar>
+    </q-header>
 
-      <!-- Sub-Navigation Route Tabs -->
+    <!-- 2. Main Page Container / Auth Gate -->
+    <q-page-container>
+      <!-- Unauthenticated State: Login Gate -->
+      <div v-if="!fruitStore.authUser" class="row justify-center items-center q-pa-md" style="min-height: 80vh;">
+        <q-card class="bg-white text-grey-9 q-pa-lg rounded-borders text-center shadow-3" style="max-width: 420px; width: 100%;">
+          <q-avatar size="96px" class="q-mb-md">
+            <q-img src="/mascots/logo_fruit_drop.png" fit="contain" />
+          </q-avatar>
+          <div class="text-h6 text-weight-bolder q-mb-xs text-grey-9">
+            ระบบแอดมิน Fruit Drop
+          </div>
+          <div class="text-caption text-grey-7 q-mb-lg">
+            เข้าสู่ระบบเพื่อจัดการรอบจอง โต๊ะท้ายรถ และดูผลประกอบการ
+          </div>
+
+          <div class="q-mb-md">
+            <GoogleSignInButton
+              theme="light"
+              shape="pill"
+              label="เข้าสู่ระบบด้วย Google"
+              :loading="fruitStore.isLoading"
+              @click="handleLogin"
+            />
+          </div>
+
+          <q-separator color="grey-3" class="q-my-md" />
+
+          <!-- Return to Customer Storefront Link -->
+          <q-btn
+            flat
+            no-caps
+            color="primary"
+            icon="storefront"
+            label="กลับไปหน้าสั่งจองผลไม้ (ลูกค้า)"
+            to="/"
+            class="text-weight-bold"
+          />
+        </q-card>
+      </div>
+
+      <!-- Unauthorized State: Account not in system -->
+      <div v-else-if="!fruitStore.isAdmin" class="row justify-center items-center q-pa-md" style="min-height: 80vh;">
+        <q-card class="bg-white text-grey-9 q-pa-lg rounded-borders text-center shadow-3" style="max-width: 440px; width: 100%;">
+          <q-icon name="gpp_bad" color="negative" size="64px" class="q-mb-sm" />
+          <div class="text-h6 text-weight-bolder text-negative q-mb-xs">
+            ไม่มีสิทธิ์เข้าใช้งานระบบ
+          </div>
+          <div class="text-body2 text-grey-8 q-mb-xs">
+            บัญชี: <strong>{{ fruitStore.authUser.email }}</strong>
+          </div>
+          <div class="text-caption text-grey-7 q-mb-lg">
+            อีเมลนี้ไม่ได้รับสิทธิ์เข้าใช้งานโต๊ะแอดมิน กรุณาติดต่อผู้ดูแลระบบเพื่อขอเพิ่มสิทธิ์
+          </div>
+
+          <div class="row q-gutter-sm justify-center">
+            <q-btn
+              outline
+              color="negative"
+              class="q-px-md text-weight-bold"
+              icon="logout"
+              label="ออกจากระบบ (Logout)"
+              no-caps
+              rounded
+              @click="handleLogout"
+            />
+            <q-btn
+              color="primary"
+              class="q-px-md text-weight-bold"
+              icon="storefront"
+              label="กลับหน้าร้านลูกค้า"
+              no-caps
+              rounded
+              to="/"
+            />
+          </div>
+        </q-card>
+      </div>
+
+      <!-- Authorized State: Render Sub-Page -->
+      <router-view v-else />
+    </q-page-container>
+
+    <!-- 3. Fixed Bottom Navigation Footer (AppSheet Style) -->
+    <q-footer
+      v-if="fruitStore.authUser && fruitStore.isAdmin"
+      elevated
+      class="bg-white text-grey-8 shadow-up-2"
+      data-audit-id="admin-bottom-nav-footer"
+    >
       <q-tabs
         dense
-        align="center"
+        align="justify"
         indicator-color="positive"
         active-color="positive"
-        class="bg-grey-10 text-grey-4"
-        narrow-indicator
+        class="text-grey-7"
+        no-caps
+        style="max-width: 680px; margin: 0 auto;"
       >
         <q-route-tab
           to="/admin"
           exact
           icon="directions_car"
           label="ท้ายรถ"
-          no-caps
           data-audit-id="tab-admin-dispatch"
         />
         <q-route-tab
           to="/admin/rounds"
           icon="event_note"
           label="รอบส่ง"
-          no-caps
           data-audit-id="tab-admin-rounds"
         />
         <q-route-tab
           to="/admin/analytics"
           icon="query_stats"
           label="กำไร-ขาดทุน"
-          no-caps
           data-audit-id="tab-admin-analytics"
         />
         <q-route-tab
           to="/admin/harvest"
           icon="content_paste"
           label="ยอดเก็บ"
-          no-caps
           data-audit-id="tab-admin-harvest"
         />
         <q-route-tab
@@ -85,72 +187,15 @@
           to="/admin/users"
           icon="group"
           label="ทีมงาน"
-          no-caps
           data-audit-id="tab-admin-users"
         />
       </q-tabs>
-    </q-header>
-
-    <!-- 2. Main Page Container / Auth Gate -->
-    <q-page-container>
-      <!-- Unauthenticated State: Login Gate -->
-      <div v-if="!fruitStore.authUser" class="row justify-center items-center q-pa-md" style="min-height: 80vh;">
-        <q-card class="bg-grey-9 text-white q-pa-lg rounded-borders text-center shadow-4" style="max-width: 420px; width: 100%;">
-          <q-avatar size="96px" class="q-mb-md">
-            <q-img src="/mascots/logo_fruit_drop.png" fit="contain" />
-          </q-avatar>
-          <div class="text-h6 text-weight-bolder q-mb-xs">
-            ระบบแอดมิน Fruit Drop
-          </div>
-          <div class="text-caption text-grey-4 q-mb-lg">
-            เข้าสู่ระบบเพื่อจัดการรอบจอง โต๊ะท้ายรถ และดูผลประกอบการ
-          </div>
-
-          <GoogleSignInButton
-            theme="light"
-            shape="pill"
-            label="เข้าสู่ระบบด้วย Google"
-            :loading="fruitStore.isLoading"
-            @click="handleLogin"
-          />
-        </q-card>
-      </div>
-
-      <!-- Unauthorized State: Account not in system -->
-      <div v-else-if="!fruitStore.isAdmin" class="row justify-center items-center q-pa-md" style="min-height: 80vh;">
-        <q-card class="bg-grey-9 text-white q-pa-lg rounded-borders text-center shadow-4" style="max-width: 440px; width: 100%;">
-          <q-icon name="gpp_bad" color="negative" size="64px" class="q-mb-sm" />
-          <div class="text-h6 text-weight-bolder text-negative q-mb-xs">
-            ไม่มีสิทธิ์เข้าใช้งานระบบ
-          </div>
-          <div class="text-body2 text-grey-3 q-mb-xs">
-            บัญชี: <strong>{{ fruitStore.authUser.email }}</strong>
-          </div>
-          <div class="text-caption text-grey-4 q-mb-lg">
-            อีเมลนี้ไม่ได้รับสิทธิ์เข้าใช้งานโต๊ะแอดมิน กรุณาติดต่อผู้ดูแลระบบเพื่อขอเพิ่มสิทธิ์
-          </div>
-
-          <q-btn
-            outline
-            color="white"
-            class="full-width q-py-xs text-weight-bold"
-            icon="logout"
-            label="ออกจากระบบ (Logout)"
-            no-caps
-            rounded
-            @click="handleLogout"
-          />
-        </q-card>
-      </div>
-
-      <!-- Authorized State: Render Sub-Page -->
-      <router-view v-else />
-    </q-page-container>
+    </q-footer>
   </q-layout>
 </template>
 
 <script setup lang="ts">
-// Admin parent layout script managing authentication state and route navigation
+// Admin parent layout script managing light theme, authentication state, and AppSheet-style fixed bottom navigation
 import { onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';

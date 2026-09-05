@@ -1,6 +1,6 @@
 <template>
   <!-- Section: Full-Page Admin Preorder Rounds Management -->
-  <q-page id="admin-rounds-page" data-audit-id="admin-rounds-page" class="q-pa-md bg-grey-10 text-white" style="max-width: 680px; margin: 0 auto;">
+  <q-page id="admin-rounds-page" data-audit-id="admin-rounds-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 76px;">
     <!-- Page Header with Back Navigation -->
     <div class="row items-center justify-between q-mb-md">
       <div class="row items-center">
@@ -9,7 +9,7 @@
           dense
           round
           icon="arrow_back"
-          color="white"
+          color="grey-8"
           class="q-mr-sm"
           data-audit-id="btn-back-to-dispatch"
           @click="handleBack"
@@ -17,10 +17,10 @@
           <q-tooltip>กลับโต๊ะจ่ายของท้ายรถ</q-tooltip>
         </q-btn>
         <div>
-          <div class="text-h6 text-weight-bolder leading-tight">
+          <div class="text-h6 text-weight-bolder leading-tight text-grey-9">
             จัดการรอบการจองผลไม้
           </div>
-          <div class="text-caption text-grey-4">
+          <div class="text-caption text-grey-7">
             เปิดรอบใหม่ แก้ไขข้อมูล และควบคุมการเปิด/ปิดรับจอง
           </div>
         </div>
@@ -32,17 +32,17 @@
         icon="add"
         label="เปิดรอบใหม่"
         no-caps
-        class="text-weight-bold shadow-2 q-px-sm"
+        class="text-weight-bold shadow-1 q-px-sm"
         data-audit-id="btn-create-new-round"
         to="/admin/rounds/new"
       />
     </div>
 
     <!-- Empty State -->
-    <div v-if="fruitStore.allRounds.length === 0" class="bg-grey-9 q-pa-xl rounded-borders text-center text-grey-4 shadow-1">
-      <q-icon name="event_busy" size="48px" class="q-mb-sm text-grey-6" />
-      <div class="text-subtitle1 text-weight-bold">ยังไม่มีรอบการจองในระบบ</div>
-      <div class="text-caption text-grey-5 q-mb-md">กดปุ่ม 'เปิดรอบใหม่' ด้านบนเพื่อสร้างรอบแรก</div>
+    <div v-if="fruitStore.allRounds.length === 0" class="bg-white q-pa-xl rounded-borders text-center text-grey-7 shadow-1">
+      <q-icon name="event_busy" size="48px" class="q-mb-sm text-grey-4" />
+      <div class="text-subtitle1 text-weight-bold text-grey-8">ยังไม่มีรอบการจองในระบบ</div>
+      <div class="text-caption text-grey-6 q-mb-md">กดปุ่ม 'เปิดรอบใหม่' ด้านบนเพื่อสร้างรอบแรก</div>
       <q-btn
         color="positive"
         icon="add"
@@ -57,19 +57,19 @@
       <q-card
         v-for="round in fruitStore.allRounds"
         :key="round.roundId"
-        class="bg-grey-9 text-white q-pa-md rounded-borders q-mb-md shadow-2"
+        class="bg-white text-grey-9 q-pa-md rounded-borders q-mb-md shadow-1"
         :data-audit-id="`round-card-${round.roundId}`"
       >
         <!-- Top Row: Title & Status Badge -->
         <div class="row items-center justify-between q-mb-xs">
           <div class="row items-center">
             <q-icon name="event_note" color="positive" size="22px" class="q-mr-xs" />
-            <span class="text-subtitle1 text-weight-bolder text-white">
+            <span class="text-subtitle1 text-weight-bolder text-grey-9">
               {{ round.title }}
             </span>
           </div>
           <q-badge
-            :color="round.isOpen ? 'positive' : 'grey-7'"
+            :color="round.isOpen ? 'positive' : 'grey-5'"
             class="text-weight-bold text-caption q-py-xs q-px-sm"
             rounded
           >
@@ -78,7 +78,7 @@
         </div>
 
         <!-- Details: Date & Location -->
-        <div class="text-caption text-grey-4 row items-center q-mb-xs">
+        <div class="text-caption text-grey-7 row items-center q-mb-xs">
           <q-icon name="schedule" size="14px" class="q-mr-xs text-primary" />
           <span class="text-weight-medium q-mr-md">{{ round.pickupDate }}</span>
           <q-icon name="place" size="14px" class="q-mr-xs text-primary" />
@@ -86,7 +86,7 @@
         </div>
 
         <!-- Bank & PromptPay Credentials -->
-        <div class="text-caption text-grey-5 row items-center q-mb-sm">
+        <div class="text-caption text-grey-7 row items-center q-mb-sm">
           <q-icon name="payments" size="14px" class="q-mr-xs text-positive" />
           <span class="q-mr-sm">พร้อมเพย์: <strong>{{ round.promptPayNumber }}</strong> ({{ round.promptPayName }})</span>
           <span v-if="round.bankAccountNumber">| KBANK: <strong>{{ round.bankAccountNumber }}</strong></span>
@@ -99,15 +99,15 @@
             :key="fruit"
             dense
             size="sm"
-            color="grey-8"
-            text-color="positive"
+            color="green-1"
+            text-color="primary"
             class="text-weight-bold q-mr-xs q-mb-none"
           >
             {{ fruit }}
           </q-chip>
         </div>
 
-        <q-separator color="grey-8" class="q-mb-sm" />
+        <q-separator color="grey-3" class="q-mb-sm" />
 
         <!-- Actions Row -->
         <div class="row items-center justify-between">
@@ -118,7 +118,7 @@
             dense
             label="เปิดรับจอง"
             left-label
-            class="text-caption text-weight-bold text-grey-3"
+            class="text-caption text-weight-bold text-grey-8"
             :data-audit-id="`toggle-round-status-${round.roundId}`"
             @update:model-value="val => handleToggleStatus(round.roundId, val)"
           />

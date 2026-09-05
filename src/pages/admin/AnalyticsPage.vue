@@ -1,6 +1,6 @@
 <template>
   <!-- Section: Deep Profit & Loss Performance Analytics -->
-  <q-page id="admin-analytics-page" data-audit-id="admin-analytics-page" class="q-pa-md bg-grey-10 text-white" style="max-width: 780px; margin: 0 auto;">
+  <q-page id="admin-analytics-page" data-audit-id="admin-analytics-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 780px; margin: 0 auto; padding-bottom: 76px;">
     <!-- Page Header with Back Navigation -->
     <div class="row items-center justify-between q-mb-md">
       <div class="row items-center">
@@ -9,7 +9,7 @@
           dense
           round
           icon="arrow_back"
-          color="white"
+          color="grey-8"
           class="q-mr-sm"
           data-audit-id="btn-back-to-dispatch"
           @click="handleBack"
@@ -17,10 +17,10 @@
           <q-tooltip>กลับโต๊ะจ่ายของท้ายรถ</q-tooltip>
         </q-btn>
         <div>
-          <div class="text-h6 text-weight-bolder leading-tight">
+          <div class="text-h6 text-weight-bolder leading-tight text-grey-9">
             วิเคราะห์ผลประกอบการ & กำไร-ขาดทุน
           </div>
-          <div class="text-caption text-grey-4">
+          <div class="text-caption text-grey-7">
             Deep Profit & Loss Performance Analysis รายการสินค้าและภาพรวม
           </div>
         </div>
@@ -28,7 +28,7 @@
     </div>
 
     <!-- Filters Control Bar -->
-    <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders q-mb-md shadow-2">
+    <q-card class="bg-white text-grey-9 q-pa-sm rounded-borders q-mb-md shadow-1">
       <div class="row items-center q-col-gutter-none">
         <!-- Round Filter -->
         <div class="col-12 col-sm-4 q-pa-xs">
@@ -37,7 +37,6 @@
             :options="roundOptions"
             emit-value
             map-options
-            dark
             outlined
             dense
             label="เลือกรอบการจอง"
@@ -56,7 +55,6 @@
             :options="statusOptions"
             emit-value
             map-options
-            dark
             outlined
             dense
             label="สถานะออเดอร์"
@@ -75,7 +73,6 @@
             :options="paymentOptions"
             emit-value
             map-options
-            dark
             outlined
             dense
             label="วิธีชำระเงิน"
@@ -93,12 +90,12 @@
     <div class="row q-mb-md">
       <!-- 1. Total Gross Revenue -->
       <div class="col-6 col-sm-3 q-pa-xs">
-        <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders text-center shadow-2" style="height: 100%;">
-          <div class="text-caption text-grey-4">ยอดขายรวม</div>
-          <div class="text-h6 text-weight-bolder text-white q-my-xs">
+        <q-card class="bg-white text-grey-9 q-pa-sm rounded-borders text-center shadow-1" style="height: 100%;">
+          <div class="text-caption text-grey-7">ยอดขายรวม</div>
+          <div class="text-h6 text-weight-bolder text-grey-9 q-my-xs">
             ฿{{ metrics.totalRevenue.toLocaleString() }}
           </div>
-          <div class="text-caption text-grey-5" style="font-size: 11px;">
+          <div class="text-caption text-grey-6" style="font-size: 11px;">
             จาก {{ metrics.filteredOrdersCount }} ออเดอร์
           </div>
         </q-card>
@@ -106,12 +103,12 @@
 
       <!-- 2. Total COGS / Fruit Cost -->
       <div class="col-6 col-sm-3 q-pa-xs">
-        <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders text-center shadow-2" style="height: 100%;">
-          <div class="text-caption text-grey-4">ต้นทุนผลไม้รวม</div>
+        <q-card class="bg-white text-grey-9 q-pa-sm rounded-borders text-center shadow-1" style="height: 100%;">
+          <div class="text-caption text-grey-7">ต้นทุนผลไม้รวม</div>
           <div class="text-h6 text-weight-bolder text-warning q-my-xs">
             ฿{{ metrics.totalCost.toLocaleString() }}
           </div>
-          <div class="text-caption text-grey-5" style="font-size: 11px;">
+          <div class="text-caption text-grey-6" style="font-size: 11px;">
             ต้นทุนเฉลี่ย {{ metrics.avgCostPercent }}%
           </div>
         </q-card>
@@ -119,15 +116,15 @@
 
       <!-- 3. Gross Profit -->
       <div class="col-6 col-sm-3 q-pa-xs">
-        <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders text-center shadow-2" style="height: 100%;">
-          <div class="text-caption text-grey-4">กำไรขั้นต้น</div>
+        <q-card class="bg-white text-grey-9 q-pa-sm rounded-borders text-center shadow-1" style="height: 100%;">
+          <div class="text-caption text-grey-7">กำไรขั้นต้น</div>
           <div
             class="text-h6 text-weight-bolder q-my-xs"
             :class="metrics.grossProfit >= 0 ? 'text-positive' : 'text-negative'"
           >
             ฿{{ metrics.grossProfit.toLocaleString() }}
           </div>
-          <div class="text-caption text-grey-5" style="font-size: 11px;">
+          <div class="text-caption text-grey-6" style="font-size: 11px;">
             {{ metrics.grossProfit >= 0 ? 'กำไรสุทธิ' : 'ขาดทุน' }}
           </div>
         </q-card>
@@ -135,15 +132,15 @@
 
       <!-- 4. Profit Margin % -->
       <div class="col-6 col-sm-3 q-pa-xs">
-        <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders text-center shadow-2" style="height: 100%;">
-          <div class="text-caption text-grey-4">อัตรากำไร (Margin)</div>
+        <q-card class="bg-white text-grey-9 q-pa-sm rounded-borders text-center shadow-1" style="height: 100%;">
+          <div class="text-caption text-grey-7">อัตรากำไร (Margin)</div>
           <div
             class="text-h6 text-weight-bolder q-my-xs"
             :class="metrics.marginPercent >= 25 ? 'text-positive' : metrics.marginPercent >= 0 ? 'text-info' : 'text-negative'"
           >
             {{ metrics.marginPercent }}%
           </div>
-          <div class="text-caption text-grey-5" style="font-size: 11px;">
+          <div class="text-caption text-grey-6" style="font-size: 11px;">
             เป้าหมาย: > 30%
           </div>
         </q-card>
@@ -151,18 +148,18 @@
     </div>
 
     <!-- Section: Fruit Breakdown Analysis -->
-    <q-card class="bg-grey-9 text-white q-pa-md rounded-borders q-mb-md shadow-2">
+    <q-card class="bg-white text-grey-9 q-pa-md rounded-borders q-mb-md shadow-1">
       <div class="row items-center justify-between q-mb-sm">
         <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
           <q-icon name="pie_chart" size="20px" class="q-mr-xs" />
           กำไร-ขาดทุน แยกตามชนิดผลไม้
         </div>
-        <div class="text-caption text-grey-4">
+        <div class="text-caption text-grey-7">
           รวม {{ fruitStats.length }} ชนิด
         </div>
       </div>
 
-      <div v-if="fruitStats.length === 0" class="text-center q-pa-lg text-grey-5">
+      <div v-if="fruitStats.length === 0" class="text-center q-pa-lg text-grey-6">
         ไม่มีรายการขายผลไม้ในเงื่อนไขการกรองนี้
       </div>
 
@@ -170,20 +167,20 @@
         <div
           v-for="stat in fruitStats"
           :key="stat.mascotKey"
-          class="bg-grey-10 q-pa-sm rounded-borders q-mb-sm shadow-1"
+          class="bg-grey-1 q-pa-sm rounded-borders q-mb-sm border-light"
           :data-audit-id="`stat-row-${stat.mascotKey}`"
         >
           <!-- Fruit Header Row -->
           <div class="row items-center justify-between q-mb-xs">
             <div class="row items-center">
-              <q-avatar size="34px" class="q-mr-sm bg-grey-9">
+              <q-avatar size="34px" class="q-mr-sm bg-white shadow-1">
                 <q-img :src="`/mascots/mascot_${stat.mascotKey}.png`" fit="contain" />
               </q-avatar>
               <div>
-                <div class="text-subtitle2 text-weight-bold leading-tight">
+                <div class="text-subtitle2 text-weight-bold leading-tight text-grey-9">
                   {{ stat.name }}
                 </div>
-                <div class="text-caption text-grey-5" style="font-size: 11px;">
+                <div class="text-caption text-grey-7" style="font-size: 11px;">
                   ยอดจำหน่าย: <strong>{{ stat.totalWeightKg.toFixed(1) }} กก.</strong>
                   <span v-if="stat.durianPieces > 0"> ({{ stat.durianPieces }} ลูก)</span>
                 </div>
@@ -210,9 +207,9 @@
           </div>
 
           <!-- Mini Progress Bar / Breakdown Strip -->
-          <div class="row items-center justify-between text-caption text-grey-4 q-pt-xs border-top-grey">
+          <div class="row items-center justify-between text-caption text-grey-7 q-pt-xs border-top-light">
             <div>
-              ยอดขาย: <strong class="text-white">฿{{ stat.revenue.toLocaleString() }}</strong>
+              ยอดขาย: <strong class="text-grey-9">฿{{ stat.revenue.toLocaleString() }}</strong>
             </div>
             <div>
               ต้นทุน: <strong class="text-warning">฿{{ stat.cost.toLocaleString() }}</strong>
@@ -226,18 +223,18 @@
     </q-card>
 
     <!-- Section: Order-Level Profit Breakdown -->
-    <q-card class="bg-grey-9 text-white q-pa-md rounded-borders shadow-2">
+    <q-card class="bg-white text-grey-9 q-pa-md rounded-borders shadow-1">
       <div class="row items-center justify-between q-mb-sm">
         <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
           <q-icon name="receipt_long" size="20px" class="q-mr-xs" />
           กำไร-ขาดทุน แยกตามรายออเดอร์
         </div>
-        <div class="text-caption text-grey-4">
+        <div class="text-caption text-grey-7">
           แสดง {{ filteredOrders.length }} รายการ
         </div>
       </div>
 
-      <div v-if="filteredOrders.length === 0" class="text-center q-pa-lg text-grey-5">
+      <div v-if="filteredOrders.length === 0" class="text-center q-pa-lg text-grey-6">
         ไม่พบออเดอร์ในเงื่อนไขการกรองนี้
       </div>
 
@@ -245,9 +242,8 @@
         <q-expansion-item
           v-for="order in orderAnalysisList"
           :key="order.orderId"
-          class="bg-grey-10 rounded-borders q-mb-sm shadow-1"
+          class="bg-grey-1 rounded-borders q-mb-sm border-light"
           header-class="q-py-sm"
-          expand-icon-class="text-white"
           :data-audit-id="`order-analysis-${order.orderId}`"
         >
           <template #header>
@@ -261,10 +257,10 @@
             </q-item-section>
 
             <q-item-section>
-              <q-item-label class="text-subtitle2 text-weight-bolder text-white">
+              <q-item-label class="text-subtitle2 text-weight-bolder text-grey-9">
                 #{{ order.orderId }} - {{ order.customer.name }}
               </q-item-label>
-              <q-item-label caption class="text-grey-4">
+              <q-item-label caption class="text-grey-7">
                 {{ order.customer.shop }} ({{ order.customer.floor }}) | {{ order.pickupSlot }}
               </q-item-label>
             </q-item-section>
@@ -273,24 +269,24 @@
               <div class="text-subtitle2 text-weight-bolder text-positive">
                 +฿{{ order.profit.toLocaleString() }}
               </div>
-              <div class="text-caption text-grey-4" style="font-size: 11px;">
+              <div class="text-caption text-grey-7" style="font-size: 11px;">
                 ขาย ฿{{ order.revenue }} (มาร์จิ้น {{ order.marginPercent }}%)
               </div>
             </q-item-section>
           </template>
 
-          <q-card class="bg-grey-10 text-white q-px-md q-pb-md">
-            <q-separator color="grey-8" class="q-mb-sm" />
+          <q-card class="bg-grey-1 text-grey-9 q-px-md q-pb-md">
+            <q-separator color="grey-3" class="q-mb-sm" />
 
             <!-- Order Item List -->
-            <div class="text-caption text-grey-4 q-mb-xs text-weight-bold">
+            <div class="text-caption text-grey-8 q-mb-xs text-weight-bold">
               รายการสินค้าและต้นทุนออเดอร์นี้:
             </div>
 
             <div
               v-for="(item, idx) in order.itemsAnalysis"
               :key="idx"
-              class="row items-center justify-between text-caption text-grey-3 q-py-xs border-top-grey"
+              class="row items-center justify-between text-caption text-grey-8 q-py-xs border-top-light"
             >
               <div>
                 <strong>{{ item.productName }}</strong> ({{ item.weightLabel }})
@@ -301,10 +297,10 @@
               </div>
             </div>
 
-            <div class="row items-center justify-between text-caption q-mt-sm text-grey-4">
+            <div class="row items-center justify-between text-caption q-mt-sm text-grey-7">
               <div>
                 วิธีชำระ:
-                <strong class="text-white">{{ order.paymentMethod === 'PAY_AT_CAR' ? '💵 เงินสดท้ายรถ' : '📱 โอนพร้อมเพย์' }}</strong>
+                <strong class="text-grey-9">{{ order.paymentMethod === 'PAY_AT_CAR' ? '💵 เงินสดท้ายรถ' : '📱 โอนพร้อมเพย์' }}</strong>
               </div>
               <div>
                 สถานะ:
@@ -601,7 +597,10 @@ const orderAnalysisList = computed(() => {
 </script>
 
 <style scoped>
-.border-top-grey {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+.border-light {
+  border: 1px solid #e0e0e0;
+}
+.border-top-light {
+  border-top: 1px solid #e0e0e0;
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
   <!-- Section: Full-Page 3-Tier RBAC Staff Management -->
-  <q-page id="admin-users-page" data-audit-id="admin-users-page" class="q-pa-md bg-grey-10 text-white" style="max-width: 680px; margin: 0 auto;">
+  <q-page id="admin-users-page" data-audit-id="admin-users-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 76px;">
     <!-- Page Header with Back Navigation -->
     <div class="row items-center justify-between q-mb-md">
       <div class="row items-center">
@@ -9,7 +9,7 @@
           dense
           round
           icon="arrow_back"
-          color="white"
+          color="grey-8"
           class="q-mr-sm"
           data-audit-id="btn-back-to-dispatch"
           @click="handleBack"
@@ -17,10 +17,10 @@
           <q-tooltip>กลับโต๊ะจ่ายของท้ายรถ</q-tooltip>
         </q-btn>
         <div>
-          <div class="text-h6 text-weight-bolder leading-tight">
+          <div class="text-h6 text-weight-bolder leading-tight text-grey-9">
             จัดการผู้ใช้และทีมงาน
           </div>
-          <div class="text-caption text-grey-4">
+          <div class="text-caption text-grey-7">
             สิทธิ์ของคุณ: <strong class="text-positive">{{ formatRole(userStore.currentUserRole) }}</strong>
           </div>
         </div>
@@ -28,7 +28,7 @@
     </div>
 
     <!-- Section 1: Add New Staff Member Card -->
-    <q-card class="bg-grey-9 text-white q-pa-md rounded-borders q-mb-md shadow-2">
+    <q-card class="bg-white text-grey-9 q-pa-md rounded-borders q-mb-md shadow-1">
       <div class="text-subtitle1 text-weight-bolder text-positive q-mb-sm row items-center">
         <q-icon name="person_add" size="20px" class="q-mr-xs" />
         เพิ่มผู้ช่วยขาย / ผู้ใช้งานใหม่
@@ -39,7 +39,6 @@
           <div class="col-12 col-sm-6 q-pr-sm-xs q-mb-sm q-mb-sm-none">
             <q-input
               v-model="newUserForm.email"
-              dark
               outlined
               dense
               type="email"
@@ -57,7 +56,6 @@
           <div class="col-12 col-sm-6 q-pl-sm-xs">
             <q-input
               v-model="newUserForm.displayName"
-              dark
               outlined
               dense
               label="ชื่อ-นามสกุล หรือชื่อเล่น *"
@@ -76,7 +74,6 @@
           <div class="col-12 col-sm-6 q-pr-sm-xs q-mb-sm q-mb-sm-none">
             <q-input
               v-model="newUserForm.phone"
-              dark
               outlined
               dense
               type="tel"
@@ -99,7 +96,6 @@
               :options="roleOptions"
               emit-value
               map-options
-              dark
               outlined
               dense
               label="ระดับสิทธิ์ในระบบ *"
@@ -113,7 +109,7 @@
           </div>
         </div>
 
-        <div v-if="userStore.isShopOwner" class="text-caption text-grey-4 q-mb-sm">
+        <div v-if="userStore.isShopOwner" class="text-caption text-grey-7 q-mb-sm">
           * เจ้าของร้านสามารถเพิ่มผู้ใช้ระดับ "ผู้ช่วยขาย (Seller)" ได้เท่านั้น
         </div>
 
@@ -133,7 +129,7 @@
     </q-card>
 
     <!-- Section 2: Active Users List -->
-    <q-card class="bg-grey-9 text-white q-pa-md rounded-borders shadow-2 q-mb-xl">
+    <q-card class="bg-white text-grey-9 q-pa-md rounded-borders shadow-1 q-mb-xl">
       <div class="row items-center justify-between q-mb-sm">
         <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
           <q-icon name="group" size="20px" class="q-mr-xs" />
@@ -141,7 +137,7 @@
         </div>
       </div>
 
-      <div v-if="userStore.users.length === 0" class="text-center q-pa-lg text-grey-5">
+      <div v-if="userStore.users.length === 0" class="text-center q-pa-lg text-grey-6">
         ยังไม่มีรายชื่อผู้ใช้งาน
       </div>
 
@@ -149,7 +145,7 @@
         <div
           v-for="user in userStore.users"
           :key="user.email"
-          class="bg-grey-10 q-pa-sm rounded-borders q-mb-sm shadow-1 row items-center justify-between"
+          class="bg-grey-1 q-pa-sm rounded-borders q-mb-sm border-light row items-center justify-between"
           :data-audit-id="`user-row-${user.email}`"
         >
           <!-- User Details -->
@@ -157,17 +153,17 @@
             <q-avatar :color="getRoleColor(user.role)" text-color="white" icon="person" size="38px" class="q-mr-sm" />
             <div>
               <div class="row items-center">
-                <span class="text-subtitle2 text-weight-bold text-white q-mr-xs">
+                <span class="text-subtitle2 text-weight-bold text-grey-9 q-mr-xs">
                   {{ user.displayName }}
                 </span>
                 <q-badge :color="getRoleColor(user.role)" class="text-weight-bold" rounded style="font-size: 10px;">
                   {{ formatRole(user.role) }}
                 </q-badge>
               </div>
-              <div class="text-caption text-grey-4">
+              <div class="text-caption text-grey-7">
                 {{ user.email }} | โทร: {{ user.phone }}
               </div>
-              <div v-if="user.lastLoginDevice" class="text-caption text-grey-5 text-italic" style="font-size: 11px;">
+              <div v-if="user.lastLoginDevice" class="text-caption text-grey-6 text-italic" style="font-size: 11px;">
                 อุปกรณ์: {{ user.lastLoginDevice.deviceModel }} ({{ user.lastLoginDevice.platform }})
               </div>
             </div>
@@ -306,10 +302,10 @@ async function handleSaveNewUser() {
 // Delete User Confirm
 function confirmDeleteUser(user: AppUser) {
   $q.dialog({
-    dark: true,
+    dark: false,
     title: 'ยืนยันการลบสิทธิ์',
     message: `ต้องการลบสิทธิ์ของ ${user.displayName} (${user.email}) หรือไม่?`,
-    cancel: { flat: true, label: 'ยกเลิก', color: 'grey-4' },
+    cancel: { flat: true, label: 'ยกเลิก', color: 'grey-7' },
     ok: { color: 'negative', label: 'ยืนยันลบ', noCaps: true }
   }).onOk(() => {
     void (async () => {
@@ -332,3 +328,9 @@ function confirmDeleteUser(user: AppUser) {
   });
 }
 </script>
+
+<style scoped>
+.border-light {
+  border: 1px solid #e0e0e0;
+}
+</style>

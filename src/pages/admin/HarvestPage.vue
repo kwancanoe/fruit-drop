@@ -1,6 +1,6 @@
 <template>
   <!-- Section: Full-Page Orchard Harvest Logistics Summary for LINE -->
-  <q-page id="admin-harvest-page" data-audit-id="admin-harvest-page" class="q-pa-md bg-grey-10 text-white" style="max-width: 680px; margin: 0 auto;">
+  <q-page id="admin-harvest-page" data-audit-id="admin-harvest-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 76px;">
     <!-- Page Header with Back Navigation -->
     <div class="row items-center justify-between q-mb-md">
       <div class="row items-center">
@@ -9,7 +9,7 @@
           dense
           round
           icon="arrow_back"
-          color="white"
+          color="grey-8"
           class="q-mr-sm"
           data-audit-id="btn-back-to-dispatch"
           @click="handleBack"
@@ -17,10 +17,10 @@
           <q-tooltip>กลับโต๊ะจ่ายของท้ายรถ</q-tooltip>
         </q-btn>
         <div>
-          <div class="text-h6 text-weight-bolder leading-tight">
+          <div class="text-h6 text-weight-bolder leading-tight text-grey-9">
             สรุปยอดตัดผลไม้ส่งสวน
           </div>
-          <div class="text-caption text-grey-4">
+          <div class="text-caption text-grey-7">
             รวบรวมยอดสั่งจองส่งกลุ่ม LINE ที่บ้านที่สวนเพื่อเตรียมตัดผลไม้
           </div>
         </div>
@@ -28,13 +28,12 @@
     </div>
 
     <!-- Round Selector Dropdown -->
-    <q-card class="bg-grey-9 text-white q-pa-sm rounded-borders q-mb-md shadow-2">
+    <q-card class="bg-white text-grey-9 q-pa-sm rounded-borders q-mb-md shadow-1">
       <q-select
         v-model="selectedRoundId"
         :options="roundOptions"
         emit-value
         map-options
-        dark
         outlined
         dense
         label="เลือกรอบส่งที่ต้องการสรุปยอด"
@@ -50,19 +49,19 @@
     <div class="row q-mb-md">
       <!-- Rambutan Summary Card -->
       <div v-if="harvestStats.totalNgoKg > 0" class="col-12 col-sm-6 q-pa-xs">
-        <q-card class="bg-grey-9 text-white q-pa-md rounded-borders shadow-2">
+        <q-card class="bg-white text-grey-9 q-pa-md rounded-borders shadow-1">
           <div class="row items-center q-mb-xs">
-            <q-avatar size="32px" class="q-mr-sm bg-grey-8">
+            <q-avatar size="32px" class="q-mr-sm bg-white shadow-1">
               <q-img src="/mascots/mascot_ngo.png" fit="contain" />
             </q-avatar>
             <div>
-              <div class="text-subtitle2 text-weight-bold">เงาะโรงเรียน</div>
+              <div class="text-subtitle2 text-weight-bold text-grey-9">เงาะโรงเรียน</div>
               <div class="text-h6 text-weight-bolder text-positive">
                 {{ harvestStats.totalNgoKg }} กก.
               </div>
             </div>
           </div>
-          <div class="text-caption text-grey-4 q-mt-xs border-top-grey q-pt-xs">
+          <div class="text-caption text-grey-7 q-mt-xs border-top-light q-pt-xs">
             • ชุด 3 โล 100: <strong>{{ harvestStats.bundle3NgoCount }} ชุด</strong> ({{ harvestStats.bundle3NgoCount * 3 }} กก.)<br>
             • สั่งเดี่ยว: <strong>{{ harvestStats.singleNgoKg }} กก.</strong>
           </div>
@@ -71,19 +70,19 @@
 
       <!-- Durian Summary Card -->
       <div v-if="harvestStats.totalDurians > 0" class="col-12 col-sm-6 q-pa-xs">
-        <q-card class="bg-grey-9 text-white q-pa-md rounded-borders shadow-2">
+        <q-card class="bg-white text-grey-9 q-pa-md rounded-borders shadow-1">
           <div class="row items-center q-mb-xs">
-            <q-avatar size="32px" class="q-mr-sm bg-grey-8">
+            <q-avatar size="32px" class="q-mr-sm bg-white shadow-1">
               <q-img src="/mascots/mascot_thurian.png" fit="contain" />
             </q-avatar>
             <div>
-              <div class="text-subtitle2 text-weight-bold">ทุเรียนหมอนทอง</div>
+              <div class="text-subtitle2 text-weight-bold text-grey-9">ทุเรียนหมอนทอง</div>
               <div class="text-h6 text-weight-bolder text-warning">
                 {{ harvestStats.totalDurians }} ลูก
               </div>
             </div>
           </div>
-          <div class="text-caption text-grey-4 q-mt-xs border-top-grey q-pt-xs">
+          <div class="text-caption text-grey-7 q-mt-xs border-top-light q-pt-xs">
             • เล็ก (≤ 2.0 กก.): <strong>{{ harvestStats.durianSmallCount }} ลูก</strong><br>
             • กลาง (2.1-3.0 กก.): <strong>{{ harvestStats.durianMediumCount }} ลูก</strong><br>
             • ใหญ่ (3.1-4.0 กก.): <strong>{{ harvestStats.durianLargeCount }} ลูก</strong>
@@ -93,13 +92,13 @@
     </div>
 
     <!-- Ready-to-copy LINE Message Card -->
-    <q-card class="bg-grey-9 text-white q-pa-md rounded-borders shadow-2 q-mb-xl">
+    <q-card class="bg-white text-grey-9 q-pa-md rounded-borders shadow-1 q-mb-xl">
       <div class="row items-center justify-between q-mb-sm">
         <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
           <q-icon name="chat" size="20px" class="q-mr-xs" />
           ข้อความเตรียมส่ง LINE
         </div>
-        <div class="text-caption text-grey-4">
+        <div class="text-caption text-grey-7">
           ลูกค้า {{ activeOrdersCount }} คน
         </div>
       </div>
@@ -110,9 +109,8 @@
         type="textarea"
         rows="12"
         readonly
-        dark
         outlined
-        class="font-mono text-body2 bg-grey-10 q-mb-md"
+        class="font-mono text-body2 bg-grey-1 q-mb-md"
         data-audit-id="textarea-harvest-summary"
       />
 
@@ -121,7 +119,7 @@
         color="positive"
         icon="content_copy"
         label="📋 คัดลอกข้อความส่ง LINE"
-        class="full-width q-py-sm text-subtitle2 text-weight-bolder shadow-2"
+        class="full-width q-py-sm text-subtitle2 text-weight-bolder shadow-1"
         no-caps
         data-audit-id="btn-copy-line-text"
         @click="copyText"
@@ -302,7 +300,7 @@ async function copyText() {
 </script>
 
 <style scoped>
-.border-top-grey {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+.border-top-light {
+  border-top: 1px solid #e0e0e0;
 }
 </style>
