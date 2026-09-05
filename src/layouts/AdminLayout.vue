@@ -4,28 +4,20 @@
     <!-- 1. Authenticated Top App Header -->
     <q-header v-if="fruitStore.authUser && fruitStore.isAdmin" elevated class="bg-white text-grey-9 shadow-1">
       <q-toolbar class="q-px-md" style="max-width: 680px; margin: 0 auto;">
-        <!-- Brand Identity -->
-        <q-avatar size="34px" class="q-mr-sm">
-          <q-img src="/mascots/logo_fruit_drop.png" fit="contain" />
-        </q-avatar>
-        <q-toolbar-title class="text-subtitle1 text-weight-bolder text-grey-9">
-          Fruit Drop <span class="text-caption text-positive text-weight-bold">แอดมิน</span>
-        </q-toolbar-title>
-
-        <!-- Action: Navigate Back to Customer Storefront -->
-        <q-btn
-          outline
-          color="positive"
-          icon="storefront"
-          label="หน้าร้าน"
-          no-caps
-          dense
-          class="q-px-sm q-mr-sm text-weight-bold"
-          to="/"
-          data-audit-id="btn-nav-to-customer-storefront"
+        <!-- Brand Identity: Clickable to Customer Storefront -->
+        <div
+          class="row items-center no-wrap cursor-pointer q-mr-auto"
+          data-audit-id="btn-logo-nav-to-storefront"
+          @click="$router.push('/')"
         >
-          <q-tooltip>ไปยังหน้าสั่งจองของลูกค้า</q-tooltip>
-        </q-btn>
+          <q-avatar size="34px" class="q-mr-sm">
+            <q-img src="/mascots/logo_fruit_drop.png" fit="contain" />
+          </q-avatar>
+          <q-toolbar-title class="text-subtitle1 text-weight-bolder text-grey-9 q-pa-none">
+            Fruit Drop <span class="text-caption text-positive text-weight-bold">แอดมิน</span>
+          </q-toolbar-title>
+          <q-tooltip anchor="bottom middle" self="top middle">แตะเพื่อไปยังหน้าสั่งจองของลูกค้า (หน้าร้าน)</q-tooltip>
+        </div>
 
         <!-- User Profile Chip & Role Badge -->
         <q-chip dense color="grey-2" text-color="grey-9" class="q-mr-xs">

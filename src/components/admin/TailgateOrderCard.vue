@@ -1,10 +1,14 @@
 <template>
-  <!-- Section: Tailgate Order Card for Admin Dispatch Desk -->
+  <!-- Section: Tailgate Order Card for Admin Dispatch Desk (Click to view full detail) -->
   <q-card
     id="tailgate-order-card"
     :data-audit-id="`order-${order.orderId}`"
-    class="rounded-borders bg-white shadow-1 q-mb-sm"
-    :class="{ 'border-positive': order.orderStatus === 'COMPLETED' }"
+    class="rounded-borders bg-white shadow-1 q-mb-sm cursor-pointer transition-all"
+    :class="{
+      'border-positive': order.orderStatus === 'COMPLETED',
+      'border-amber': order.orderStatus === 'WAITING_PICKUP' && hasUnweighedFruit
+    }"
+    @click="navigateToDetail"
   >
     <q-card-section class="q-pa-md">
       <!-- Top Row: Order ID, Time Slot & Customer Shop -->
@@ -69,6 +73,7 @@
           color="primary"
           size="sm"
           :href="`tel:${order.customer.phone}`"
+          @click.stop
         >
           <q-tooltip>โทรหาลูกค้า</q-tooltip>
         </q-btn>
@@ -96,113 +101,33 @@
                 <span v-if="item.actualWeighedKg" class="text-positive text-weight-bold q-ml-xs">
                   [ชั่งแล้ว: {{ item.actualWeighedKg }} กก. = {{ item.itemFinalPrice }} บ.]
                 </span>
+                <span v-else class="text-amber-9 text-weight-bold q-ml-xs">
+                  [ยังไม่ชั่ง]
+                </span>
               </template>
             </span>
-          </div>
-
-          <!-- Specific button to weigh if durian and not yet delivered -->
-          <div v-if="item.productType === 'VARIABLE_WHOLE_FRUIT' && order.orderStatus !== 'COMPLETED'">
-            <q-btn
-              outline
-              dense
-              no-caps
-              color="amber-9"
-              icon="scale"
-              label="ชั่งน้ำหนัก"
-              size="sm"
-              class="q-px-xs"
-              @click="$emit('open-scale', { order, itemIndex: idx })"
-            />
           </div>
         </div>
       </div>
 
-      <!-- Attribution & Proof Audit Row (if available) -->
-      <div v-if="order.attribution || order.proofUrl" class="bg-grey-1 q-pa-xs rounded-borders q-mt-xs row items-center justify-between text-caption" style="font-size: 11px;">
+      <!-- Attribution Audit (if delivered) -->
+      <div v-if="order.attribution" class="bg-grey-1 q-pa-xs rounded-borders q-mt-xs row items-center justify-between text-caption" style="font-size: 11px;">
         <div class="col text-grey-8">
-          <span v-if="order.attribution">
-            👤 ส่งโดย: <strong>{{ order.attribution.handledByName }}</strong> ({{ order.attribution.handledByRole }})
-            <span v-if="order.attribution.deviceFingerprint?.deviceModel" class="text-grey-6 q-ml-xs">
-              • {{ order.attribution.deviceFingerprint.deviceModel }}
-            </span>
-          </span>
-        </div>
-        <div v-if="order.proofUrl" class="col-auto">
-          <q-btn
-            flat
-            dense
-            no-caps
-            color="primary"
-            icon="image"
-            label="ดูรูปหลักฐาน"
-            size="xs"
-            :href="order.proofUrl"
-            target="_blank"
-          />
+          👤 ส่งโดย: <strong>{{ order.attribution.handledByName }}</strong> ({{ order.attribution.handledByRole }})
         </div>
       </div>
 
       <q-separator class="q-my-xs" />
 
-      <!-- Bottom Action Row -->
+      <!-- Bottom Summary & Click Affordance -->
       <div class="row items-center justify-between q-pt-xs">
         <div class="text-caption text-grey-8">
           ยอดรวมสุทธิ: <strong class="text-primary text-subtitle2">{{ order.totalFinalPrice || order.totalEstimatedPrice }} บาท</strong>
         </div>
 
-        <div class="row items-center">
-          <template v-if="order.orderStatus !== 'COMPLETED'">
-            <!-- Camera Proof Button (Mandatory or optional photo attachment) -->
-            <q-btn
-              outline
-              dense
-              no-caps
-              color="primary"
-              icon="photo_camera"
-              label="ถ่ายรูปสลิป/ส่งมอบ"
-              class="q-mr-xs q-px-xs"
-              size="sm"
-              @click="$emit('open-proof-modal', order)"
-            />
-
-            <!-- Case A: Ready to deliver after scale or if paid -->
-            <q-btn
-              v-if="order.paymentStatus === 'PAID'"
-              color="positive"
-              icon="done"
-              label="ส่งมอบแล้ว"
-              no-caps
-              dense
-              class="q-px-sm"
-              size="sm"
-              @click="$emit('mark-delivered', order.orderId)"
-            />
-
-            <!-- Case B: Collect cash & deliver in 1 tap -->
-            <q-btn
-              v-else
-              color="positive"
-              icon="payments"
-              :label="`รับเงิน ${order.totalFinalPrice || order.totalEstimatedPrice} บ. & ส่งมอบ`"
-              no-caps
-              dense
-              class="q-px-sm text-weight-bold"
-              size="sm"
-              @click="$emit('collect-cash-deliver', order.orderId)"
-            />
-          </template>
-
-          <template v-else>
-            <q-btn
-              flat
-              dense
-              no-caps
-              color="grey-6"
-              label="ยกเลิกสถานะส่งมอบ"
-              size="xs"
-              @click="$emit('revert-status', order.orderId)"
-            />
-          </template>
+        <div class="row items-center text-primary text-weight-bold text-caption">
+          <span>ตรวจออเดอร์ & ส่งมอบ</span>
+          <q-icon name="chevron_right" size="20px" />
         </div>
       </div>
     </q-card-section>
@@ -211,19 +136,18 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import type { Order } from '@/types/fruit_app';
 
 const props = defineProps<{
   order: Order;
 }>();
 
-defineEmits<{
-  (e: 'open-scale', payload: { order: Order; itemIndex: number }): void;
-  (e: 'open-proof-modal', order: Order): void;
-  (e: 'mark-delivered', orderId: string): void;
-  (e: 'collect-cash-deliver', orderId: string): void;
-  (e: 'revert-status', orderId: string): void;
-}>();
+const router = useRouter();
+
+function navigateToDetail() {
+  void router.push(`/admin/orders/${props.order.orderId}`);
+}
 
 // Check if any whole fruit item has not been weighed yet
 const hasUnweighedFruit = computed<boolean>(() => {

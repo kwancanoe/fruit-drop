@@ -50,6 +50,21 @@
       />
     </div>
 
+    <!-- Quick Action: Scan Customer QR Code -->
+    <div class="q-mb-md">
+      <q-btn
+        color="primary"
+        class="full-width q-py-sm text-weight-bolder text-subtitle2 shadow-2"
+        no-caps
+        rounded
+        icon="qr_code_scanner"
+        to="/admin/scan"
+        data-audit-id="btn-scan-customer-qr"
+      >
+        <span>📷 สแกน QR Code ลูกค้าเพื่อเปิดออเดอร์ & ส่งมอบ</span>
+      </q-btn>
+    </div>
+
     <!-- Time-Slot Filter Tabs & Instant Search -->
     <TimeSlotTabs
       :available-slots="availableSlots"
@@ -70,30 +85,21 @@
         v-for="order in filteredOrders"
         :key="order.orderId"
         :order="order"
-        @open-scale="handleOpenScale"
-        @open-proof-modal="handleOpenProofModal"
-        @mark-delivered="handleMarkDelivered"
-        @collect-cash-deliver="handleCollectCashDeliver"
-        @revert-status="handleRevertStatus"
       />
     </div>
 
-    <!-- Inline Utility Modals for real-time car interaction -->
-    <!-- Durian Scale Modal -->
-    <DurianScaleModal
-      v-model:is-open="isScaleModalOpen"
-      :order="scaleTargetOrder"
-      :item-index="scaleTargetItemIndex"
-      :prompt-pay-number="fruitStore.activeRound?.promptPayNumber || '0878902935'"
-      :prompt-pay-name="fruitStore.activeRound?.promptPayName || 'นาตยา บุญณะ'"
-      @confirm="handleScaleConfirm"
-    />
-
-    <!-- Payment Proof Modal -->
-    <PaymentProofModal
-      v-model:is-open="isProofModalOpen"
-      :order="proofTargetOrder"
-    />
+    <!-- Floating Action Button for Instant Camera QR Scan -->
+    <q-page-sticky position="bottom-right" :offset="[16, 80]">
+      <q-btn
+        fab
+        icon="qr_code_scanner"
+        color="primary"
+        label="สแกน QR"
+        class="shadow-4 text-weight-bolder"
+        to="/admin/scan"
+        data-audit-id="fab-scan-customer-qr"
+      />
+    </q-page-sticky>
   </q-page>
 </template>
 
@@ -105,27 +111,12 @@ import { useFruitStore } from '@/stores/fruitStore';
 import type { Order } from '@/types/fruit_app';
 import TimeSlotTabs from '@/components/admin/TimeSlotTabs.vue';
 import TailgateOrderCard from '@/components/admin/TailgateOrderCard.vue';
-import DurianScaleModal from '@/components/admin/DurianScaleModal.vue';
-import PaymentProofModal from '@/components/admin/PaymentProofModal.vue';
 
-const $q = useQuasar();
 const fruitStore = useFruitStore();
 
 // Filter states
 const selectedSlot = ref<string>('ALL');
 const searchQuery = ref<string>('');
-
-// Modal states for car interactions
-const isScaleModalOpen = ref<boolean>(false);
-const scaleTargetOrder = ref<Order | null>(null);
-const scaleTargetItemIndex = ref<number>(-1);
-const isProofModalOpen = ref<boolean>(false);
-const proofTargetOrder = ref<Order | null>(null);
-
-function handleOpenProofModal(order: Order) {
-  proofTargetOrder.value = order;
-  isProofModalOpen.value = true;
-}
 
 // Slots
 const availableSlots = computed<string[]>(() => {
@@ -204,74 +195,4 @@ const filteredOrders = computed<Order[]>(() => {
   return list;
 });
 
-// Scale Handlers
-function handleOpenScale(payload: { order: Order; itemIndex: number }) {
-  scaleTargetOrder.value = payload.order;
-  scaleTargetItemIndex.value = payload.itemIndex;
-  isScaleModalOpen.value = true;
-}
-
-async function handleScaleConfirm(payload: {
-  orderId: string;
-  itemIndex: number;
-  weighedKg: number;
-  finalPrice: number;
-  paymentMode: 'CASH' | 'TRANSFER';
-}) {
-  await fruitStore.updateWeighedFruit(
-    payload.orderId,
-    payload.itemIndex,
-    payload.weighedKg,
-    payload.finalPrice
-  );
-
-  // Automatically mark as completed and set payment status
-  await fruitStore.updateOrderStatus(payload.orderId, {
-    orderStatus: 'COMPLETED',
-    paymentStatus: 'PAID',
-    completedAt: Date.now(),
-    paidAt: Date.now()
-  });
-
-  $q.notify({
-    type: 'positive',
-    message: `บันทึกน้ำหนัก ${payload.weighedKg} กก. (${payload.finalPrice} บ.) และส่งมอบแล้ว!`,
-    position: 'top',
-    timeout: 2000
-  });
-}
-
-// Mark delivered for pre-paid orders
-async function handleMarkDelivered(orderId: string) {
-  await fruitStore.updateOrderStatus(orderId, {
-    orderStatus: 'COMPLETED',
-    completedAt: Date.now()
-  });
-  $q.notify({ type: 'positive', message: `ส่งมอบ #${orderId} เรียบร้อยแล้ว`, position: 'top', timeout: 1500 });
-}
-
-// Single-tap cash collection & delivery
-async function handleCollectCashDeliver(orderId: string) {
-  await fruitStore.updateOrderStatus(orderId, {
-    orderStatus: 'COMPLETED',
-    paymentStatus: 'PAID',
-    completedAt: Date.now(),
-    paidAt: Date.now()
-  });
-  $q.notify({
-    type: 'positive',
-    message: `รับเงินสดและส่งมอบ #${orderId} เรียบร้อย!`,
-    position: 'top',
-    timeout: 1500
-  });
-}
-
-// Revert status if tapped by mistake
-async function handleRevertStatus(orderId: string) {
-  await fruitStore.updateOrderStatus(orderId, {
-    orderStatus: 'WAITING_PICKUP',
-    completedAt: undefined
-  });
-  $q.notify({ type: 'info', message: `ยกเลิกสถานะ #${orderId} แล้ว`, position: 'top', timeout: 1500 });
-}
 </script>

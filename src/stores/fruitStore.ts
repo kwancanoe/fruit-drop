@@ -538,6 +538,22 @@ export const useFruitStore = defineStore('fruit', () => {
     return snap.docs.map(d => ({ ...d.data() as ProductItem, id: d.id }));
   }
 
+  // Fetch single order by human-readable orderId across memory & Firestore
+  async function getOrderByOrderId(orderId: string): Promise<Order | null> {
+    const cleanId = orderId.trim().toUpperCase();
+    const inMemory = orders.value.find(o => o.orderId.toUpperCase() === cleanId);
+    if (inMemory) return inMemory;
+
+    const ordersRef = collection(db, 'orders');
+    const q = query(ordersRef, where('orderId', '==', cleanId));
+    const snap = await getDocs(q);
+    const firstDoc = snap.docs[0];
+    if (firstDoc && firstDoc.exists()) {
+      return { ...firstDoc.data() as Order, id: firstDoc.id };
+    }
+    return null;
+  }
+
   // Toggle round open/closed status
   async function toggleRoundStatus(roundId: string, isOpen: boolean) {
     await updateDoc(doc(db, 'rounds', roundId), {
@@ -595,6 +611,7 @@ export const useFruitStore = defineStore('fruit', () => {
     updateRound,
     getRoundById,
     getProductsByRoundId,
+    getOrderByOrderId,
     toggleRoundStatus,
     submitOrder,
     updateWeighedFruit,

@@ -15,22 +15,57 @@
     </div>
 
     <q-card-section class="q-pa-md">
-      <!-- Order ID Banner -->
+      <!-- Order ID Banner & Personal Order QR Code -->
       <div class="bg-grey-2 q-pa-md rounded-borders text-center q-mb-md">
         <div class="text-caption text-grey-8">รหัสออเดอร์ของคุณ</div>
         <div class="text-h4 text-weight-bolder text-primary tracking-wide q-my-xs">
           #{{ order.orderId }}
         </div>
-        <q-btn
-          flat
-          dense
-          no-caps
-          color="primary"
-          icon="content_copy"
-          label="คัดลอกรหัสออเดอร์"
-          size="sm"
-          @click="copyOrderId"
-        />
+
+        <!-- Personal Order QR Code for Seller Tailgate Scan -->
+        <div class="column items-center justify-center q-my-sm">
+          <div class="bg-white q-pa-sm rounded-borders shadow-1">
+            <q-img
+              v-if="qrDataUrl"
+              :src="qrDataUrl"
+              style="width: 170px; height: 170px;"
+              fit="contain"
+              alt="Order QR Code"
+            />
+            <q-spinner v-else color="primary" size="48px" class="q-ma-lg" />
+          </div>
+          <div class="text-caption text-weight-bold text-grey-9 q-mt-xs">
+            📱 แสดง QR Code นี้ให้คนขายสแกนรับผลไม้
+          </div>
+          <div class="text-caption text-grey-7" style="font-size: 11px;">
+            ป้องกันการรับผิดคน และได้รับผลไม้ตรงตามที่สั่ง 100%
+          </div>
+        </div>
+
+        <div class="row justify-center items-center q-mt-xs">
+          <q-btn
+            flat
+            dense
+            no-caps
+            color="primary"
+            icon="content_copy"
+            label="คัดลอกรหัส"
+            size="sm"
+            class="q-mr-sm"
+            @click="copyOrderId"
+          />
+          <q-btn
+            v-if="qrDataUrl"
+            flat
+            dense
+            no-caps
+            color="secondary"
+            icon="download"
+            label="บันทึกรูป QR"
+            size="sm"
+            @click="downloadQrImage"
+          />
+        </div>
       </div>
 
       <!-- Customer Details -->
@@ -101,7 +136,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue';
 import { useQuasar } from 'quasar';
+import QRCode from 'qrcode';
 import type { Order } from '@/types/fruit_app';
 
 const props = defineProps<{
@@ -109,12 +146,54 @@ const props = defineProps<{
 }>();
 
 const $q = useQuasar();
+const qrDataUrl = ref<string>('');
+
+// Generate QR Code containing the direct URL to the order detail
+async function generateQrCode() {
+  try {
+    const targetUrl = `${window.location.origin}/admin/orders/${props.order.orderId}`;
+    qrDataUrl.value = await QRCode.toDataURL(targetUrl, {
+      width: 250,
+      margin: 2,
+      color: {
+        dark: '#1b5e20', // Forest green matching brand
+        light: '#ffffff'
+      }
+    });
+  } catch (err) {
+    console.error('Failed to generate order QR:', err);
+  }
+}
+
+onMounted(() => {
+  void generateQrCode();
+});
+
+watch(() => props.order.orderId, () => {
+  void generateQrCode();
+});
 
 function copyOrderId() {
   void navigator.clipboard.writeText(props.order.orderId);
   $q.notify({
     type: 'positive',
     message: `คัดลอกรหัส #${props.order.orderId} แล้ว`,
+    position: 'top',
+    timeout: 1500
+  });
+}
+
+function downloadQrImage() {
+  if (!qrDataUrl.value) return;
+  const link = document.createElement('a');
+  link.href = qrDataUrl.value;
+  link.download = `FruitDrop-${props.order.orderId}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  $q.notify({
+    type: 'positive',
+    message: 'ดาวน์โหลดภาพ QR Code เรียบร้อยแล้ว',
     position: 'top',
     timeout: 1500
   });
