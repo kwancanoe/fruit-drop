@@ -6,6 +6,8 @@ import {
   doc,
   setDoc,
   updateDoc,
+  deleteDoc,
+  deleteField,
   getDocs,
   query,
   where,
@@ -14,6 +16,30 @@ import {
   serverTimestamp,
   type Unsubscribe
 } from 'firebase/firestore';
+
+/**
+ * Recursively removes all keys whose value is undefined from an object.
+ * Firestore setDoc and updateDoc throw fatal errors if any field value is undefined.
+ */
+export function sanitizeFirestoreData<T>(obj: T): T {
+  if (obj === null || obj === undefined || typeof obj !== 'object') {
+    return obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(sanitizeFirestoreData) as unknown as T;
+  }
+  // Preserve Firestore FieldValue instances (serverTimestamp, deleteField, etc.)
+  if (obj.constructor && obj.constructor.name === 'FieldValue') {
+    return obj;
+  }
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      result[key] = sanitizeFirestoreData(value);
+    }
+  }
+  return result as T;
+}
 import {
   signInWithPopup,
   signOut,
@@ -303,13 +329,27 @@ export const useFruitStore = defineStore('fruit', () => {
       updates.attribution = attribution;
     }
 
-    Object.assign(targetOrder, updates);
+    // Apply updates to local targetOrder in-memory state
+    for (const [key, val] of Object.entries(updates)) {
+      if (val === undefined) {
+        delete (targetOrder as any)[key];
+      } else {
+        (targetOrder as any)[key] = val;
+      }
+    }
 
     if (targetOrder.id) {
-      await updateDoc(doc(db, 'orders', targetOrder.id), {
-        ...updates,
+      const firestoreUpdates: Record<string, any> = {
         updatedAt: serverTimestamp()
-      });
+      };
+      for (const [key, val] of Object.entries(updates)) {
+        if (val === undefined) {
+          firestoreUpdates[key] = deleteField();
+        } else {
+          firestoreUpdates[key] = sanitizeFirestoreData(val);
+        }
+      }
+      await updateDoc(doc(db, 'orders', targetOrder.id), firestoreUpdates);
     }
   }
 
@@ -342,11 +382,52 @@ export const useFruitStore = defineStore('fruit', () => {
       };
 
       // 1. Save round document
-      await setDoc(doc(db, 'rounds', roundId), newRound);
+      await setDoc(doc(db, 'rounds', roundId), sanitizeFirestoreData(newRound));
 
       // 2. Save configured products for this round
       for (const fruit of enabledFruits) {
         const prodId = `PROD-${roundId}-${fruit.fruitKey.toUpperCase()}`;
+        const bundles = fruit.fruitKey === 'ngo' ? [
+          { qtyKg: 3, price: 100, label: 'ชุด 3 กก. (100 บาท)' },
+          { qtyKg: 6, price: 200, label: 'ชุด 6 กก. (200 บาท)' },
+          { qtyKg: 9, price: 300, label: 'ชุด 9 กก. (300 บาท)' }
+        ] : fruit.fruitKey === 'mangkut' ? [
+          { qtyKg: 3, price: 150, label: 'ชุด 3 กก. (150 บาท)' },
+          { qtyKg: 5, price: 240, label: 'ชุด 5 กก. (240 บาท)' }
+        ] : fruit.fruitKey === 'longkong' ? [
+          { qtyKg: 3, price: 130, label: 'ชุด 3 กก. (130 บาท)' }
+        ] : undefined;
+
+        const sizeTiers = fruit.fruitKey === 'thurian' ? [
+          {
+            tierId: 'TIER-SMALL',
+            label: 'ลูกเล็ก (1.8 - 2.0 กก.)',
+            minKg: 1.8,
+            maxKg: 2.0,
+            estimatedPriceMin: Math.round(1.8 * fruit.pricePerKg),
+            estimatedPriceMax: Math.round(2.0 * fruit.pricePerKg),
+            reserveWeightKg: 1.9
+          },
+          {
+            tierId: 'TIER-MEDIUM',
+            label: 'ลูกกลาง (2.1 - 3.0 กก.)',
+            minKg: 2.1,
+            maxKg: 3.0,
+            estimatedPriceMin: Math.round(2.1 * fruit.pricePerKg),
+            estimatedPriceMax: Math.round(3.0 * fruit.pricePerKg),
+            reserveWeightKg: 2.5
+          },
+          {
+            tierId: 'TIER-LARGE',
+            label: 'ลูกใหญ่ (3.1 - 4.0 กก.)',
+            minKg: 3.1,
+            maxKg: 4.0,
+            estimatedPriceMin: Math.round(3.1 * fruit.pricePerKg),
+            estimatedPriceMax: Math.round(4.0 * fruit.pricePerKg),
+            reserveWeightKg: 3.5
+          }
+        ] : undefined;
+
         const prodItem: ProductItem = {
           id: prodId,
           roundId,
@@ -360,48 +441,11 @@ export const useFruitStore = defineStore('fruit', () => {
           currentReservedKg: 0,
           minKg: 1,
           stepKg: 1,
-          bundles: fruit.fruitKey === 'ngo' ? [
-            { qtyKg: 3, price: 100, label: 'ชุด 3 กก. (100 บาท)' },
-            { qtyKg: 6, price: 200, label: 'ชุด 6 กก. (200 บาท)' },
-            { qtyKg: 9, price: 300, label: 'ชุด 9 กก. (300 บาท)' }
-          ] : fruit.fruitKey === 'mangkut' ? [
-            { qtyKg: 3, price: 150, label: 'ชุด 3 กก. (150 บาท)' },
-            { qtyKg: 5, price: 240, label: 'ชุด 5 กก. (240 บาท)' }
-          ] : fruit.fruitKey === 'longkong' ? [
-            { qtyKg: 3, price: 130, label: 'ชุด 3 กก. (130 บาท)' }
-          ] : undefined,
-          sizeTiers: fruit.fruitKey === 'thurian' ? [
-            {
-              tierId: 'TIER-SMALL',
-              label: 'ลูกเล็ก (1.8 - 2.0 กก.)',
-              minKg: 1.8,
-              maxKg: 2.0,
-              estimatedPriceMin: Math.round(1.8 * fruit.pricePerKg),
-              estimatedPriceMax: Math.round(2.0 * fruit.pricePerKg),
-              reserveWeightKg: 1.9
-            },
-            {
-              tierId: 'TIER-MEDIUM',
-              label: 'ลูกกลาง (2.1 - 3.0 กก.)',
-              minKg: 2.1,
-              maxKg: 3.0,
-              estimatedPriceMin: Math.round(2.1 * fruit.pricePerKg),
-              estimatedPriceMax: Math.round(3.0 * fruit.pricePerKg),
-              reserveWeightKg: 2.5
-            },
-            {
-              tierId: 'TIER-LARGE',
-              label: 'ลูกใหญ่ (3.1 - 4.0 กก.)',
-              minKg: 3.1,
-              maxKg: 4.0,
-              estimatedPriceMin: Math.round(3.1 * fruit.pricePerKg),
-              estimatedPriceMax: Math.round(4.0 * fruit.pricePerKg),
-              reserveWeightKg: 3.5
-            }
-          ] : undefined
+          ...(bundles ? { bundles } : {}),
+          ...(sizeTiers ? { sizeTiers } : {})
         };
 
-        await setDoc(doc(db, 'products', prodId), prodItem);
+        await setDoc(doc(db, 'products', prodId), sanitizeFirestoreData(prodItem));
       }
 
       // Sync active round immediately
@@ -441,7 +485,7 @@ export const useFruitStore = defineStore('fruit', () => {
       };
 
       // 1. Update round document
-      await updateDoc(doc(db, 'rounds', roundId), roundUpdates);
+      await updateDoc(doc(db, 'rounds', roundId), sanitizeFirestoreData(roundUpdates));
 
       // 2. Fetch existing products for this round to preserve currentReservedKg
       const existingProducts = await getProductsByRoundId(roundId);
@@ -453,6 +497,47 @@ export const useFruitStore = defineStore('fruit', () => {
         const existing = existingMap.get(fruit.fruitKey);
 
         if (fruit.isEnabled) {
+          const bundles = fruit.fruitKey === 'ngo' ? [
+            { qtyKg: 3, price: 100, label: 'ชุด 3 กก. (100 บาท)' },
+            { qtyKg: 6, price: 200, label: 'ชุด 6 กก. (200 บาท)' },
+            { qtyKg: 9, price: 300, label: 'ชุด 9 กก. (300 บาท)' }
+          ] : fruit.fruitKey === 'mangkut' ? [
+            { qtyKg: 3, price: 150, label: 'ชุด 3 กก. (150 บาท)' },
+            { qtyKg: 5, price: 240, label: 'ชุด 5 กก. (240 บาท)' }
+          ] : fruit.fruitKey === 'longkong' ? [
+            { qtyKg: 3, price: 130, label: 'ชุด 3 กก. (130 บาท)' }
+          ] : undefined;
+
+          const sizeTiers = fruit.fruitKey === 'thurian' ? [
+            {
+              tierId: 'TIER-SMALL',
+              label: 'ลูกเล็ก (1.8 - 2.0 กก.)',
+              minKg: 1.8,
+              maxKg: 2.0,
+              estimatedPriceMin: Math.round(1.8 * fruit.pricePerKg),
+              estimatedPriceMax: Math.round(2.0 * fruit.pricePerKg),
+              reserveWeightKg: 1.9
+            },
+            {
+              tierId: 'TIER-MEDIUM',
+              label: 'ลูกกลาง (2.1 - 3.0 กก.)',
+              minKg: 2.1,
+              maxKg: 3.0,
+              estimatedPriceMin: Math.round(2.1 * fruit.pricePerKg),
+              estimatedPriceMax: Math.round(3.0 * fruit.pricePerKg),
+              reserveWeightKg: 2.5
+            },
+            {
+              tierId: 'TIER-LARGE',
+              label: 'ลูกใหญ่ (3.1 - 4.0 กก.)',
+              minKg: 3.1,
+              maxKg: 4.0,
+              estimatedPriceMin: Math.round(3.1 * fruit.pricePerKg),
+              estimatedPriceMax: Math.round(4.0 * fruit.pricePerKg),
+              reserveWeightKg: 3.5
+            }
+          ] : undefined;
+
           const prodItem: ProductItem = {
             id: prodId,
             roundId,
@@ -466,50 +551,12 @@ export const useFruitStore = defineStore('fruit', () => {
             currentReservedKg: existing?.currentReservedKg || 0,
             minKg: 1,
             stepKg: 1,
-            bundles: fruit.fruitKey === 'ngo' ? [
-              { qtyKg: 3, price: 100, label: 'ชุด 3 กก. (100 บาท)' },
-              { qtyKg: 6, price: 200, label: 'ชุด 6 กก. (200 บาท)' },
-              { qtyKg: 9, price: 300, label: 'ชุด 9 กก. (300 บาท)' }
-            ] : fruit.fruitKey === 'mangkut' ? [
-              { qtyKg: 3, price: 150, label: 'ชุด 3 กก. (150 บาท)' },
-              { qtyKg: 5, price: 240, label: 'ชุด 5 กก. (240 บาท)' }
-            ] : fruit.fruitKey === 'longkong' ? [
-              { qtyKg: 3, price: 130, label: 'ชุด 3 กก. (130 บาท)' }
-            ] : undefined,
-            sizeTiers: fruit.fruitKey === 'thurian' ? [
-              {
-                tierId: 'TIER-SMALL',
-                label: 'ลูกเล็ก (1.8 - 2.0 กก.)',
-                minKg: 1.8,
-                maxKg: 2.0,
-                estimatedPriceMin: Math.round(1.8 * fruit.pricePerKg),
-                estimatedPriceMax: Math.round(2.0 * fruit.pricePerKg),
-                reserveWeightKg: 1.9
-              },
-              {
-                tierId: 'TIER-MEDIUM',
-                label: 'ลูกกลาง (2.1 - 3.0 กก.)',
-                minKg: 2.1,
-                maxKg: 3.0,
-                estimatedPriceMin: Math.round(2.1 * fruit.pricePerKg),
-                estimatedPriceMax: Math.round(3.0 * fruit.pricePerKg),
-                reserveWeightKg: 2.5
-              },
-              {
-                tierId: 'TIER-LARGE',
-                label: 'ลูกใหญ่ (3.1 - 4.0 กก.)',
-                minKg: 3.1,
-                maxKg: 4.0,
-                estimatedPriceMin: Math.round(3.1 * fruit.pricePerKg),
-                estimatedPriceMax: Math.round(4.0 * fruit.pricePerKg),
-                reserveWeightKg: 3.5
-              }
-            ] : undefined
+            ...(bundles ? { bundles } : {}),
+            ...(sizeTiers ? { sizeTiers } : {})
           };
-          await setDoc(doc(db, 'products', prodId), prodItem);
+          await setDoc(doc(db, 'products', prodId), sanitizeFirestoreData(prodItem));
         } else if (existing) {
           // If disabled and previously existed, delete product doc so customer cannot book
-          const { deleteDoc } = await import('firebase/firestore');
           await deleteDoc(doc(db, 'products', prodId));
         }
       }

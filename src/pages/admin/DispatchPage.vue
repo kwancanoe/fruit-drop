@@ -53,7 +53,7 @@
     <!-- Quick Action: Scan Customer QR Code -->
     <div class="q-mb-md">
       <q-btn
-        color="primary"
+        color="positive"
         class="full-width q-py-sm text-weight-bolder text-subtitle2 shadow-2"
         no-caps
         rounded
@@ -87,6 +87,21 @@
         :order="order"
       />
     </div>
+
+    <!-- Floating Action Button (FAB) for Instant QR Scan at any scroll position -->
+    <q-page-sticky position="bottom-right" :offset="[16, 76]" style="z-index: 2000;">
+      <q-btn
+        fab
+        color="positive"
+        icon="qr_code_scanner"
+        label="สแกน QR"
+        class="shadow-4 text-weight-bolder text-subtitle2"
+        to="/admin/scan"
+        data-audit-id="fab-scan-customer-qr"
+      >
+        <q-tooltip anchor="top middle" self="bottom middle">สแกน QR Code ลูกค้าเพื่อเปิดออเดอร์ & ส่งมอบ</q-tooltip>
+      </q-btn>
+    </q-page-sticky>
   </q-page>
 </template>
 
