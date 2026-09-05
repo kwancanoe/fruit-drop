@@ -13,10 +13,10 @@
         <q-icon name="local_shipping" color="positive" size="22px" class="q-mr-sm" />
         <div>
           <div class="text-caption text-grey-9">
-            คนขายจะ Standby รอส่งของที่รถ: <strong class="text-positive">{{ standbyStartTime }} - {{ standbyEndTime }} น.</strong>
+            ช่วงเวลาพร้อมส่งของ: <strong class="text-positive">{{ standbyStartTime }} - {{ standbyEndTime }} น.</strong>
           </div>
           <div class="text-caption text-grey-6" style="font-size: 11px;">
-            กรุณาระบุเวลาที่ท่านคาดว่าจะมารับของ (ต้องอยู่ระหว่างช่วงที่คนขายรอ)
+            กรุณาระบุเวลามารับของ
           </div>
         </div>
       </div>
@@ -92,10 +92,7 @@
             <q-icon name="warning" color="negative" size="20px" />
           </template>
           <div class="text-caption text-weight-bold">
-            ⚠️ เวลา {{ inputTime }} น. อยู่นอกช่วงเวลา Standby ของคนขาย ({{ standbyStartTime }} - {{ standbyEndTime }} น.)
-          </div>
-          <div class="text-caption text-grey-8" style="font-size: 11px;">
-            กรุณาเลือกเวลาใหม่อยู่ระหว่าง {{ standbyStartTime }} น. ถึง {{ standbyEndTime }} น.
+            กรุณาเลือกเวลารับในช่วง {{ standbyStartTime }} - {{ standbyEndTime }} น.
           </div>
         </q-banner>
       </transition>

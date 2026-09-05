@@ -72,16 +72,22 @@
         @update:is-valid="val => isSlotValid = val"
       />
 
-      <!-- 5. Payment Method & PromptPay QR -->
-      <PaymentMethodPicker
-        v-model="paymentMethod"
-        :total-amount="totalEstimatedPrice"
-        :prompt-pay-number="currentRound.promptPayNumber || '0878902935'"
-        :prompt-pay-name="currentRound.promptPayName || 'นาตยา บุญณะ'"
-        :bank-name="currentRound.bankName || 'KBANK (กสิกรไทย)'"
-        :bank-account-number="currentRound.bankAccountNumber || '8172235408'"
-        :bank-account-name="currentRound.bankAccountName || 'นาตยา บุญณะ'"
-      />
+      <!-- Section 5: Pay at Tailgate Reassurance Banner (Enforced Pay at Pickup) -->
+      <q-card id="customer-pay-at-car-card" data-audit-id="customer-pay-at-car-card" class="rounded-borders bg-white shadow-1 q-mb-md">
+        <q-card-section class="q-pa-md">
+          <div class="row items-center no-wrap">
+            <q-avatar color="green-1" text-color="positive" icon="payments" size="42px" class="q-mr-md" />
+            <div>
+              <div class="text-subtitle2 text-weight-bolder text-grey-9">
+                💵 ชำระเงินตอนรับของที่ท้ายรถ (เงินสด / สแกน QR)
+              </div>
+              <div class="text-caption text-grey-7">
+                ไม่ต้องโอนเงินล่วงหน้า ตรวจรับผลไม้แล้วค่อยจ่ายเงินสด หรือสแกน QR พร้อมเพย์กับคนขายที่รถ
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
 
       <!-- 6. Prominent Order Action Section (Impossible to miss at end of form) -->
       <div class="q-mt-lg q-mb-xl bg-white q-pa-md rounded-borders shadow-2">
@@ -188,14 +194,13 @@ import { ref, computed, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import { useCustomerStorage } from '@/composables/useCustomerStorage';
-import type { OrderItem, CustomerInfo, PaymentMethod, Order, PreorderRound } from '@/types/fruit_app';
+import type { OrderItem, CustomerInfo, Order, PreorderRound } from '@/types/fruit_app';
 import { calculateItemSubtotal } from '@/utils/pricing';
 import ActiveRoundsList from '@/components/customer/ActiveRoundsList.vue';
 import BatchHeaderCard from '@/components/customer/BatchHeaderCard.vue';
 import FruitSelector from '@/components/customer/FruitSelector.vue';
 import ContactPicker from '@/components/customer/ContactPicker.vue';
 import PickupSlotPicker from '@/components/customer/PickupSlotPicker.vue';
-import PaymentMethodPicker from '@/components/customer/PaymentMethodPicker.vue';
 import OrderQueueCard from '@/components/customer/OrderQueueCard.vue';
 
 const $q = useQuasar();
@@ -226,7 +231,6 @@ const customerInfo = ref<CustomerInfo>({
 });
 const selectedSlot = ref<string>('19:30 น.');
 const isSlotValid = ref<boolean>(true);
-const paymentMethod = ref<PaymentMethod>('PAY_AT_CAR');
 
 // Modal states
 const showSuccessModal = ref<boolean>(false);
@@ -315,8 +319,8 @@ async function handlePlaceOrder() {
       items: [...orderedItems.value],
       pickupSlot: selectedSlot.value,
       pickupTime: selectedSlot.value,
-      paymentMethod: paymentMethod.value,
-      paymentStatus: paymentMethod.value === 'PROMPTPAY_PREPAID' ? 'VERIFYING_SLIP' : 'UNPAID',
+      paymentMethod: 'PAY_AT_CAR',
+      paymentStatus: 'UNPAID',
       totalEstimatedPrice: totalEstimatedPrice.value
     });
 
@@ -331,8 +335,8 @@ async function handlePlaceOrder() {
       pickupSlot: selectedSlot.value,
       pickupTime: selectedSlot.value,
       orderStatus: 'WAITING_PICKUP',
-      paymentMethod: paymentMethod.value,
-      paymentStatus: paymentMethod.value === 'PROMPTPAY_PREPAID' ? 'VERIFYING_SLIP' : 'UNPAID',
+      paymentMethod: 'PAY_AT_CAR',
+      paymentStatus: 'UNPAID',
       totalEstimatedPrice: totalEstimatedPrice.value,
       totalFinalPrice: totalEstimatedPrice.value,
       createdAt: Date.now()

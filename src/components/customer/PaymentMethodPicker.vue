@@ -25,7 +25,7 @@
         </q-item-section>
         <q-item-section>
           <q-item-label class="text-subtitle2 text-weight-bold">
-            💵 จ่ายตอนรับของที่รถ (เงินสด / สแกน QR)
+            💵 จ่ายตอนรับของ (เงินสด / สแกน QR)
           </q-item-label>
           <q-item-label caption class="text-grey-7">
             จ่ายเงินสด หรือสแกนจ่ายตอนรับผลไม้
