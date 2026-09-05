@@ -328,6 +328,9 @@ export const useFruitStore = defineStore('fruit', () => {
         pickupSlots: payload.pickupSlots,
         promptPayNumber: payload.promptPayNumber,
         promptPayName: payload.promptPayName,
+        bankName: payload.bankName || 'KBANK (กสิกรไทย)',
+        bankAccountNumber: payload.bankAccountNumber || '8172235408',
+        bankAccountName: payload.bankAccountName || payload.promptPayName || 'นาตยา บุญณะ',
         isOpen: true,
         fruitSummary: fruitNames,
         createdAt: timestamp
@@ -373,7 +376,7 @@ export const useFruitStore = defineStore('fruit', () => {
             },
             {
               tierId: 'TIER-MEDIUM',
-              label: 'ลูกกลาง (2.1 - 3.0 กก.) ★ ยอดนิยม',
+              label: 'ลูกกลาง (2.1 - 3.0 กก.)',
               minKg: 2.1,
               maxKg: 3.0,
               estimatedPriceMin: Math.round(2.1 * fruit.pricePerKg),
@@ -423,8 +426,11 @@ export const useFruitStore = defineStore('fruit', () => {
       pickupDate: 'วันอังคารที่ 8 กันยายน 2569',
       pickupLocation: 'ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B',
       pickupSlots: ['19:00 - 19:30', '19:30 - 20:00', '20:00 - 20:30', '21:00+ (หลังห้างปิด)'],
-      promptPayNumber: '081-234-5678',
-      promptPayName: 'คุณอ้น (ธ.กสิกรไทย)',
+      promptPayNumber: '0878902935',
+      promptPayName: 'นาตยา บุญณะ',
+      bankName: 'KBANK (กสิกรไทย)',
+      bankAccountNumber: '8172235408',
+      bankAccountName: 'นาตยา บุญณะ',
       isOpen: true,
       fruitSummary: ['เงาะโรงเรียน', 'ทุเรียนหมอนทอง'],
       createdAt: Date.now()
@@ -509,7 +515,7 @@ function getDefaultProducts(roundId: string): ProductItem[] {
         },
         {
           tierId: 'TIER-MEDIUM',
-          label: 'ลูกกลาง (2.1 - 3.0 กก.) ★ ยอดนิยม',
+          label: 'ลูกกลาง (2.1 - 3.0 กก.)',
           minKg: 2.1,
           maxKg: 3.0,
           estimatedPriceMin: 336,

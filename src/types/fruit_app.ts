@@ -69,8 +69,11 @@ export interface PreorderRound {
   pickupDate: string;           // e.g. "วันอังคารที่ 8 กันยายน 2569"
   pickupLocation: string;       // e.g. "ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B"
   pickupSlots: string[];        // ["19:00 - 19:30", "19:30 - 20:00", "20:00 - 20:30", "21:00+ (หลังห้างปิด)"]
-  promptPayNumber: string;      // "081-234-5678"
-  promptPayName: string;        // "คุณอ้น (ธ.กสิกรไทย)"
+  promptPayNumber: string;      // "0878902935"
+  promptPayName: string;        // "นาตยา บุญณะ"
+  bankName?: string | undefined;         // "กสิกรไทย (KBANK)"
+  bankAccountNumber?: string | undefined;// "8172235408"
+  bankAccountName?: string | undefined;  // "นาตยา บุญณะ"
   isOpen: boolean;              // Open for customer pre-orders
   fruitSummary?: string[] | undefined; // Quick preview list e.g. ["เงาะโรงเรียน", "ทุเรียนหมอนทอง"]
   createdAt: number;
@@ -94,6 +97,9 @@ export interface RoundCreationPayload {
   pickupSlots: string[];
   promptPayNumber: string;
   promptPayName: string;
+  bankName?: string | undefined;
+  bankAccountNumber?: string | undefined;
+  bankAccountName?: string | undefined;
   fruits: RoundCreationFruitConfig[];
 }
 

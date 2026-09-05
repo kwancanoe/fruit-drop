@@ -2,17 +2,6 @@
   <!-- Section: Customer Batch Header & Announcement Banner -->
   <q-card id="customer-batch-header" data-audit-id="customer-batch-header" class="rounded-borders bg-white shadow-2 q-mb-md">
     <q-card-section class="q-pa-md text-center">
-      <!-- Mascot Logo -->
-      <div class="row justify-center items-center q-mb-sm">
-        <q-img
-          src="/mascots/logo_fruit_drop.png"
-          alt="Fruit Drop Logo"
-          style="max-width: 170px;"
-          fit="contain"
-          class="cursor-pointer"
-        />
-      </div>
-
       <!-- Round Title -->
       <div class="text-h6 text-weight-bolder text-primary q-mb-xs">
         {{ round?.title || 'เปิดรอบสั่งจองผลไม้สด Fruit Drop' }}

@@ -74,8 +74,11 @@
       <PaymentMethodPicker
         v-model="paymentMethod"
         :total-amount="totalEstimatedPrice"
-        :prompt-pay-number="currentRound.promptPayNumber || '081-234-5678'"
-        :prompt-pay-name="currentRound.promptPayName || 'คุณอ้น (ธ.กสิกรไทย)'"
+        :prompt-pay-number="currentRound.promptPayNumber || '0878902935'"
+        :prompt-pay-name="currentRound.promptPayName || 'นาตยา บุญณะ'"
+        :bank-name="currentRound.bankName || 'KBANK (กสิกรไทย)'"
+        :bank-account-number="currentRound.bankAccountNumber || '8172235408'"
+        :bank-account-name="currentRound.bankAccountName || 'นาตยา บุญณะ'"
       />
 
       <!-- 6. Prominent Order Action Section (Impossible to miss at end of form) -->

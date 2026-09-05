@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 import {
   collection,
   doc,
+  getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -83,7 +84,25 @@ export const useUserStore = defineStore('user', () => {
     const normalizedEmail = email.toLowerCase().trim();
     let found = users.value.find(u => u.email.toLowerCase() === normalizedEmail);
 
-    // Bootstrap fallback check
+    // Direct Firestore lookup if cache is not yet ready
+    if (!found) {
+      try {
+        const userDocRef = doc(db, 'users', normalizedEmail);
+        const snap = await getDoc(userDocRef);
+        if (snap.exists()) {
+          const data = snap.data() as AppUser;
+          found = {
+            ...data,
+            id: snap.id,
+            email: data.email || snap.id
+          };
+        }
+      } catch (err) {
+        console.warn('Direct user lookup error:', err);
+      }
+    }
+
+    // Bootstrap fallback if not found in Firestore
     if (!found) {
       if (normalizedEmail === 'wittinunt.k@gmail.com') {
         found = {
@@ -97,8 +116,8 @@ export const useUserStore = defineStore('user', () => {
       } else if (normalizedEmail === 'natyabuyna089@gmail.com') {
         found = {
           email: normalizedEmail,
-          displayName: 'น้องอ้น (Natyabuyna)',
-          phone: '0812345678',
+          displayName: 'นาตยา บุญณะ',
+          phone: '0878902935',
           role: 'SHOP_OWNER',
           isActive: true,
           createdAt: Date.now()

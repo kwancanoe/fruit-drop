@@ -84,6 +84,9 @@
           <div class="text-caption text-grey-8 q-mt-xs">
             บัญชีพร้อมเพย์: <span class="text-weight-bold">{{ promptPayNumber }}</span> ({{ promptPayName }})
           </div>
+          <div v-if="bankAccountNumber" class="text-caption text-grey-8 q-mt-xs">
+            หรือโอนเข้าบัญชี: <span class="text-weight-bold text-primary">{{ bankName || 'KBANK (กสิกรไทย)' }} {{ bankAccountNumber }}</span> ({{ bankAccountName || promptPayName }})
+          </div>
           <div class="text-caption text-positive text-weight-bold q-mt-xs">
             * สแกนแล้วยอดเงินจะขึ้นตรงตามจำนวนอัตโนมัติ ไม่ต้องพิมพ์ตัวเลขเอง
           </div>
@@ -103,6 +106,9 @@ const props = defineProps<{
   totalAmount: number;
   promptPayNumber: string;
   promptPayName: string;
+  bankName?: string | undefined;
+  bankAccountNumber?: string | undefined;
+  bankAccountName?: string | undefined;
 }>();
 
 const emit = defineEmits<{

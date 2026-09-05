@@ -125,8 +125,8 @@
       v-model:is-open="isScaleModalOpen"
       :order="scaleTargetOrder"
       :item-index="scaleTargetItemIndex"
-      :prompt-pay-number="fruitStore.activeRound?.promptPayNumber || '081-234-5678'"
-      :prompt-pay-name="fruitStore.activeRound?.promptPayName || 'คุณอ้น (ธ.กสิกรไทย)'"
+      :prompt-pay-number="fruitStore.activeRound?.promptPayNumber || '0878902935'"
+      :prompt-pay-name="fruitStore.activeRound?.promptPayName || 'นาตยา บุญณะ'"
       @confirm="handleScaleConfirm"
     />
 

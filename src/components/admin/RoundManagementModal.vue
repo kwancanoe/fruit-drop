@@ -184,15 +184,15 @@
             </div>
           </div>
 
-          <!-- PromptPay Details -->
-          <div class="row q-mb-md">
+          <!-- Payment & Bank Details -->
+          <div class="row q-mb-sm">
             <div class="col-12 col-sm-6 q-pr-sm-xs q-mb-sm q-mb-sm-none">
               <q-input
                 v-model="newRoundForm.promptPayNumber"
                 outlined
                 dense
                 label="เบอร์พร้อมเพย์รับเงิน *"
-                placeholder="0812345678"
+                placeholder="0878902935"
               >
                 <template #prepend>
                   <q-icon name="payments" color="primary" />
@@ -205,10 +205,39 @@
                 outlined
                 dense
                 label="ชื่อบัญชีรับเงิน *"
-                placeholder="คุณอ้น (ธ.กสิกรไทย)"
+                placeholder="นาตยา บุญณะ"
               >
                 <template #prepend>
                   <q-icon name="account_circle" color="primary" />
+                </template>
+              </q-input>
+            </div>
+          </div>
+
+          <div class="row q-mb-md">
+            <div class="col-12 col-sm-6 q-pr-sm-xs q-mb-sm q-mb-sm-none">
+              <q-input
+                v-model="newRoundForm.bankName"
+                outlined
+                dense
+                label="ธนาคารรับโอน"
+                placeholder="KBANK (กสิกรไทย)"
+              >
+                <template #prepend>
+                  <q-icon name="account_balance" color="primary" />
+                </template>
+              </q-input>
+            </div>
+            <div class="col-12 col-sm-6 q-pl-sm-xs">
+              <q-input
+                v-model="newRoundForm.bankAccountNumber"
+                outlined
+                dense
+                label="เลขที่บัญชีธนาคาร"
+                placeholder="8172235408"
+              >
+                <template #prepend>
+                  <q-icon name="credit_card" color="primary" />
                 </template>
               </q-input>
             </div>
@@ -391,8 +420,10 @@ const newRoundForm = ref({
   pickupDate: 'วันอังคารที่ 8 กันยายน 2569',
   pickupLocation: 'ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B',
   pickupSlots: ['19:00 - 19:30', '19:30 - 20:00', '20:00 - 20:30', '21:00+ (หลังห้างปิด)'],
-  promptPayNumber: '081-234-5678',
-  promptPayName: 'คุณอ้น (ธ.กสิกรไทย)',
+  promptPayNumber: '0878902935',
+  promptPayName: 'นาตยา บุญณะ',
+  bankName: 'KBANK (กสิกรไทย)',
+  bankAccountNumber: '8172235408',
   fruits: getInitialFruitConfigs()
 });
 
@@ -442,6 +473,9 @@ async function handleCreateRound() {
       pickupSlots: newRoundForm.value.pickupSlots,
       promptPayNumber: newRoundForm.value.promptPayNumber.trim(),
       promptPayName: newRoundForm.value.promptPayName.trim(),
+      bankName: newRoundForm.value.bankName.trim(),
+      bankAccountNumber: newRoundForm.value.bankAccountNumber.trim(),
+      bankAccountName: newRoundForm.value.promptPayName.trim(),
       fruits: newRoundForm.value.fruits
     });
 
