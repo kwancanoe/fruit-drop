@@ -94,27 +94,31 @@
           </div>
 
           <div class="bg-grey-1 q-pa-md rounded-borders">
-            <div class="row items-center justify-between q-mb-xs">
-              <div>
-                <span class="text-subtitle1 text-weight-bolder text-grey-9">{{ order.customer.name }}</span>
-                <div class="text-body2 text-grey-7">
-                  🏢 {{ order.customer.shop }} • ชั้น {{ order.customer.floor }}
+            <div class="row items-center justify-between no-wrap">
+              <div class="col ellipsis">
+                <div class="text-subtitle1 text-weight-bolder text-grey-9 ellipsis">{{ order.customer.name }}</div>
+                <div class="text-caption text-grey-7 q-mt-xs">
+                  🏢 {{ order.customer.shop }} • ชั้น {{ order.customer.floor.replace(/^ชั้น\s*/, '') }}
+                </div>
+                <div class="text-caption text-grey-8 text-weight-medium q-mt-xs">
+                  เบอร์โทรศัพท์: <strong>{{ order.customer.phone }}</strong>
                 </div>
               </div>
 
-              <!-- Quick Call Customer -->
-              <q-btn
-                color="primary"
-                icon="phone"
-                label="โทรหา"
-                no-caps
-                dense
-                class="q-px-sm text-weight-bold"
-                :href="`tel:${order.customer.phone}`"
-              />
-            </div>
-            <div class="text-caption text-grey-7 q-mt-xs">
-              เบอร์โทรศัพท์: <strong>{{ order.customer.phone }}</strong>
+              <!-- Sleek Mobile Call Button -->
+              <div class="col-auto q-pl-md">
+                <q-btn
+                  round
+                  color="positive"
+                  icon="phone"
+                  size="md"
+                  class="shadow-2"
+                  :href="`tel:${order.customer.phone}`"
+                  data-audit-id="btn-call-customer"
+                >
+                  <q-tooltip>โทรหาลูกค้า</q-tooltip>
+                </q-btn>
+              </div>
             </div>
           </div>
         </q-card-section>
@@ -272,7 +276,7 @@
                 หรือโอน ธ.กสิกรไทย <strong>{{ activeRound?.bankAccountNumber || '8172235408' }}</strong>
               </div>
               <div class="text-caption text-positive text-weight-bold q-mt-xs">
-                📱 ให้ลูกค้าเปิดแอปธนาคารสแกนหน้าจอนี้ได้ทันที ยอดเงินตรงตามจำนวน
+                📱 ให้ลูกค้าเปิดแอปธนาคารสแกนหน้าจอนี้ได้ทันที
               </div>
             </div>
           </div>

@@ -203,6 +203,7 @@ export const useFruitStore = defineStore('fruit', () => {
     customer: CustomerInfo;
     items: OrderItem[];
     pickupSlot: string;
+    pickupTime?: string;
     paymentMethod: PaymentMethod;
     paymentStatus: PaymentStatus;
     totalEstimatedPrice: number;
@@ -219,6 +220,7 @@ export const useFruitStore = defineStore('fruit', () => {
         customer: payload.customer,
         items: payload.items,
         pickupSlot: payload.pickupSlot,
+        pickupTime: payload.pickupTime || payload.pickupSlot,
         orderStatus: 'WAITING_PICKUP',
         paymentMethod: payload.paymentMethod,
         paymentStatus: payload.paymentStatus,
@@ -326,6 +328,9 @@ export const useFruitStore = defineStore('fruit', () => {
         pickupDate: payload.pickupDate,
         pickupLocation: payload.pickupLocation,
         pickupSlots: payload.pickupSlots,
+        standbyTime: payload.standbyTime,
+        standbyStartTime: payload.standbyStartTime,
+        standbyEndTime: payload.standbyEndTime,
         promptPayNumber: payload.promptPayNumber,
         promptPayName: payload.promptPayName,
         bankName: payload.bankName || 'KBANK (กสิกรไทย)',
@@ -422,6 +427,9 @@ export const useFruitStore = defineStore('fruit', () => {
         pickupDate: payload.pickupDate,
         pickupLocation: payload.pickupLocation,
         pickupSlots: payload.pickupSlots,
+        standbyTime: payload.standbyTime,
+        standbyStartTime: payload.standbyStartTime,
+        standbyEndTime: payload.standbyEndTime,
         promptPayNumber: payload.promptPayNumber,
         promptPayName: payload.promptPayName,
         bankName: payload.bankName || 'KBANK (กสิกรไทย)',

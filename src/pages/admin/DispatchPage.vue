@@ -87,19 +87,6 @@
         :order="order"
       />
     </div>
-
-    <!-- Floating Action Button for Instant Camera QR Scan -->
-    <q-page-sticky position="bottom-right" :offset="[16, 80]">
-      <q-btn
-        fab
-        icon="qr_code_scanner"
-        color="primary"
-        label="สแกน QR"
-        class="shadow-4 text-weight-bolder"
-        to="/admin/scan"
-        data-audit-id="fab-scan-customer-qr"
-      />
-    </q-page-sticky>
   </q-page>
 </template>
 

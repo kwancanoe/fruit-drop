@@ -10,30 +10,26 @@
           data-audit-id="btn-logo-nav-to-storefront"
           @click="$router.push('/')"
         >
-          <q-avatar size="34px" class="q-mr-sm">
+          <q-avatar size="30px" class="q-mr-xs">
             <q-img src="/mascots/logo_fruit_drop.png" fit="contain" />
           </q-avatar>
-          <q-toolbar-title class="text-subtitle1 text-weight-bolder text-grey-9 q-pa-none">
-            Fruit Drop <span class="text-caption text-positive text-weight-bold">แอดมิน</span>
-          </q-toolbar-title>
-          <q-tooltip anchor="bottom middle" self="top middle">แตะเพื่อไปยังหน้าสั่งจองของลูกค้า (หน้าร้าน)</q-tooltip>
+          <span class="text-subtitle1 text-weight-bolder text-grey-9">Fruit Drop</span>
+          <q-tooltip anchor="bottom middle" self="top middle">แตะเพื่อไปยังหน้าร้าน</q-tooltip>
         </div>
 
-        <!-- User Profile Chip & Role Badge -->
-        <q-chip dense color="grey-2" text-color="grey-9" class="q-mr-xs">
-          <q-avatar icon="person" color="primary" text-color="white" />
-          <span class="text-caption ellipsis text-weight-medium" style="max-width: 90px;">
+        <!-- User Role Badge & Name (Minimal & uncluttered) -->
+        <div class="row items-center no-wrap q-mr-sm text-caption text-grey-8">
+          <span class="text-weight-medium ellipsis" style="max-width: 110px;">
             {{ userStore.currentAppUser?.displayName || fruitStore.authUser.displayName || fruitStore.authUser.email }}
           </span>
           <q-badge
             :color="userStore.isSystemAdmin ? 'purple-9' : userStore.isShopOwner ? 'positive' : 'warning'"
             class="q-ml-xs text-weight-bolder"
-            style="font-size: 10px;"
             rounded
           >
             {{ userStore.isSystemAdmin ? 'Admin' : userStore.isShopOwner ? 'Owner' : 'Seller' }}
           </q-badge>
-        </q-chip>
+        </div>
 
         <!-- Logout Action Button -->
         <q-btn

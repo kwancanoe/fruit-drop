@@ -77,10 +77,12 @@
           </q-badge>
         </div>
 
-        <!-- Details: Date & Location -->
+        <!-- Details: Date, Standby & Location -->
         <div class="text-caption text-grey-7 row items-center q-mb-xs">
-          <q-icon name="schedule" size="14px" class="q-mr-xs text-primary" />
+          <q-icon name="event" size="14px" class="q-mr-xs text-primary" />
           <span class="text-weight-medium q-mr-md">{{ round.pickupDate }}</span>
+          <q-icon name="schedule" size="14px" class="q-mr-xs text-primary" />
+          <span class="text-weight-medium q-mr-md">Standby: {{ round.standbyTime || (round.pickupSlots && round.pickupSlots[0]) || '19:00 - 23:00' }} น.</span>
           <q-icon name="place" size="14px" class="q-mr-xs text-primary" />
           <span class="ellipsis">{{ round.pickupLocation }}</span>
         </div>

@@ -66,8 +66,10 @@
 
       <!-- 4. Pickup Time-Slot Chips -->
       <PickupSlotPicker
+        :round="currentRound"
         :slots="availablePickupSlots"
         v-model="selectedSlot"
+        @update:is-valid="val => isSlotValid = val"
       />
 
       <!-- 5. Payment Method & PromptPay QR -->
@@ -97,7 +99,7 @@
           no-caps
           rounded
           :loading="fruitStore.isLoading"
-          :disable="orderedItems.length === 0 || !isContactValid"
+          :disable="orderedItems.length === 0 || !isContactValid || !isSlotValid"
           @click="handlePlaceOrder"
         >
           <q-icon name="check_circle" class="q-mr-xs" size="24px" />
@@ -109,6 +111,9 @@
         </div>
         <div v-else-if="!isContactValid" class="text-center text-caption text-negative q-mt-xs">
           * กรุณากรอกชื่อและเบอร์โทรศัพท์ให้ครบถ้วน
+        </div>
+        <div v-else-if="!isSlotValid" class="text-center text-caption text-negative q-mt-xs">
+          * เวลานัดรับอยู่นอกช่วงเวลา Standby ของคนขาย
         </div>
 
         <div class="q-mt-md text-center">
@@ -126,7 +131,7 @@
 
       <!-- 7. Sticky Bottom Bar for quick action while scrolling -->
       <div
-        v-if="orderedItems.length > 0 && isContactValid"
+        v-if="orderedItems.length > 0 && isContactValid && isSlotValid"
         class="fixed-bottom bg-white shadow-up-3 q-pa-sm row items-center justify-between"
         style="z-index: 1000;"
       >
@@ -206,9 +211,8 @@ function handleSelectRound(round: PreorderRound) {
   selectedRoundId.value = round.roundId;
   fruitStore.selectActiveRound(round);
   orderedItems.value = [];
-  if (round.pickupSlots && round.pickupSlots.length > 0 && round.pickupSlots[0]) {
-    selectedSlot.value = round.pickupSlots[0];
-  }
+  const start = round.standbyStartTime || (round.pickupSlots?.[0]?.match(/(\d{1,2}:\d{2})/)?.[1]) || '19:00';
+  selectedSlot.value = `${start} น.`;
 }
 
 // Form states
@@ -219,7 +223,8 @@ const customerInfo = ref<CustomerInfo>({
   floor: 'ชั้น 1',
   shop: ''
 });
-const selectedSlot = ref<string>('19:00 - 19:30');
+const selectedSlot = ref<string>('19:30 น.');
+const isSlotValid = ref<boolean>(true);
 const paymentMethod = ref<PaymentMethod>('PAY_AT_CAR');
 
 // Modal states
@@ -298,6 +303,15 @@ async function handlePlaceOrder() {
     return;
   }
 
+  if (!isSlotValid.value) {
+    $q.notify({
+      type: 'negative',
+      message: 'เวลานัดรับอยู่นอกช่วงเวลา Standby ของคนขาย กรุณาเลือกเวลาใหม่',
+      position: 'top'
+    });
+    return;
+  }
+
   try {
     saveProfile(customerInfo.value);
 
@@ -307,6 +321,7 @@ async function handlePlaceOrder() {
       customer: { ...customerInfo.value },
       items: [...orderedItems.value],
       pickupSlot: selectedSlot.value,
+      pickupTime: selectedSlot.value,
       paymentMethod: paymentMethod.value,
       paymentStatus: paymentMethod.value === 'PROMPTPAY_PREPAID' ? 'VERIFYING_SLIP' : 'UNPAID',
       totalEstimatedPrice: totalEstimatedPrice.value
@@ -321,6 +336,7 @@ async function handlePlaceOrder() {
       customer: { ...customerInfo.value },
       items: [...orderedItems.value],
       pickupSlot: selectedSlot.value,
+      pickupTime: selectedSlot.value,
       orderStatus: 'WAITING_PICKUP',
       paymentMethod: paymentMethod.value,
       paymentStatus: paymentMethod.value === 'PROMPTPAY_PREPAID' ? 'VERIFYING_SLIP' : 'UNPAID',

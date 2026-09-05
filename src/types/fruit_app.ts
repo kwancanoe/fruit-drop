@@ -68,7 +68,10 @@ export interface PreorderRound {
   title: string;
   pickupDate: string;           // e.g. "วันอังคารที่ 8 กันยายน 2569"
   pickupLocation: string;       // e.g. "ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B"
-  pickupSlots: string[];        // ["19:00 - 19:30", "19:30 - 20:00", "20:00 - 20:30", "21:00+ (หลังห้างปิด)"]
+  standbyTime?: string | undefined;         // e.g. "19:00 - 23:00" (single standby window)
+  standbyStartTime?: string | undefined;    // e.g. "19:00"
+  standbyEndTime?: string | undefined;      // e.g. "23:00"
+  pickupSlots: string[];        // ["19:00 - 23:00"] backward-compatible
   promptPayNumber: string;      // "0878902935"
   promptPayName: string;        // "นาตยา บุญณะ"
   bankName?: string | undefined;         // "กสิกรไทย (KBANK)"
@@ -95,6 +98,9 @@ export interface RoundCreationPayload {
   title: string;
   pickupDate: string;
   pickupLocation: string;
+  standbyTime?: string | undefined;
+  standbyStartTime?: string | undefined;
+  standbyEndTime?: string | undefined;
   pickupSlots: string[];
   promptPayNumber: string;
   promptPayName: string;
@@ -109,6 +115,9 @@ export interface RoundUpdatePayload {
   title: string;
   pickupDate: string;
   pickupLocation: string;
+  standbyTime?: string | undefined;
+  standbyStartTime?: string | undefined;
+  standbyEndTime?: string | undefined;
   pickupSlots: string[];
   promptPayNumber: string;
   promptPayName: string;
@@ -177,7 +186,8 @@ export interface Order {
   roundId: string;
   customer: CustomerInfo;
   items: OrderItem[];
-  pickupSlot: string;           // "19:00 - 19:30"
+  pickupSlot: string;           // "19:00 - 23:00" or approximate time e.g. "19:30 น."
+  pickupTime?: string | undefined; // "19:30" (customer's approximate arrival time)
   orderStatus: OrderStatus;     // 'WAITING_PICKUP' | 'COMPLETED' | 'CANCELLED'
 
   paymentMethod: PaymentMethod; // 'PAY_AT_CAR' | 'PROMPTPAY_PREPAID'

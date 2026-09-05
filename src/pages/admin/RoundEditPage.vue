@@ -55,57 +55,8 @@
           />
         </div>
 
-        <!-- Requirement 4: Interactive Date Picker with Quick Presets -->
+        <!-- 1. Pickup Date Picker (Clean, No Shortcut Chips) -->
         <div class="q-mb-sm">
-          <div class="text-caption text-grey-8 q-mb-xs text-weight-bold">
-            วันที่นัดรับของ * (เลือกจากปฏิทินหรือปุ่มด่วน):
-          </div>
-
-          <!-- Quick Preset Chips -->
-          <div class="row items-center q-mb-xs">
-            <q-chip
-              clickable
-              dense
-              outline
-              color="primary"
-              icon="today"
-              label="วันนี้"
-              class="q-mr-xs q-mb-xs text-weight-bold"
-              @click="applyDatePreset(0)"
-            />
-            <q-chip
-              clickable
-              dense
-              outline
-              color="primary"
-              icon="event"
-              label="พรุ่งนี้"
-              class="q-mr-xs q-mb-xs text-weight-bold"
-              @click="applyDatePreset(1)"
-            />
-            <q-chip
-              clickable
-              dense
-              outline
-              color="primary"
-              icon="date_range"
-              label="วันอังคารหน้า"
-              class="q-mr-xs q-mb-xs text-weight-bold"
-              @click="applyNextWeekdayPreset(2)"
-            />
-            <q-chip
-              clickable
-              dense
-              outline
-              color="primary"
-              icon="date_range"
-              label="วันศุกร์หน้า"
-              class="q-mr-xs q-mb-xs text-weight-bold"
-              @click="applyNextWeekdayPreset(5)"
-            />
-          </div>
-
-          <!-- Date Input with Calendar Popup -->
           <q-input
             v-model="form.pickupDate"
             outlined
@@ -171,57 +122,69 @@
           </q-input>
         </div>
 
-        <!-- Requirement 4: Interactive Pickup Slots Selection -->
+        <!-- Standby Window (Single Period when seller waits at tailgate) -->
         <div class="q-mb-sm">
-          <div class="row items-center justify-between q-mb-xs">
-            <span class="text-caption text-grey-8 text-weight-bold">
-              ช่วงเวลานัดรับของ * (แตะเพื่อเลือก/ยกเลิก):
-            </span>
-            <span class="text-caption text-positive text-weight-bold">
-              เลือกไว้ {{ form.pickupSlots.length }} ช่วงเวลา
-            </span>
+          <div class="text-caption text-grey-8 text-weight-bold q-mb-xs">
+            ช่วงเวลาที่คนขาย Standby รอส่งของที่รถ (ช่วงเดียว) *
+          </div>
+          <div class="text-caption text-grey-6 q-mb-sm" style="font-size: 11px;">
+            กำหนดช่วงเวลาที่คนขายจะไปรอส่งของที่รถ (เช่น 19:00 - 23:00) เพื่อให้ลูกค้าระบุเวลามารับของในช่วงนี้
           </div>
 
-          <!-- Standard Preset Slot Toggles -->
-          <div class="row items-center q-mb-sm">
-            <q-chip
-              v-for="slot in PRESET_SLOTS"
-              :key="slot"
-              clickable
-              :color="isSlotSelected(slot) ? 'positive' : 'grey-2'"
-              :text-color="isSlotSelected(slot) ? 'white' : 'grey-9'"
-              :icon="isSlotSelected(slot) ? 'check' : 'schedule'"
-              class="q-mr-xs q-mb-xs text-weight-bold"
-              :data-audit-id="`slot-chip-${slot}`"
-              @click="toggleSlot(slot)"
-            >
-              {{ slot }}
-            </q-chip>
-          </div>
-
-          <!-- Custom Slot Add Input -->
-          <div class="row items-center q-mb-xs">
-            <div class="col-8 col-sm-9 q-pr-xs">
+          <div class="row q-col-gutter-sm items-center q-mb-xs">
+            <div class="col-6">
               <q-input
-                v-model="customSlotInput"
+                v-model="form.standbyStartTime"
                 outlined
                 dense
-                placeholder="เช่น 12:00 - 13:00 (รอบเที่ยง)"
-                label="เพิ่มช่วงเวลาอื่นที่ไม่มีในตัวเลือก"
-                @keyup.enter="addCustomSlot"
-              />
+                label="เวลาเริ่ม Standby *"
+                mask="time"
+                placeholder="19:00"
+                data-audit-id="input-standby-start"
+              >
+                <template #prepend>
+                  <q-icon name="access_time" color="positive" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-time v-model="form.standbyStartTime" format24h color="positive">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="ตกลง" color="positive" flat />
+                        </div>
+                      </q-time>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
             </div>
-            <div class="col-4 col-sm-3 q-pl-xs">
-              <q-btn
-                outline
-                color="positive"
-                icon="add"
-                label="เพิ่มรอบ"
-                class="full-width q-py-xs text-weight-bold"
-                no-caps
-                @click="addCustomSlot"
-              />
+
+            <div class="col-6">
+              <q-input
+                v-model="form.standbyEndTime"
+                outlined
+                dense
+                label="เวลาสิ้นสุด Standby *"
+                mask="time"
+                placeholder="23:00"
+                data-audit-id="input-standby-end"
+              >
+                <template #prepend>
+                  <q-icon name="access_time" color="positive" class="cursor-pointer">
+                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+                      <q-time v-model="form.standbyEndTime" format24h color="positive">
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="ตกลง" color="positive" flat />
+                        </div>
+                      </q-time>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
             </div>
+          </div>
+
+          <!-- Standby Window Preview Banner -->
+          <div class="bg-green-1 q-pa-sm rounded-borders row items-center text-primary text-caption text-weight-bold">
+            <q-icon name="schedule" size="18px" class="q-mr-xs" />
+            <span>คนขายจะ Standby: {{ computedStandbyTime }} น.</span>
           </div>
         </div>
 
@@ -460,20 +423,6 @@ const fruitStore = useFruitStore();
 const roundId = computed<string>(() => (route.params.roundId as string) || '');
 const isEditMode = computed<boolean>(() => !!roundId.value && roundId.value !== 'new');
 const isLoadingData = ref<boolean>(false);
-
-// Standard Delivery Slot Presets
-const PRESET_SLOTS = [
-  '17:00 - 18:00 (รอบเย็นเลิกงาน)',
-  '18:00 - 18:30',
-  '18:30 - 19:00',
-  '19:00 - 19:30',
-  '19:30 - 20:00',
-  '20:00 - 20:30',
-  '20:30 - 21:00',
-  '21:00+ (หลังห้างปิด / ท้ายรถ)'
-];
-
-const customSlotInput = ref<string>('');
 const calendarDate = ref<string>('');
 
 // Thai Date Formatters
@@ -499,57 +448,9 @@ function formatThaiDateFromIso(isoStr: string): string {
   return `${dayName} ${day} ${monthName} ${thaiYear}`;
 }
 
-function formatDateToIso(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}/${m}/${day}`;
-}
-
-// Quick Date Preset: Add N days from today
-function applyDatePreset(daysFromToday: number) {
-  const d = new Date();
-  d.setDate(d.getDate() + daysFromToday);
-  calendarDate.value = formatDateToIso(d);
-  form.value.pickupDate = formatThaiDateFromIso(calendarDate.value);
-}
-
-// Quick Date Preset: Next specific weekday (0=Sun, 2=Tue, 5=Fri)
-function applyNextWeekdayPreset(targetDayOfWeek: number) {
-  const d = new Date();
-  let daysUntil = (targetDayOfWeek - d.getDay() + 7) % 7;
-  if (daysUntil === 0) daysUntil = 7; // next week
-  d.setDate(d.getDate() + daysUntil);
-  calendarDate.value = formatDateToIso(d);
-  form.value.pickupDate = formatThaiDateFromIso(calendarDate.value);
-}
-
 function onCalendarDatePicked(val: string) {
   if (!val) return;
   form.value.pickupDate = formatThaiDateFromIso(val);
-}
-
-// Slot toggle handlers
-function isSlotSelected(slot: string): boolean {
-  return form.value.pickupSlots.includes(slot);
-}
-
-function toggleSlot(slot: string) {
-  const idx = form.value.pickupSlots.indexOf(slot);
-  if (idx >= 0) {
-    form.value.pickupSlots.splice(idx, 1);
-  } else {
-    form.value.pickupSlots.push(slot);
-  }
-}
-
-function addCustomSlot() {
-  const trimmed = customSlotInput.value.trim();
-  if (!trimmed) return;
-  if (!form.value.pickupSlots.includes(trimmed)) {
-    form.value.pickupSlots.push(trimmed);
-  }
-  customSlotInput.value = '';
 }
 
 // Default Master 7 Fruits
@@ -625,11 +526,10 @@ const form = ref({
   title: 'รอบส่งผลไม้ วันอังคาร 8 ก.ย.',
   pickupDate: 'วันอังคารที่ 8 กันยายน 2569',
   pickupLocation: 'ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B',
+  standbyStartTime: '19:00',
+  standbyEndTime: '23:00',
   pickupSlots: [
-    '19:00 - 19:30',
-    '19:30 - 20:00',
-    '20:00 - 20:30',
-    '21:00+ (หลังห้างปิด / ท้ายรถ)'
+    '19:00 - 23:00'
   ],
   promptPayNumber: '0878902935',
   promptPayName: 'นาตยา บุญณะ',
@@ -640,13 +540,20 @@ const form = ref({
   fruits: getDefaultFruitConfigs()
 });
 
+const computedStandbyTime = computed<string>(() => {
+  const start = form.value.standbyStartTime || '19:00';
+  const end = form.value.standbyEndTime || '23:00';
+  return `${start} - ${end}`;
+});
+
 const isFormValid = computed<boolean>(() => {
   const hasTitle = !!form.value.title.trim();
   const hasDate = !!form.value.pickupDate.trim();
   const hasLocation = !!form.value.pickupLocation.trim();
-  const hasSlots = form.value.pickupSlots.length > 0;
+  const hasStandbyStart = !!form.value.standbyStartTime?.trim();
+  const hasStandbyEnd = !!form.value.standbyEndTime?.trim();
   const hasAtLeastOneFruit = form.value.fruits.some(f => f.isEnabled && f.pricePerKg > 0);
-  return hasTitle && hasDate && hasLocation && hasSlots && hasAtLeastOneFruit;
+  return hasTitle && hasDate && hasLocation && hasStandbyStart && hasStandbyEnd && hasAtLeastOneFruit;
 });
 
 // Back handler
@@ -672,12 +579,27 @@ async function loadRoundData(id: string) {
     form.value.title = roundData.title;
     form.value.pickupDate = roundData.pickupDate;
     form.value.pickupLocation = roundData.pickupLocation;
-    form.value.pickupSlots = roundData.pickupSlots || [
-      '19:00 - 19:30',
-      '19:30 - 20:00',
-      '20:00 - 20:30',
-      '21:00+ (หลังห้างปิด / ท้ายรถ)'
-    ];
+
+    // Load Standby Window
+    form.value.standbyStartTime = roundData.standbyStartTime || '19:00';
+    form.value.standbyEndTime = roundData.standbyEndTime || '23:00';
+
+    if (!roundData.standbyStartTime && roundData.standbyTime) {
+      const match = roundData.standbyTime.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+      if (match && match[1] && match[2]) {
+        form.value.standbyStartTime = match[1];
+        form.value.standbyEndTime = match[2];
+      }
+    } else if (!roundData.standbyStartTime && roundData.pickupSlots && roundData.pickupSlots.length > 0) {
+      const firstSlot = roundData.pickupSlots[0];
+      const match = firstSlot ? firstSlot.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/) : null;
+      if (match && match[1] && match[2]) {
+        form.value.standbyStartTime = match[1];
+        form.value.standbyEndTime = match[2];
+      }
+    }
+
+    form.value.pickupSlots = [computedStandbyTime.value];
     form.value.promptPayNumber = roundData.promptPayNumber || '0878902935';
     form.value.promptPayName = roundData.promptPayName || 'นาตยา บุญณะ';
     form.value.bankName = roundData.bankName || 'KBANK (กสิกรไทย)';
@@ -717,13 +639,17 @@ async function loadRoundData(id: string) {
 async function handleSubmit() {
   if (!isFormValid.value) return;
 
+  const standbyTimeStr = computedStandbyTime.value;
   try {
     if (isEditMode.value) {
       await fruitStore.updateRound(roundId.value, {
         title: form.value.title.trim(),
         pickupDate: form.value.pickupDate.trim(),
         pickupLocation: form.value.pickupLocation.trim(),
-        pickupSlots: form.value.pickupSlots,
+        standbyTime: standbyTimeStr,
+        standbyStartTime: form.value.standbyStartTime.trim(),
+        standbyEndTime: form.value.standbyEndTime.trim(),
+        pickupSlots: [standbyTimeStr],
         promptPayNumber: form.value.promptPayNumber.trim(),
         promptPayName: form.value.promptPayName.trim(),
         bankName: form.value.bankName.trim(),
@@ -743,7 +669,10 @@ async function handleSubmit() {
         title: form.value.title.trim(),
         pickupDate: form.value.pickupDate.trim(),
         pickupLocation: form.value.pickupLocation.trim(),
-        pickupSlots: form.value.pickupSlots,
+        standbyTime: standbyTimeStr,
+        standbyStartTime: form.value.standbyStartTime.trim(),
+        standbyEndTime: form.value.standbyEndTime.trim(),
+        pickupSlots: [standbyTimeStr],
         promptPayNumber: form.value.promptPayNumber.trim(),
         promptPayName: form.value.promptPayName.trim(),
         bankName: form.value.bankName.trim(),
