@@ -325,6 +325,7 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFruitStore } from '@/stores/fruitStore';
 import type { Order, ProductItem } from '@/types/fruit_app';
+import { calculateItemSubtotal } from '@/utils/pricing';
 
 const router = useRouter();
 const fruitStore = useFruitStore();
@@ -523,7 +524,7 @@ const fruitStats = computed<FruitStat[]>(() => {
 
       const kg = getItemWeightKg(item);
       const costPerKg = getItemCostPerKg(item);
-      const itemRev = item.itemFinalPrice !== undefined ? item.itemFinalPrice : (kg * item.pricePerKg);
+      const itemRev = calculateItemSubtotal(item, fruitStore.products);
 
       map[key].totalWeightKg += kg;
       map[key].revenue += itemRev;
@@ -563,7 +564,7 @@ const orderAnalysisList = computed(() => {
     const itemsAnalysis = order.items.map(item => {
       const kg = getItemWeightKg(item);
       const costPerKg = getItemCostPerKg(item);
-      const itemRevenue = item.itemFinalPrice !== undefined ? item.itemFinalPrice : (kg * item.pricePerKg);
+      const itemRevenue = calculateItemSubtotal(item, fruitStore.products);
       const itemCost = kg * costPerKg;
       const itemProfit = itemRevenue - itemCost;
       cost += itemCost;

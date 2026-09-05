@@ -95,7 +95,7 @@
             ⚠️ เวลา {{ inputTime }} น. อยู่นอกช่วงเวลา Standby ของคนขาย ({{ standbyStartTime }} - {{ standbyEndTime }} น.)
           </div>
           <div class="text-caption text-grey-8" style="font-size: 11px;">
-            กรุณาเลือกเวลาใหม่อยู่ระหว่าง {{ standbyStartTime }} น. ถึง {{ standbyEndTime }} น. เพื่อให้มีคนส่งมอบของให้ท่าน
+            กรุณาเลือกเวลาใหม่อยู่ระหว่าง {{ standbyStartTime }} น. ถึง {{ standbyEndTime }} น.
           </div>
         </q-banner>
       </transition>
@@ -107,7 +107,7 @@
         data-audit-id="badge-pickup-valid"
       >
         <q-icon name="check_circle" size="16px" class="q-mr-xs" />
-        <span>นัดรับเวลา {{ inputTime }} น. (อยู่ในช่วงคนขาย Standby เรียบร้อย)</span>
+        <span>นัดรับเวลา {{ inputTime }} น.</span>
       </div>
     </q-card-section>
   </q-card>

@@ -189,6 +189,7 @@ import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import { useCustomerStorage } from '@/composables/useCustomerStorage';
 import type { OrderItem, CustomerInfo, PaymentMethod, Order, PreorderRound } from '@/types/fruit_app';
+import { calculateItemSubtotal } from '@/utils/pricing';
 import ActiveRoundsList from '@/components/customer/ActiveRoundsList.vue';
 import BatchHeaderCard from '@/components/customer/BatchHeaderCard.vue';
 import FruitSelector from '@/components/customer/FruitSelector.vue';
@@ -247,15 +248,7 @@ const totalEstimatedPrice = computed<number>(() => {
   let total = 0;
   for (const item of orderedItems.value) {
     if (item.productType === 'FIXED_WEIGHT') {
-      const prod = fruitStore.products.find(p => p.id === item.productId);
-      if (prod?.bundles) {
-        const bundle = prod.bundles.find(b => b.qtyKg === item.orderedKg);
-        if (bundle) {
-          total += bundle.price;
-          continue;
-        }
-      }
-      total += (item.orderedKg || 1) * item.pricePerKg;
+      total += calculateItemSubtotal(item, fruitStore.products);
     } else if (item.productType === 'VARIABLE_WHOLE_FRUIT') {
       const prod = fruitStore.products.find(p => p.id === item.productId);
       const tier = prod?.sizeTiers?.find(t => t.tierId === item.selectedTierId);

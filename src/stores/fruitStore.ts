@@ -63,6 +63,7 @@ import type {
 import { ADMIN_WHITELIST_EMAILS } from '@/types/fruit_app';
 import { useUserStore } from '@/stores/userStore';
 import { collectDeviceFingerprint } from '@/utils/deviceTelemetry';
+import { calculateOrderFinalTotal } from '@/utils/pricing';
 
 export const useFruitStore = defineStore('fruit', () => {
   // State
@@ -278,15 +279,8 @@ export const useFruitStore = defineStore('fruit', () => {
     itemToUpdate.actualWeighedKg = actualKg;
     itemToUpdate.itemFinalPrice = finalItemPrice;
 
-    // Recalculate total final price
-    let sum = 0;
-    for (const item of targetOrder.items) {
-      if (item.itemFinalPrice !== undefined) {
-        sum += item.itemFinalPrice;
-      } else {
-        sum += (item.orderedKg || 1) * item.pricePerKg;
-      }
-    }
+    // Recalculate total final price using centralized pricing engine
+    const sum = calculateOrderFinalTotal(targetOrder.items, products.value);
     targetOrder.totalFinalPrice = sum;
 
     // Sync to Firestore if document id exists

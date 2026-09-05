@@ -195,6 +195,7 @@ function updateFixedQty(prod: ProductItem, qty: number) {
   if (qty > 0) {
     // Check if matching bundle exists
     const matchingBundle = prod.bundles?.find(b => b.qtyKg === qty);
+    const itemFinalPrice = calculateFixedSubtotal(prod, qty);
     nextList.push({
       productId: prod.id,
       productName: prod.name,
@@ -202,6 +203,7 @@ function updateFixedQty(prod: ProductItem, qty: number) {
       pricePerKg: prod.pricePerKg,
       orderedKg: qty,
       orderedBundle: matchingBundle?.label,
+      itemFinalPrice,
       mascotKey: prod.mascotKey
     });
   }

@@ -153,7 +153,7 @@
                 <q-item-label v-if="item.productType === 'FIXED_WEIGHT'" caption class="text-grey-7">
                   จำนวน: <strong>{{ item.orderedKg }} กก.</strong> {{ item.orderedBundle ? `(${item.orderedBundle})` : '' }}
                   <div class="text-primary text-weight-bold q-mt-xs">
-                    {{ (item.orderedKg || 1) * item.pricePerKg }} บาท
+                    {{ calculateItemSubtotal(item, fruitStore.products) }} บาท
                   </div>
                 </q-item-label>
 
@@ -166,29 +166,52 @@
                     ✓ ชั่งแล้ว: {{ item.actualWeighedKg }} กก. = {{ item.itemFinalPrice }} บาท
                   </div>
 
-                  <!-- Inline Scale Input Box -->
-                  <div class="bg-amber-1 q-pa-sm rounded-borders q-mt-sm border-amber">
+                  <!-- Inline Scale Input Box: Interactive Selector with Direct Typing -->
+                  <div class="bg-amber-1 q-pa-sm rounded-borders q-mt-sm border-amber" data-audit-id="durian-scale-box">
                     <div class="text-caption text-weight-bold text-amber-10 q-mb-xs">
                       {{ item.actualWeighedKg ? 'แก้ไขน้ำหนักชั่งจริง:' : '⚖️ ชั่งน้ำหนักจริงบนตาชั่ง:' }}
                     </div>
                     <div class="row items-center no-wrap">
-                      <q-input
-                        v-model.number="durianInputs[idx]"
-                        outlined
+                      <q-select
+                        v-model="durianInputs[idx]"
+                        use-input
+                        fill-input
+                        hide-selected
+                        input-debounce="0"
+                        behavior="menu"
+                        :options="weightOptions[idx] || defaultWeightOptions"
+                        options-dense
                         dense
-                        type="number"
-                        step="0.05"
-                        min="0.5"
-                        max="10"
+                        outlined
                         bg-color="white"
-                        placeholder="เช่น 2.75"
+                        placeholder="เลือกหรือพิมพ์ เช่น 2.75"
                         class="col"
                         input-class="text-weight-bold text-primary"
+                        inputmode="decimal"
+                        data-audit-id="select-durian-weight"
+                        @filter="(val, update) => filterWeightOptions(idx, val, update)"
+                        @input-value="val => handleWeightTyping(idx, val)"
+                        @keydown="handleWeightKeydown"
+                        @keyup.enter="handleSaveWeight(idx)"
                       >
                         <template #append>
                           <span class="text-caption text-grey-7">กก.</span>
                         </template>
-                      </q-input>
+                        <template #option="scope">
+                          <q-item v-bind="scope.itemProps" dense class="q-py-none">
+                            <q-item-section>
+                              <q-item-label class="text-weight-medium text-grey-9">{{ scope.opt }} กก.</q-item-label>
+                            </q-item-section>
+                          </q-item>
+                        </template>
+                        <template #no-option>
+                          <q-item dense>
+                            <q-item-section class="text-grey-6 text-caption">
+                              กดปุ่ม "บันทึก" ด้านข้างเพื่อใช้น้ำหนักนี้
+                            </q-item-section>
+                          </q-item>
+                        </template>
+                      </q-select>
 
                       <q-btn
                         color="amber-9"
@@ -197,6 +220,7 @@
                         dense
                         class="q-ml-sm q-px-md text-weight-bold"
                         :loading="isSavingWeight[idx]"
+                        data-audit-id="btn-save-weight"
                         @click="handleSaveWeight(idx)"
                       />
                     </div>
@@ -205,14 +229,14 @@
                     <div class="row items-center q-mt-xs">
                       <span class="text-caption text-grey-7 q-mr-xs">ปุ่มลัด:</span>
                       <q-btn
-                        v-for="w in [2.0, 2.4, 2.6, 2.8, 3.0, 3.2]"
+                        v-for="w in ['2.0', '2.4', '2.6', '2.8', '3.0', '3.2']"
                         :key="w"
                         flat
                         dense
                         no-caps
                         size="xs"
                         color="grey-8"
-                        :label="`${w}`"
+                        :label="w"
                         class="q-mr-xs bg-white text-weight-medium"
                         @click="durianInputs[idx] = w"
                       />
@@ -434,6 +458,7 @@ import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import type { Order } from '@/types/fruit_app';
 import { generatePromptPayQRDataUrl } from '@/utils/promptpay';
+import { calculateItemSubtotal, calculateOrderFinalTotal } from '@/utils/pricing';
 
 const route = useRoute();
 const router = useRouter();
@@ -444,9 +469,60 @@ const orderId = computed<string>(() => (route.params.orderId as string) || '');
 const order = ref<Order | null>(null);
 const isLoading = ref<boolean>(true);
 
-// Durian Scale Inputs
-const durianInputs = ref<Record<number, number>>({});
+// Durian Scale Inputs: Supports direct typing and combo-box selector
+const durianInputs = ref<Record<number, string>>({});
 const isSavingWeight = ref<Record<number, boolean>>({});
+
+// Predefined weight options for durian combobox
+const defaultWeightOptions = [
+  '1.5', '1.6', '1.7', '1.8', '1.9',
+  '2.0', '2.1', '2.2', '2.3', '2.4',
+  '2.5', '2.6', '2.7', '2.8', '2.9',
+  '3.0', '3.1', '3.2', '3.3', '3.4',
+  '3.5', '3.6', '3.7', '3.8', '3.9',
+  '4.0', '4.2', '4.5', '4.8', '5.0'
+];
+const weightOptions = ref<Record<number, string[]>>({});
+
+// Filter weight options in combobox based on typed value
+function filterWeightOptions(idx: number, val: string, update: (callback: () => void) => void) {
+  update(() => {
+    if (!val) {
+      weightOptions.value[idx] = defaultWeightOptions;
+    } else {
+      const needle = val.trim().toLowerCase();
+      weightOptions.value[idx] = defaultWeightOptions.filter(v => v.includes(needle));
+    }
+  });
+}
+
+// Strictly allow only numbers and at most one decimal point when typing
+function handleWeightTyping(idx: number, val: string) {
+  if (val === undefined || val === null) return;
+  let clean = val.replace(/[^0-9.]/g, '');
+  const parts = clean.split('.');
+  if (parts.length > 2) {
+    clean = parts[0] + '.' + parts.slice(1).join('');
+  }
+  durianInputs.value[idx] = clean;
+}
+
+// Block non-numeric characters from keyboard input
+function handleWeightKeydown(e: KeyboardEvent) {
+  if (['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', 'Escape'].includes(e.key)) {
+    return;
+  }
+  if (e.ctrlKey || e.metaKey) {
+    return;
+  }
+  if (/^[0-9]$/.test(e.key)) {
+    return;
+  }
+  if (e.key === '.') {
+    return;
+  }
+  e.preventDefault();
+}
 
 // PromptPay QR State
 const promptPayQrUrl = ref<string>('');
@@ -472,7 +548,7 @@ async function loadOrder() {
     if (fetched && fetched.items) {
       fetched.items.forEach((item, idx) => {
         if (item.productType === 'VARIABLE_WHOLE_FRUIT' && item.actualWeighedKg) {
-          durianInputs.value[idx] = item.actualWeighedKg;
+          durianInputs.value[idx] = String(item.actualWeighedKg);
         }
       });
     }
@@ -502,9 +578,14 @@ const hasUnweighedFruit = computed<boolean>(() => {
   );
 });
 
-// Final net price calculation
+// Final net price calculation using centralized pricing engine
 const currentFinalPrice = computed<number>(() => {
   if (!order.value) return 0;
+  if (hasUnweighedFruit.value) {
+    return order.value.totalEstimatedPrice || 0;
+  }
+  const calculated = calculateOrderFinalTotal(order.value.items, fruitStore.products);
+  if (calculated > 0) return calculated;
   return order.value.totalFinalPrice || order.value.totalEstimatedPrice || 0;
 });
 
@@ -533,8 +614,9 @@ async function refreshPromptPayQR() {
 // Durian Scale Save Handler
 async function handleSaveWeight(idx: number) {
   if (!order.value) return;
-  const weight = durianInputs.value[idx];
-  if (!weight || weight <= 0) {
+  const raw = durianInputs.value[idx];
+  const weight = parseFloat(String(raw || '0'));
+  if (!weight || isNaN(weight) || weight <= 0) {
     $q.notify({ type: 'warning', message: 'กรุณาระบุน้ำหนักที่มากกว่า 0 กก.', position: 'top' });
     return;
   }
@@ -550,16 +632,10 @@ async function handleSaveWeight(idx: number) {
     // Update local reactive state
     item.actualWeighedKg = weight;
     item.itemFinalPrice = finalItemPrice;
+    durianInputs.value[idx] = String(weight);
 
-    // Recalculate order total final price
-    let sum = 0;
-    for (const it of order.value.items) {
-      if (it.itemFinalPrice !== undefined) {
-        sum += it.itemFinalPrice;
-      } else {
-        sum += (it.orderedKg || 1) * it.pricePerKg;
-      }
-    }
+    // Recalculate order total final price using centralized pricing engine
+    const sum = calculateOrderFinalTotal(order.value.items, fruitStore.products);
     order.value.totalFinalPrice = sum;
 
     $q.notify({
