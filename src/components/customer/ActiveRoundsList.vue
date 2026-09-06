@@ -60,14 +60,19 @@
             </div>
           </div>
 
-          <!-- Fruits Available in this Round -->
-          <div v-if="round.fruitSummary && round.fruitSummary.length > 0" class="q-mb-md">
-            <div class="text-caption text-grey-7 q-mb-xs">ผลไม้ในรอบนี้:</div>
-            <div class="row items-center">
-              <FruitChip
+          <!-- Fruits Available in this Round (Mascot Avatars with Names) -->
+          <div
+            v-if="round.fruitSummary && round.fruitSummary.length > 0"
+            class="q-mb-md"
+            data-audit-id="round-fruit-summary-section"
+          >
+            <div class="text-caption text-grey-7 q-mb-sm text-weight-medium">ผลไม้ในรอบนี้:</div>
+            <div class="row items-start wrap" style="gap: 12px;" data-audit-id="round-fruit-avatars-row">
+              <FruitMascotAvatar
                 v-for="fruit in round.fruitSummary"
                 :key="fruit"
                 :name="fruit"
+                size="54px"
               />
             </div>
           </div>
@@ -91,7 +96,7 @@
 <script setup lang="ts">
 import type { PreorderRound } from '@/types/fruit_app';
 import RoundStatusBadge from '@/components/common/RoundStatusBadge.vue';
-import FruitChip from '@/components/common/FruitChip.vue';
+import FruitMascotAvatar from '@/components/common/FruitMascotAvatar.vue';
 
 defineProps<{
   rounds: PreorderRound[];
