@@ -1,1 +1,111 @@
-// app global css
+// =============================================================================
+// Fruit Drop: Global Application Styles & Design Tokens
+// =============================================================================
+
+// 1. Light-Tinted Badges & Chips: Automatic Outline Enhancement
+// -----------------------------------------------------------------------------
+// When badges or chips have light/pastel backgrounds, an outline is automatically
+// applied to provide crisp contrast and prevent blending into white cards/surfaces.
+.q-badge,
+.q-chip {
+  box-sizing: border-box;
+
+  // Green / Positive tints (e.g. fruit tags, active indicators)
+  &.bg-green-1,
+  &.bg-green-2,
+  &.bg-light-green-1,
+  &.bg-light-green-2 {
+    border: 1px solid $badge-soft-primary-border;
+  }
+
+  // Grey tints (e.g. pickup slot labels, unselected filter chips)
+  &.bg-grey-1,
+  &.bg-grey-2 {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+  }
+  &.bg-grey-3,
+  &.bg-grey-4 {
+    border: 1px solid $badge-soft-grey-border;
+  }
+
+  // Amber / Orange / Warning tints (e.g. pending cash, weighing alerts)
+  &.bg-amber-1,
+  &.bg-amber-2,
+  &.bg-orange-1,
+  &.bg-orange-2 {
+    border: 1px solid $badge-soft-warning-border;
+  }
+
+  // Red / Negative tints (e.g. cancellations, urgent errors)
+  &.bg-red-1,
+  &.bg-red-2 {
+    border: 1px solid $badge-soft-negative-border;
+  }
+
+  // Blue / Info tints (e.g. guidance, transfer confirmations)
+  &.bg-blue-1,
+  &.bg-blue-2,
+  &.bg-light-blue-1,
+  &.bg-light-blue-2 {
+    border: 1px solid $badge-soft-info-border;
+  }
+
+  // Purple tints
+  &.bg-purple-1,
+  &.bg-purple-2 {
+    border: 1px solid rgba(156, 39, 176, 0.35);
+  }
+
+  // Teal tints
+  &.bg-teal-1,
+  &.bg-teal-2 {
+    border: 1px solid rgba(0, 150, 136, 0.35);
+  }
+}
+
+// 2. Global Soft Badge & Chip Semantic Utility Classes
+// -----------------------------------------------------------------------------
+// Can be added explicitly to any <q-badge>, <q-chip>, or custom element:
+.badge-soft-primary,
+.badge-soft-positive {
+  background-color: $badge-soft-primary-bg !important;
+  color: $primary !important;
+  border: 1px solid $badge-soft-primary-border !important;
+}
+
+.badge-soft-secondary {
+  background-color: $badge-soft-secondary-bg !important;
+  color: $secondary !important;
+  border: 1px solid $badge-soft-secondary-border !important;
+}
+
+.badge-soft-warning {
+  background-color: $badge-soft-warning-bg !important;
+  color: $warning !important;
+  border: 1px solid $badge-soft-warning-border !important;
+}
+
+.badge-soft-negative {
+  background-color: $badge-soft-negative-bg !important;
+  color: $negative !important;
+  border: 1px solid $badge-soft-negative-border !important;
+}
+
+.badge-soft-info {
+  background-color: $badge-soft-info-bg !important;
+  color: $info !important;
+  border: 1px solid $badge-soft-info-border !important;
+}
+
+.badge-soft-grey {
+  background-color: $badge-soft-grey-bg !important;
+  color: #424242 !important;
+  border: 1px solid $badge-soft-grey-border !important;
+}
+
+// Universal dynamic outline helper: auto-derives border color from current text color
+.badge-outline-soft,
+.chip-outline-soft,
+.outline-soft {
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent) !important;
+}

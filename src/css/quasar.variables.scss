@@ -25,3 +25,22 @@ $negative  : #C62828; // Cancel / Delete / Reject
 $warning   : #EF6C00; // Warning / Pending / Cash
 $info      : #0288D1; // Info / Guidance
 
+// Global Soft Badge / Chip Semantic Tokens
+$badge-soft-primary-bg     : #E8F5E9;
+$badge-soft-primary-border : rgba($primary, 0.35);
+
+$badge-soft-secondary-bg   : #F1F8E9;
+$badge-soft-secondary-border: rgba($secondary, 0.35);
+
+$badge-soft-warning-bg     : #FFF3E0;
+$badge-soft-warning-border : rgba($warning, 0.35);
+
+$badge-soft-negative-bg    : #FFEBEE;
+$badge-soft-negative-border: rgba($negative, 0.35);
+
+$badge-soft-info-bg        : #E1F5FE;
+$badge-soft-info-border    : rgba($info, 0.35);
+
+$badge-soft-grey-bg        : #F5F5F5;
+$badge-soft-grey-border    : rgba(0, 0, 0, 0.16);
+
