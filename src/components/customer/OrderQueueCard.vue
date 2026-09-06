@@ -39,7 +39,27 @@
           </div>
         </div>
 
-        <div class="row justify-center items-center q-mt-xs">
+        <!-- Prominent Save Full Order Ticket Action -->
+        <div class="q-mt-md q-mb-xs">
+          <q-btn
+            id="btn-save-full-order-ticket"
+            data-audit-id="btn-save-full-order-ticket"
+            color="positive"
+            class="full-width q-py-sm text-weight-bolder text-subtitle2 shadow-3 btn-gradient-primary"
+            icon="photo_camera"
+            label="บันทึกคำสั่งซื้อ"
+            :loading="isGeneratingTicket"
+            :disable="!qrDataUrl"
+            @click="handleSaveFullTicket"
+          >
+            <q-tooltip>บันทึกรูปใบออเดอร์พร้อม QR Code เก็บไว้ในมือถือ</q-tooltip>
+          </q-btn>
+          <div class="text-caption text-grey-8 text-center q-mt-xs">
+            💡 แนะนำให้บันทึกรูปเก็บไว้ในมือถือเพื่อแสดงตอนรับของที่รถ (กันลืม)
+          </div>
+        </div>
+
+        <div class="row justify-center items-center q-mt-sm">
           <q-btn
             flat
             dense
@@ -56,9 +76,9 @@
             flat
             dense
             no-caps
-            color="secondary"
+            color="grey-7"
             icon="download"
-            label="บันทึกรูป QR"
+            label="บันทึกเฉพาะ QR"
             size="sm"
             @click="downloadQrImage"
           />
@@ -131,13 +151,17 @@ import { useQuasar } from 'quasar';
 import QRCode from 'qrcode';
 import type { Order } from '@/types/fruit_app';
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
+import { useFruitStore } from '@/stores/fruitStore';
+import { saveOrderTicketImage } from '@/utils/orderTicketCanvas';
 
 const props = defineProps<{
   order: Order;
 }>();
 
 const $q = useQuasar();
+const fruitStore = useFruitStore();
 const qrDataUrl = ref<string>('');
+const isGeneratingTicket = ref<boolean>(false);
 
 // Generate QR Code containing the direct URL to the order detail
 async function generateQrCode() {
@@ -163,6 +187,38 @@ onMounted(() => {
 watch(() => props.order.orderId, () => {
   void generateQrCode();
 });
+
+// Save full order ticket with embedded QR code as a high-resolution image
+async function handleSaveFullTicket() {
+  if (!qrDataUrl.value) return;
+  isGeneratingTicket.value = true;
+  try {
+    const round = fruitStore.allRounds.find(r => r.roundId === props.order.roundId);
+    const location = round?.pickupLocation || 'ท้ายรถลานจอดรถห้าง';
+    const success = await saveOrderTicketImage({
+      order: props.order,
+      qrDataUrl: qrDataUrl.value,
+      pickupLocation: location
+    });
+    if (success) {
+      $q.notify({
+        type: 'positive',
+        message: 'บันทึกรูปใบออเดอร์เรียบร้อยแล้ว!',
+        position: 'top',
+        timeout: 2000
+      });
+    }
+  } catch (err) {
+    console.error('Failed to save order ticket image:', err);
+    $q.notify({
+      type: 'negative',
+      message: 'บันทึกรูปไม่สำเร็จ โปรดลองอีกครั้ง',
+      position: 'top'
+    });
+  } finally {
+    isGeneratingTicket.value = false;
+  }
+}
 
 function copyOrderId() {
   void navigator.clipboard.writeText(props.order.orderId);
