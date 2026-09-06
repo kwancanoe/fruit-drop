@@ -13,8 +13,7 @@ export const BUILT_IN_MASCOTS: BuiltInMascot[] = [
   { key: 'longkong', name: 'น้องลองกอง', url: '/mascots/mascot_longkong.png' },
   { key: 'langsat', name: 'น้องลางสาด', url: '/mascots/mascot_langsat.png' },
   { key: 'som', name: 'น้องส้ม', url: '/mascots/mascot_som.png' },
-  { key: 'mamuang', name: 'น้องมะม่วง', url: '/mascots/mascot_mamuang.png' },
-  { key: 'fruit_drop', name: 'โลโก้ Fruit Drop', url: '/mascots/logo_fruit_drop.png' }
+  { key: 'mamuang', name: 'น้องมะม่วง', url: '/mascots/mascot_mamuang.png' }
 ];
 
 /**

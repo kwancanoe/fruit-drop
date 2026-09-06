@@ -306,7 +306,7 @@ const form = ref<{
   defaultPricePerKg: 50,
   defaultCostPerKg: 30,
   defaultTotalQuotaKg: 100,
-  imageUrl: '/mascots/logo_fruit_drop.png',
+  imageUrl: '/mascots/mascot_ngo.png',
   avatarType: 'PREDEFINED',
   isActive: true,
   sortOrder: 1
@@ -407,7 +407,7 @@ watch(() => props.fruitToEdit, (val) => {
       defaultPricePerKg: 50,
       defaultCostPerKg: 30,
       defaultTotalQuotaKg: 100,
-      imageUrl: '/mascots/logo_fruit_drop.png',
+      imageUrl: '/mascots/mascot_ngo.png',
       avatarType: 'PREDEFINED',
       isActive: true,
       sortOrder: (fruitStore.masterFruits.length || 0) + 1
