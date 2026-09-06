@@ -101,7 +101,7 @@
       <!-- 2. Total COGS / Fruit Cost -->
       <div class="col-6 col-sm-3 q-pa-xs">
         <q-card class="bg-white text-grey-9 q-pa-sm rounded-borders text-center shadow-1" style="height: 100%;">
-          <div class="text-caption text-grey-7">ต้นทุนผลไม้รวม</div>
+          <div class="text-caption text-grey-7">ต้นทุนรวม</div>
           <div class="text-h6 text-weight-bolder text-warning q-my-xs">
             ฿{{ metrics.totalCost.toLocaleString() }}
           </div>
@@ -114,7 +114,7 @@
       <!-- 3. Gross Profit -->
       <div class="col-6 col-sm-3 q-pa-xs">
         <q-card class="bg-white text-grey-9 q-pa-sm rounded-borders text-center shadow-1" style="height: 100%;">
-          <div class="text-caption text-grey-7">กำไรขั้นต้น</div>
+          <div class="text-caption text-grey-7">กำไร</div>
           <div
             class="text-h6 text-weight-bolder q-my-xs"
             :class="metrics.grossProfit >= 0 ? 'text-positive' : 'text-negative'"
@@ -130,7 +130,7 @@
       <!-- 4. Profit Margin % -->
       <div class="col-6 col-sm-3 q-pa-xs">
         <q-card class="bg-white text-grey-9 q-pa-sm rounded-borders text-center shadow-1" style="height: 100%;">
-          <div class="text-caption text-grey-7">อัตรากำไร (Margin)</div>
+          <div class="text-caption text-grey-7">อัตรากำไร</div>
           <div
             class="text-h6 text-weight-bolder q-my-xs"
             :class="metrics.marginPercent >= 25 ? 'text-positive' : metrics.marginPercent >= 0 ? 'text-info' : 'text-negative'"
@@ -254,20 +254,27 @@
             </q-item-section>
 
             <q-item-section>
-              <q-item-label class="text-subtitle2 text-weight-bolder text-grey-9">
-                #{{ order.orderId }} - {{ order.customer.name }}
-              </q-item-label>
-              <q-item-label caption class="text-grey-7">
-                {{ order.customer.shop }} ({{ order.customer.floor }}) | {{ order.pickupSlot }}
-              </q-item-label>
-            </q-item-section>
-
-            <q-item-section side class="text-right">
-              <div class="text-subtitle2 text-weight-bolder text-positive">
-                +฿{{ order.profit.toLocaleString() }}
+              <!-- Row 1: Order ID + Customer Name (Left) & Profit (Right) -->
+              <div class="row items-center justify-between no-wrap">
+                <div class="text-subtitle2 text-weight-bolder text-grey-9 ellipsis q-mr-xs">
+                  #{{ order.orderId }} - {{ order.customer.name }}
+                </div>
+                <div
+                  class="text-subtitle2 text-weight-bolder text-no-wrap"
+                  :class="order.profit >= 0 ? 'text-positive' : 'text-negative'"
+                >
+                  {{ order.profit >= 0 ? '+' : '' }}฿{{ order.profit.toLocaleString() }}
+                </div>
               </div>
-              <div class="text-caption text-grey-7" style="font-size: 11px;">
-                ขาย ฿{{ order.revenue }} (มาร์จิ้น {{ order.marginPercent }}%)
+
+              <!-- Row 2: Customer Location & Slot (Left) | Revenue & Margin (Right) -->
+              <div class="row items-center justify-between no-wrap text-caption text-grey-7 q-mt-xs">
+                <div class="ellipsis q-mr-xs">
+                  {{ order.customer.shop }} ({{ order.customer.floor }}) | {{ order.pickupSlot }}
+                </div>
+                <div class="text-no-wrap text-right" style="font-size: 11px;">
+                  ขาย ฿{{ order.revenue.toLocaleString() }} (มาร์จิ้น {{ order.marginPercent }}%)
+                </div>
               </div>
             </q-item-section>
           </template>
