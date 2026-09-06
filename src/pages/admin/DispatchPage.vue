@@ -59,19 +59,12 @@
                   <q-item-label class="text-weight-bold text-subtitle2">{{ scope.opt.title }}</q-item-label>
                   <q-item-label caption class="text-grey-7">{{ scope.opt.date }}</q-item-label>
                 </q-item-section>
-                <q-item-section side>
-                  <q-badge
-                    :color="scope.opt.isOpen ? 'positive' : 'grey-5'"
-                    :label="scope.opt.isOpen ? 'เปิดรับจอง' : 'ปิดรับจอง'"
-                    class="text-weight-bold"
-                  />
-                </q-item-section>
               </q-item>
             </template>
           </q-select>
 
           <div v-else class="text-caption text-grey-7 q-pa-xs">
-            ยังไม่มีรอบส่งในระบบ
+            ไม่มีรอบที่เปิดรับจองในขณะนี้
           </div>
         </div>
 
@@ -147,7 +140,13 @@ const fruitStore = useFruitStore();
 
 // Round selection states
 const selectedRoundId = computed<string>({
-  get: () => fruitStore.activeRound?.roundId || '',
+  get: () => {
+    const active = fruitStore.activeRound;
+    if (active && active.isOpen && roundOptions.value.some(opt => opt.value === active.roundId)) {
+      return active.roundId;
+    }
+    return roundOptions.value[0]?.value || '';
+  },
   set: (val: string) => {
     const found = fruitStore.allRounds.find(r => r.roundId === val);
     if (found) {
@@ -157,13 +156,14 @@ const selectedRoundId = computed<string>({
 });
 
 const roundOptions = computed(() => {
-  return fruitStore.allRounds.map(r => ({
-    label: `${r.title} (${r.pickupDate || 'ไม่ระบุวันที่'})`,
-    value: r.roundId,
-    title: r.title,
-    date: r.pickupDate || 'ไม่ระบุวันที่',
-    isOpen: !!r.isOpen
-  }));
+  return fruitStore.allRounds
+    .filter(r => r.isOpen)
+    .map(r => ({
+      label: `${r.title} (${r.pickupDate || 'ไม่ระบุวันที่'})`,
+      value: r.roundId,
+      title: r.title,
+      date: r.pickupDate || 'ไม่ระบุวันที่'
+    }));
 });
 
 // Handle changing active dispatch round

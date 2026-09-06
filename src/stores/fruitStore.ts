@@ -168,13 +168,18 @@ export const useFruitStore = defineStore('fruit', () => {
         id: docSnap.id
       }));
 
-      // Auto-select latest round or sync existing active round with latest data
+      // Auto-select latest OPEN round or sync existing active round with latest data
       if (allRounds.value.length > 0) {
         const currentActive = allRounds.value.find(r => r.roundId === activeRound.value?.roundId);
-        if (currentActive) {
+        if (currentActive && currentActive.isOpen) {
           activeRound.value = currentActive;
-        } else if (allRounds.value[0]) {
-          selectActiveRound(allRounds.value[0]);
+        } else {
+          const firstOpen = allRounds.value.find(r => r.isOpen);
+          if (firstOpen) {
+            selectActiveRound(firstOpen);
+          } else if (allRounds.value[0]) {
+            selectActiveRound(allRounds.value[0]);
+          }
         }
       }
     }, (error) => {

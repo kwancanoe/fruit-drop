@@ -60,22 +60,12 @@
         class="bg-white text-grey-9 q-pa-md rounded-borders q-mb-md shadow-1"
         :data-audit-id="`round-card-${round.roundId}`"
       >
-        <!-- Top Row: Title, Desk Active Indicator & Status Badge -->
-        <div class="row items-center justify-between q-mb-xs">
-          <div class="row items-center">
-            <q-icon name="event_note" color="positive" size="22px" class="q-mr-xs" />
-            <span class="text-subtitle1 text-weight-bolder text-grey-9">
-              {{ round.title }}
-            </span>
-            <q-badge
-              v-if="fruitStore.activeRoundId === round.roundId"
-              color="primary"
-              label="กำลังดูที่ท้ายรถ"
-              class="q-ml-sm text-weight-bold"
-              :data-audit-id="`badge-desk-active-${round.roundId}`"
-            />
-          </div>
-          <RoundStatusBadge :is-open="round.isOpen" />
+        <!-- Top Row: Title -->
+        <div class="row items-center q-mb-xs">
+          <q-icon name="event_note" color="positive" size="22px" class="q-mr-xs" />
+          <span class="text-subtitle1 text-weight-bolder text-grey-9">
+            {{ round.title }}
+          </span>
         </div>
 
         <!-- Details: Date, Standby & Location -->
@@ -106,7 +96,7 @@
 
         <q-separator color="grey-3" class="q-mb-sm" />
 
-        <!-- Actions Row -->
+        <!-- Actions Row: Customer Booking Toggle & Edit Button -->
         <div class="row items-center justify-between">
           <!-- Toggle Open / Closed Switch -->
           <q-toggle
@@ -120,33 +110,18 @@
             @update:model-value="val => handleToggleStatus(round.roundId, val)"
           />
 
-          <!-- Command Buttons -->
-          <div class="row items-center">
-            <!-- Edit Button -->
-            <q-btn
-              outline
-              size="sm"
-              no-caps
-              color="warning"
-              icon="edit"
-              label="แก้ไขข้อมูล"
-              class="q-mr-sm q-px-sm text-weight-bold"
-              :to="`/admin/rounds/${round.roundId}/edit`"
-              :data-audit-id="`btn-edit-round-${round.roundId}`"
-            />
-
-            <!-- View Orders at Desk Button -->
-            <q-btn
-              size="sm"
-              no-caps
-              color="primary"
-              icon="inventory_2"
-              label="ดูออเดอร์"
-              class="q-px-sm text-weight-bold shadow-1"
-              :data-audit-id="`btn-select-round-${round.roundId}`"
-              @click="handleSelectActive(round)"
-            />
-          </div>
+          <!-- Edit Button -->
+          <q-btn
+            outline
+            size="sm"
+            no-caps
+            color="warning"
+            icon="edit"
+            label="แก้ไขข้อมูล"
+            class="q-px-sm text-weight-bold"
+            :to="`/admin/rounds/${round.roundId}/edit`"
+            :data-audit-id="`btn-edit-round-${round.roundId}`"
+          />
         </div>
       </q-card>
     </div>
@@ -158,8 +133,6 @@
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
-import type { PreorderRound } from '@/types/fruit_app';
-import RoundStatusBadge from '@/components/common/RoundStatusBadge.vue';
 import FruitChip from '@/components/common/FruitChip.vue';
 
 const router = useRouter();
@@ -188,17 +161,5 @@ async function handleToggleStatus(roundId: string, isOpen: boolean) {
   } catch (err) {
     $q.notify({ type: 'negative', message: 'ไม่สามารถเปลี่ยนสถานะได้' });
   }
-}
-
-// Select active round for tailgate desk
-function handleSelectActive(round: PreorderRound) {
-  fruitStore.selectActiveRound(round);
-  $q.notify({
-    type: 'info',
-    message: `เปิดดูออเดอร์ '${round.title}' ที่ท้ายรถแล้ว`,
-    position: 'top',
-    timeout: 1500
-  });
-  void router.push('/admin');
 }
 </script>
