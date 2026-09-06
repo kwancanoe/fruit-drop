@@ -1,6 +1,6 @@
 <template>
   <!-- Section: Full-Page Admin Preorder Rounds Management -->
-  <q-page id="admin-rounds-page" data-audit-id="admin-rounds-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 84px;">
+  <q-page id="admin-rounds-page" data-audit-id="admin-rounds-page" class="q-pa-md bg-grey-1 text-grey-9 overflow-hidden" style="max-width: 680px; margin: 0 auto; padding-bottom: 84px; overflow-x: hidden;">
     <!-- Page Header with Back Navigation -->
     <div class="row items-center justify-between q-mb-md">
       <div class="row items-center">
@@ -57,13 +57,13 @@
       <q-card
         v-for="round in fruitStore.allRounds"
         :key="round.roundId"
-        class="bg-white text-grey-9 q-pa-md rounded-borders q-mb-md shadow-1"
+        class="bg-white text-grey-9 q-pa-md rounded-borders q-mb-md shadow-1 overflow-hidden full-width"
         :data-audit-id="`round-card-${round.roundId}`"
       >
         <!-- Top Row: Title -->
-        <div class="row items-center q-mb-xs">
-          <q-icon name="event_note" color="positive" size="22px" class="q-mr-xs" />
-          <span class="text-subtitle1 text-weight-bolder text-grey-9">
+        <div class="row items-center no-wrap q-mb-xs">
+          <q-icon name="event_note" color="positive" size="22px" class="q-mr-xs flex-shrink-0" />
+          <span class="col text-subtitle1 text-weight-bolder text-grey-9 ellipsis">
             {{ round.title }}
           </span>
         </div>
@@ -72,24 +72,25 @@
         <div class="text-caption text-grey-7 q-mb-sm">
           <div class="row items-center no-wrap q-mb-xs">
             <q-icon name="event" size="15px" class="q-mr-xs text-primary flex-shrink-0" />
-            <span class="text-weight-medium ellipsis">{{ round.pickupDate }}</span>
+            <div class="col text-weight-medium ellipsis text-grey-8">{{ round.pickupDate }}</div>
           </div>
 
           <div class="row items-center no-wrap q-mb-xs">
             <q-icon name="schedule" size="15px" class="q-mr-xs text-primary flex-shrink-0" />
-            <span class="text-weight-medium ellipsis">เวลารับของ: {{ round.standbyTime || (round.pickupSlots && round.pickupSlots[0]) || '19:00 - 23:00' }} น.</span>
+            <div class="col text-weight-medium ellipsis text-grey-8">เวลารับของ: {{ round.standbyTime || (round.pickupSlots && round.pickupSlots[0]) || '19:00 - 23:00' }} น.</div>
           </div>
 
-          <div class="row items-center no-wrap q-mb-xs">
-            <q-icon name="place" size="15px" class="q-mr-xs text-primary flex-shrink-0" />
-            <span class="ellipsis">{{ round.pickupLocation }}</span>
+          <div class="row items-start no-wrap q-mb-xs">
+            <q-icon name="place" size="15px" class="q-mr-xs text-primary flex-shrink-0 q-mt-xs" />
+            <div class="col ellipsis text-grey-8">{{ round.pickupLocation }}</div>
           </div>
 
-          <div class="row items-center no-wrap">
-            <q-icon name="payments" size="15px" class="q-mr-xs text-positive flex-shrink-0" />
-            <span class="ellipsis">
-              พร้อมเพย์: <strong>{{ round.promptPayNumber }}</strong> ({{ round.promptPayName }})<span v-if="round.bankAccountNumber"> • KBANK: <strong>{{ round.bankAccountNumber }}</strong></span>
-            </span>
+          <div class="row items-start no-wrap">
+            <q-icon name="payments" size="15px" class="q-mr-xs text-positive flex-shrink-0 q-mt-xs" />
+            <div class="col text-grey-8">
+              <div class="ellipsis">พร้อมเพย์: <strong>{{ round.promptPayNumber }}</strong> ({{ round.promptPayName }})</div>
+              <div v-if="round.bankAccountNumber" class="ellipsis text-grey-7">ธ.กสิกรไทย (KBANK): <strong>{{ round.bankAccountNumber }}</strong></div>
+            </div>
           </div>
         </div>
 
