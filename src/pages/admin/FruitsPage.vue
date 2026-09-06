@@ -80,72 +80,68 @@
         class="bg-white q-pa-md rounded-borders q-mb-md shadow-1 overflow-hidden"
         :data-audit-id="`master-fruit-card-${fruit.id}`"
       >
-        <div class="row items-center justify-between no-wrap">
-          <!-- Left: Avatar & Info -->
-          <div class="row items-center no-wrap col">
-            <FruitMascotAvatar
-              :name="fruit.name"
-              :image-url="fruit.imageUrl"
-              size="56px"
-              class="q-mr-md flex-shrink-0"
-            />
+        <!-- Top Section: Avatar & Info -->
+        <div class="row items-center no-wrap">
+          <FruitMascotAvatar
+            :name="fruit.name"
+            :image-url="fruit.imageUrl"
+            size="56px"
+            class="q-mr-md flex-shrink-0"
+          />
 
-            <div class="col min-width-0">
-              <div class="row items-center q-mb-xs">
-                <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mr-sm ellipsis">
-                  {{ fruit.name }}
-                </div>
-                <q-badge
-                  :color="fruit.productType === 'VARIABLE_WHOLE_FRUIT' ? 'purple-7' : 'green-8'"
-                  rounded
-                  dense
-                  class="text-caption"
-                  style="font-size: 10px;"
-                >
-                  {{ fruit.productType === 'VARIABLE_WHOLE_FRUIT' ? 'ชั่งตามลูก' : 'ขายยกกิโล' }}
-                </q-badge>
+          <div class="col min-width-0">
+            <div class="row items-center q-mb-xs">
+              <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mr-sm ellipsis">
+                {{ fruit.name }}
               </div>
-
-              <!-- Price & Cost Details -->
-              <div class="text-caption text-grey-8 row items-center wrap" style="gap: 8px;">
-                <span>ราคาขาย: <strong>{{ fruit.defaultPricePerKg }}</strong> บ.</span>
-                <span>ต้นทุน: <strong>{{ fruit.defaultCostPerKg }}</strong> บ.</span>
-                <span class="text-positive text-weight-bold">
-                  (กำไร {{ fruit.defaultPricePerKg - fruit.defaultCostPerKg }} บ./กก.)
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right: Status Toggle & Edit Button -->
-          <div class="column items-end flex-shrink-0 q-ml-sm">
-            <q-btn
-              outline
-              size="sm"
-              no-caps
-              color="warning"
-              icon="edit"
-              label="แก้ไข"
-              rounded
-              class="q-px-sm text-weight-bold q-mb-xs"
-              :data-audit-id="`btn-edit-master-fruit-${fruit.id}`"
-              @click="openEditDialog(fruit)"
-            />
-
-            <div class="row items-center">
-              <q-toggle
-                :model-value="fruit.isActive"
-                color="positive"
+              <q-badge
+                :color="fruit.productType === 'VARIABLE_WHOLE_FRUIT' ? 'purple-7' : 'green-8'"
+                rounded
                 dense
-                size="sm"
-                :data-audit-id="`toggle-fruit-active-${fruit.id}`"
-                @update:model-value="val => handleToggleActive(fruit.id, val)"
-              />
-              <span class="text-caption text-grey-7 q-ml-xs" style="font-size: 11px;">
-                {{ fruit.isActive ? 'เปิดใช้งาน' : 'ปิดใช้งาน' }}
+                class="text-caption"
+                style="font-size: 10px;"
+              >
+                {{ fruit.productType === 'VARIABLE_WHOLE_FRUIT' ? 'ชั่งตามลูก' : 'ขายยกกิโล' }}
+              </q-badge>
+            </div>
+
+            <!-- Price & Cost Details -->
+            <div class="text-caption text-grey-8 row items-center wrap" style="gap: 8px;">
+              <span>ราคาขาย: <strong>{{ fruit.defaultPricePerKg }}</strong> บ.</span>
+              <span>ต้นทุน: <strong>{{ fruit.defaultCostPerKg }}</strong> บ.</span>
+              <span class="text-positive text-weight-bold">
+                (กำไร {{ fruit.defaultPricePerKg - fruit.defaultCostPerKg }} บ./กก.)
               </span>
             </div>
           </div>
+        </div>
+
+        <q-separator color="grey-3" class="q-my-sm" />
+
+        <!-- Bottom Actions Row: Status Toggle on Left & Edit Button on Right (Zero misclick risk) -->
+        <div class="row items-center justify-between">
+          <q-toggle
+            :model-value="fruit.isActive"
+            color="positive"
+            dense
+            label="เปิดใช้งาน"
+            left-label
+            class="text-caption text-weight-bold text-grey-8"
+            :data-audit-id="`toggle-fruit-active-${fruit.id}`"
+            @update:model-value="val => handleToggleActive(fruit.id, val)"
+          />
+
+          <q-btn
+            outline
+            size="sm"
+            color="warning"
+            icon="edit"
+            label="แก้ไขข้อมูล"
+            no-caps
+            class="q-px-sm text-weight-bold"
+            :data-audit-id="`btn-edit-master-fruit-${fruit.id}`"
+            @click="openEditDialog(fruit)"
+          />
         </div>
       </q-card>
     </div>

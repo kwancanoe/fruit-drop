@@ -12,25 +12,14 @@
       class="bg-white text-grey-9 rounded-borders shadow-3 q-pa-sm"
       style="width: 100%; max-width: 520px; max-height: 90vh;"
     >
-      <!-- Dialog Header -->
-      <q-card-section class="row items-center justify-between q-pb-none">
-        <div class="row items-center">
-          <q-avatar size="38px" color="green-1" text-color="positive" class="q-mr-sm">
-            <q-icon name="eco" size="22px" />
-          </q-avatar>
-          <div>
-            <div class="text-subtitle1 text-weight-bolder text-grey-9">
-              {{ isEdit ? 'แก้ไขชนิดผลไม้' : 'เพิ่มชนิดผลไม้ใหม่' }}
-            </div>
-            <div class="text-caption text-grey-7">
-              {{ isEdit ? `รหัส: ${form.fruitKey}` : 'กำหนดข้อมูลผลไม้กลางสำหรับนำไปเปิดรอบการจอง' }}
-            </div>
-          </div>
+      <!-- Dialog Header: Clean, Compact, Zero Waste -->
+      <q-card-section class="q-px-md q-pt-sm q-pb-xs">
+        <div class="text-subtitle1 text-weight-bolder text-grey-9">
+          {{ isEdit ? `แก้ไขชนิดผลไม้ (${form.fruitKey})` : 'เพิ่มชนิดผลไม้ใหม่' }}
         </div>
-        <q-btn flat round dense icon="close" color="grey-7" v-close-popup />
       </q-card-section>
 
-      <q-separator class="q-my-sm" />
+      <q-separator class="q-mb-sm" />
 
       <!-- Dialog Body Form -->
       <q-card-section class="q-pt-none scroll" style="max-height: 65vh;">
