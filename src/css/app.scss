@@ -186,8 +186,23 @@
 .q-card:not(.q-card--square) {
   border-radius: 16px !important;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: $gradient-surface-card;
   overflow: hidden;
+}
+
+.q-card:not([class*="bg-"]) {
+  background: $gradient-surface-card;
+}
+
+// Banners: Normalize rounded banners to M3 Surface Card radius (16px)
+.q-banner--rounded,
+.q-banner.rounded {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+// Standardize Quasar .rounded-borders utility to M3 Nested Container (12px)
+.rounded-borders {
+  border-radius: 12px !important;
 }
 
 // M3 Nested container helper

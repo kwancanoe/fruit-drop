@@ -1,30 +1,36 @@
 <template>
   <!-- Section: Customer Order Page (2-Stage Flow: Active Rounds Overview ➔ Round Booking Screen) -->
   <q-page id="customer-order-page" data-audit-id="customer-order-page" class="q-pa-md" style="max-width: 620px; margin: 0 auto; padding-bottom: 90px;">
-    <!-- Active Order Alert Banner (if customer previously placed an order) -->
+    <!-- Active Order Alert Card (if customer previously placed an order) -->
     <div v-if="activeCustomerOrder" class="q-mb-md">
-      <q-banner rounded class="bg-positive text-white shadow-2 row items-center justify-between">
-        <template #avatar>
-          <q-icon name="local_mall" color="white" />
-        </template>
-        <div class="text-caption text-weight-medium">
-          มีออเดอร์รอรับ: <strong>#{{ activeCustomerOrder.orderId }}</strong>
-          (รอบ {{ activeCustomerOrder.pickupSlot }})
+      <q-card
+        id="card-active-customer-order"
+        data-audit-id="card-active-customer-order"
+        class="bg-positive text-white shadow-2 q-pa-sm"
+      >
+        <div class="row items-center justify-between">
+          <div class="row items-center q-pa-xs">
+            <q-icon name="local_mall" color="white" size="24px" class="q-mr-sm" />
+            <div class="text-caption text-weight-medium">
+              มีออเดอร์รอรับ: <strong>#{{ activeCustomerOrder.orderId }}</strong>
+              <span class="text-green-1 q-ml-xs">(รอบ {{ activeCustomerOrder.pickupSlot }})</span>
+            </div>
+          </div>
+          <div class="row justify-end q-pa-xs">
+            <q-btn
+              id="btn-view-order-detail"
+              data-audit-id="btn-view-order-detail"
+              flat
+              dense
+              no-caps
+              label="รายละเอียดคำสั่งซื้อ"
+              color="white"
+              class="text-weight-bold"
+              :to="`/orders/${activeCustomerOrder.orderId}`"
+            />
+          </div>
         </div>
-        <template #action>
-          <q-btn
-            id="btn-view-order-detail"
-            data-audit-id="btn-view-order-detail"
-            flat
-            dense
-            no-caps
-            label="รายละเอียดคำสั่งซื้อ"
-            color="white"
-            class="text-weight-bold"
-            :to="`/orders/${activeCustomerOrder.orderId}`"
-          />
-        </template>
-      </q-banner>
+      </q-card>
     </div>
 
     <!-- Stage 1: Active Open Rounds Overview Screen (when no round selected) -->

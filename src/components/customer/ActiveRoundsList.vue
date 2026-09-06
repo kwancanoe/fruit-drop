@@ -2,7 +2,7 @@
   <!-- Section: Active Open Rounds Overview Screen -->
   <div id="active-rounds-list" data-audit-id="active-rounds-list">
     <!-- Case 1: No Open Rounds Available -->
-    <div v-if="rounds.length === 0" class="bg-white q-pa-xl rounded-borders text-center shadow-1">
+    <q-card v-if="rounds.length === 0" class="bg-white q-pa-xl text-center shadow-1">
       <q-icon name="event_busy" size="56px" color="grey-5" class="q-mb-sm" />
       <div class="text-subtitle1 text-weight-bold text-grey-9 q-mb-xs">
         ยังไม่มีรอบเปิดจอง
@@ -20,7 +20,7 @@
         class="q-px-md"
         @click="$emit('lookup-order')"
       />
-    </div>
+    </q-card>
 
     <!-- Case 2: One or More Open Rounds -->
     <div v-else>

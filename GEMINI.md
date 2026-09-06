@@ -15,8 +15,15 @@
   - คลาส Quasar Animate (เช่น nimated fadeIn, nimated bounceIn)
   - <q-slide-transition>
 
-## 3. เอกภาพและความสม่ำเสมอของ Component (Identical & Consistency)
-- คุณสมบัติพื้นฐาน (Border-radius, Shadow, Elevation, Font Weight) ต้องถูกกำหนดแบบ Global ผ่าน SCSS Tokens
+## 3. เอกภาพและความสม่ำเสมอของ Component (Identical & Consistency & M3 Shape Hierarchy)
+- คุณสมบัติพื้นฐาน (Border-radius, Shadow, Elevation, Font Weight) ต้องถูกกำหนดแบบ Global ผ่าน SCSS Tokens ห้ามสับสนหรือเขียนปะปน
+- **Google Material Design 3 (M3 Expressive 2026) Shape Hierarchy**:
+  - **Surface Cards & Banners (ระดับการ์ดหลัก & แบนเนอร์เตือน)**: ต้องมี Border-radius เท่ากับ **`16px`** เสมอ (`.q-card`, `.m3-surface-card`, `.q-banner--rounded`)
+    - ❌ **ห้ามใช้ `<div>` + `.rounded-borders` หรือ `<div>` + `shadow-1` เพื่อทำเป็นการ์ดหลอกๆ ลอยๆ เด็ดขาด** (เช่น การ์ด Empty State, การ์ดแจ้งเตือน, การ์ดแสดงผล) ทุกอย่างที่เป็นกล่อง Surface หลักบนจอ ต้องใช้แท็ก `<q-card>` เท่านั้น
+    - ถ้ามีการใช้ `<q-banner>` ต้องเป็น `.q-banner--rounded` ซึ่งถูก normalize ให้มี border-radius เท่ากับ 16px เสมอ
+  - **Nested Subcards & Inner Containers (กล่องย่อยภายใน Card)**: ต้องเป็น **`10px - 12px`** (ใช้ `.surface-subcard`, `.sub-row-item`, หรือ `.rounded-borders`)
+  - **Buttons, Badges, Chips (ปุ่มกดและป้ายกำกับ)**: ต้องเป็น Capsule / Full Pill **`9999px`** เสมอ ($button-border-radius: 9999px, .q-badge, .q-chip)
+  - **Text Inputs**: `8px` ตามมาตรฐาน Quasar Input
 - **Semantic Command Colors (สีของปุ่มสั่งการตามหน้าที่)**:
   - **ปุ่มยืนยัน / ส่งมอบ / บันทึก (Submit / Confirm / Deliver)**: สีเขียว ($positive หรือ #2E7D32)
   - **ปุ่มยกเลิก / ปฏิเสธ / ลบ (Cancel / Delete / Reject)**: สีแดง ($negative หรือ #C62828)

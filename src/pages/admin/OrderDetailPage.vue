@@ -26,12 +26,12 @@
     </div>
 
     <!-- Not Found State -->
-    <div v-else-if="!order" class="bg-white q-pa-xl rounded-borders text-center shadow-1">
+    <q-card v-else-if="!order" class="bg-white q-pa-xl text-center shadow-1">
       <q-icon name="error_outline" size="56px" color="negative" class="q-mb-sm" />
       <div class="text-h6 text-weight-bold text-grey-9">ไม่พบออเดอร์ #{{ orderId }}</div>
       <div class="text-caption text-grey-6 q-mb-md">ตรวจสอบรหัสออเดอร์ หรือสแกน QR Code ใหม่อีกครั้ง</div>
       <q-btn color="primary" label="กลับไปหน้าจ่ายของ" no-caps to="/admin" />
-    </div>
+    </q-card>
 
     <!-- Order Detail Content -->
     <div v-else>

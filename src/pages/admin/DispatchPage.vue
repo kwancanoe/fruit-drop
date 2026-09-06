@@ -60,11 +60,11 @@
     />
 
     <!-- Orders Dispatch List -->
-    <div v-if="filteredOrders.length === 0" class="bg-white q-pa-xl rounded-borders text-center text-grey-7 shadow-1">
+    <q-card v-if="filteredOrders.length === 0" class="bg-white q-pa-xl text-center text-grey-7 shadow-1">
       <q-icon name="inbox" size="48px" class="q-mb-sm text-grey-4" />
       <div class="text-subtitle1 text-weight-bold text-grey-8">ไม่พบรายการออเดอร์</div>
       <div class="text-caption text-grey-6">ในรอบเวลาหรือคำค้นหานี้</div>
-    </div>
+    </q-card>
 
     <div v-else>
       <TailgateOrderCard

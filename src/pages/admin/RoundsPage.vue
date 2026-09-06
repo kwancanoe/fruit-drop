@@ -39,7 +39,7 @@
     </div>
 
     <!-- Empty State -->
-    <div v-if="fruitStore.allRounds.length === 0" class="bg-white q-pa-xl rounded-borders text-center text-grey-7 shadow-1">
+    <q-card v-if="fruitStore.allRounds.length === 0" class="bg-white q-pa-xl text-center text-grey-7 shadow-1">
       <q-icon name="event_busy" size="48px" class="q-mb-sm text-grey-4" />
       <div class="text-subtitle1 text-weight-bold text-grey-8">ยังไม่มีรอบการจองในระบบ</div>
       <div class="text-caption text-grey-6 q-mb-md">กดปุ่ม 'เปิดรอบใหม่' ด้านบนเพื่อสร้างรอบแรก</div>
@@ -50,7 +50,7 @@
         no-caps
         to="/admin/rounds/new"
       />
-    </div>
+    </q-card>
 
     <!-- Rounds List -->
     <div v-else class="column">
