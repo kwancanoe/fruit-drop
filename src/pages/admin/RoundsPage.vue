@@ -1,6 +1,6 @@
 <template>
   <!-- Section: Full-Page Admin Preorder Rounds Management -->
-  <q-page id="admin-rounds-page" data-audit-id="admin-rounds-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 76px;">
+  <q-page id="admin-rounds-page" data-audit-id="admin-rounds-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 84px;">
     <!-- Page Header with Back Navigation -->
     <div class="row items-center justify-between q-mb-md">
       <div class="row items-center">

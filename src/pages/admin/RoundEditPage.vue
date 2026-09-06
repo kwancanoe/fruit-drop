@@ -275,23 +275,26 @@
         </div>
       </q-card>
 
-      <!-- Card 3: Fruits Pricing, Cost & Quotas -->
-      <q-card class="bg-white text-grey-9 q-pa-md rounded-borders q-mb-md shadow-1">
-        <div class="row items-center justify-between q-mb-xs">
+      <!-- Card 3: Fruits Pricing, Cost & Quotas (Flush List, No Subcard Nesting) -->
+      <q-card class="bg-white text-grey-9 rounded-borders q-mb-md shadow-1 overflow-hidden">
+        <div class="q-px-md q-py-sm row items-center justify-between">
           <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
             <q-icon name="eco" size="20px" class="q-mr-xs" />
             3. ผลไม้ ราคาขาย ต้นทุน และโควต้า
           </div>
         </div>
-        <div class="text-caption text-grey-7 q-mb-md">
+        <div class="q-px-md text-caption text-grey-7 q-mb-sm">
           กำหนดราคาขายและต้นทุนต่อ กก. เพื่อให้ระบบคำนวณกำไร-ขาดทุนแบบ Deep Analysis อัตโนมัติ
         </div>
 
-        <div class="column">
+        <q-separator />
+
+        <!-- Native Flush Deck List -->
+        <q-list separator>
           <div
             v-for="fruit in form.fruits"
             :key="fruit.fruitKey"
-            class="bg-grey-1 q-pa-sm rounded-borders q-mb-sm shadow-none border-light"
+            class="q-pa-md"
             :data-audit-id="`fruit-config-row-${fruit.fruitKey}`"
           >
             <!-- Top Row: Checkbox, Avatar, Name & Profit Margin Badge -->
@@ -304,7 +307,7 @@
                   class="q-mr-sm"
                   :data-audit-id="`checkbox-enable-${fruit.fruitKey}`"
                 />
-                <q-avatar size="34px" class="q-mr-sm bg-white shadow-1">
+                <q-avatar size="36px" class="q-mr-sm bg-grey-1 shadow-1">
                   <q-img :src="`/mascots/mascot_${fruit.fruitKey}.png`" fit="contain" />
                 </q-avatar>
                 <div>
@@ -377,7 +380,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </q-list>
       </q-card>
 
       <!-- Action Buttons -->

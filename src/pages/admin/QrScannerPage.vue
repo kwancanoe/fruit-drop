@@ -1,6 +1,6 @@
 <template>
   <!-- Section: In-App Camera QR Code Scanner for Admin Dispatch Desk -->
-  <q-page id="admin-qr-scanner-page" data-audit-id="admin-qr-scanner-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 600px; margin: 0 auto; padding-bottom: 90px;">
+  <q-page id="admin-qr-scanner-page" data-audit-id="admin-qr-scanner-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 84px;">
     <!-- Top Bar Navigation -->
     <div class="row items-center justify-between q-mb-md">
       <q-btn

@@ -33,11 +33,11 @@
       <q-btn color="primary" label="กลับไปหน้าจ่ายของ" no-caps to="/admin" />
     </q-card>
 
-    <!-- Order Detail Content -->
+    <!-- Order Detail Content: Unified Single Surface Sheet (No Card-in-Card, No Multi-Card Fragmentation) -->
     <div v-else>
-      <!-- 1. Header Card: Order ID, Slot & Status -->
-      <q-card class="bg-white shadow-1 rounded-borders q-mb-md" data-audit-id="card-order-header">
-        <q-card-section class="q-pa-md">
+      <q-card class="bg-white shadow-1 rounded-borders overflow-hidden q-mb-xl" data-audit-id="order-detail-sheet">
+        <!-- 1. Header Section: Order ID, Slot & Status -->
+        <div class="q-pa-md" data-audit-id="section-order-header">
           <div class="row items-center justify-between">
             <div>
               <div class="text-caption text-grey-7">รหัสออเดอร์</div>
@@ -51,57 +51,55 @@
               </q-badge>
             </div>
           </div>
-        </q-card-section>
-      </q-card>
+        </div>
 
-      <!-- 2. Customer Information Card -->
-      <q-card class="bg-white shadow-1 rounded-borders q-mb-md" data-audit-id="card-customer-info">
-        <q-card-section class="q-pa-md">
+        <q-separator />
+
+        <!-- 2. Customer Information Section (Flat, No Inner Subcard) -->
+        <div class="q-pa-md" data-audit-id="section-customer-info">
           <div class="text-subtitle2 text-weight-bold text-grey-8 q-mb-sm row items-center">
             <q-icon name="person" color="primary" class="q-mr-xs" size="20px" />
             <span>ข้อมูลลูกค้า</span>
           </div>
 
-          <div class="bg-grey-1 q-pa-md rounded-borders">
-            <div class="row items-center justify-between no-wrap">
-              <div class="col ellipsis">
-                <div class="text-subtitle1 text-weight-bolder text-grey-9 ellipsis">{{ order.customer.name }}</div>
-                <div class="text-caption text-grey-7 q-mt-xs">
-                  🏢 {{ order.customer.shop }} • ชั้น {{ order.customer.floor.replace(/^ชั้น\s*/, '') }}
-                </div>
-                <div class="text-caption text-grey-8 text-weight-medium q-mt-xs">
-                  เบอร์โทรศัพท์: <strong>{{ order.customer.phone }}</strong>
-                </div>
+          <div class="row items-center justify-between no-wrap">
+            <div class="col ellipsis">
+              <div class="text-subtitle1 text-weight-bolder text-grey-9 ellipsis">{{ order.customer.name }}</div>
+              <div class="text-caption text-grey-7 q-mt-xs">
+                🏢 {{ order.customer.shop }} • ชั้น {{ order.customer.floor.replace(/^ชั้น\s*/, '') }}
               </div>
-
-              <!-- Sleek Mobile Call Button -->
-              <div class="col-auto q-pl-md">
-                <q-btn
-                  round
-                  color="positive"
-                  icon="phone"
-                  size="md"
-                  class="shadow-2"
-                  :href="`tel:${order.customer.phone}`"
-                  data-audit-id="btn-call-customer"
-                >
-                  <q-tooltip>โทรหาลูกค้า</q-tooltip>
-                </q-btn>
+              <div class="text-caption text-grey-8 text-weight-medium q-mt-xs">
+                เบอร์โทรศัพท์: <strong>{{ order.customer.phone }}</strong>
               </div>
             </div>
-          </div>
-        </q-card-section>
-      </q-card>
 
-      <!-- 3. Fruit Items & Digital Scale Calculator -->
-      <q-card class="bg-white shadow-1 rounded-borders q-mb-md" data-audit-id="card-ordered-items">
-        <q-card-section class="q-pa-md">
+            <!-- Sleek Mobile Call Button -->
+            <div class="col-auto q-pl-md">
+              <q-btn
+                round
+                color="positive"
+                icon="phone"
+                size="md"
+                class="shadow-2"
+                :href="`tel:${order.customer.phone}`"
+                data-audit-id="btn-call-customer"
+              >
+                <q-tooltip>โทรหาลูกค้า</q-tooltip>
+              </q-btn>
+            </div>
+          </div>
+        </div>
+
+        <q-separator />
+
+        <!-- 3. Fruit Items & Digital Scale Calculator -->
+        <div class="q-pa-md" data-audit-id="section-ordered-items">
           <div class="text-subtitle2 text-weight-bold text-grey-8 q-mb-sm row items-center">
             <q-icon name="shopping_basket" color="primary" class="q-mr-xs" size="20px" />
             <span>รายการผลไม้</span>
           </div>
 
-          <q-list separator class="rounded-borders">
+          <q-list separator>
             <q-item v-for="(item, idx) in order.items" :key="idx" class="q-pa-sm">
               <q-item-section avatar>
                 <q-avatar size="44px" class="bg-green-1">
@@ -215,67 +213,68 @@
               </q-item-section>
             </q-item>
           </q-list>
-        </q-card-section>
-      </q-card>
+        </div>
 
-      <!-- 4. Dynamic PromptPay Payment QR Section (Hidden when already COMPLETED) -->
-      <q-card v-if="order.orderStatus !== 'COMPLETED'" class="bg-white shadow-2 rounded-borders q-mb-md" data-audit-id="card-payment-qr">
-        <q-card-section class="q-pa-md">
-          <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-xs row items-center justify-between">
-            <div class="row items-center">
-              <q-icon name="qr_code_scanner" color="primary" class="q-mr-xs" size="22px" />
-              <span>QR รับเงิน</span>
+        <!-- 4. Dynamic PromptPay Payment QR Section (Hidden when already COMPLETED) -->
+        <template v-if="order.orderStatus !== 'COMPLETED'">
+          <q-separator />
+          <div class="q-pa-md" data-audit-id="section-payment-qr">
+            <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-xs row items-center justify-between">
+              <div class="row items-center">
+                <q-icon name="qr_code_scanner" color="primary" class="q-mr-xs" size="22px" />
+                <span>QR รับเงิน</span>
+              </div>
+              <div class="text-h6 text-weight-bolder text-primary">
+                {{ currentFinalPrice }} บาท
+              </div>
             </div>
-            <div class="text-h6 text-weight-bolder text-primary">
-              {{ currentFinalPrice }} บาท
+
+            <!-- Gating: If Durian Unweighed, Block QR and Show Amber Alert -->
+            <div v-if="hasUnweighedFruit" class="bg-amber-1 q-pa-md rounded-borders border-amber text-center q-my-sm">
+              <q-icon name="scale" color="amber-9" size="36px" class="q-mb-xs" />
+              <div class="text-subtitle2 text-weight-bolder text-amber-10">
+                ชั่งน้ำหนักทุเรียนก่อนสร้าง QR รับเงิน
+              </div>
+            </div>
+
+            <!-- Ready State: Display High-Quality PromptPay QR Code -->
+            <div v-else class="text-center q-py-sm">
+              <div v-if="isGeneratingQR" class="q-pa-xl">
+                <q-spinner color="primary" size="48px" />
+                <div class="text-caption text-grey-7 q-mt-sm">กำลังสร้าง QR พร้อมเพย์...</div>
+              </div>
+
+              <div v-else-if="promptPayQrUrl" class="column items-center">
+                <div class="bg-white q-pa-sm rounded-borders shadow-2 inline-block border-positive">
+                  <q-img
+                    :src="promptPayQrUrl"
+                    style="width: 220px; height: 220px;"
+                    fit="contain"
+                    alt="PromptPay QR Code"
+                  />
+                </div>
+
+                <div class="text-subtitle2 text-weight-bolder text-primary q-mt-sm">
+                  ยอดชำระ: {{ currentFinalPrice }} บาท
+                </div>
+                <div class="text-caption text-grey-8">
+                  พร้อมเพย์: <strong>{{ activeRound?.promptPayNumber || '0878902935' }}</strong> ({{ activeRound?.promptPayName || 'นาตยา บุญณะ' }})
+                </div>
+                <div class="text-caption text-grey-7">
+                  หรือโอน ธ.กสิกรไทย <strong>{{ activeRound?.bankAccountNumber || '8172235408' }}</strong>
+                </div>
+                <div class="text-caption text-positive text-weight-bold q-mt-xs">
+                  📱 ให้ลูกค้าเปิดแอปธนาคารสแกนหน้าจอนี้ได้ทันที
+                </div>
+              </div>
             </div>
           </div>
+        </template>
 
-          <!-- Gating: If Durian Unweighed, Block QR and Show Amber Alert -->
-          <div v-if="hasUnweighedFruit" class="bg-amber-1 q-pa-md rounded-borders border-amber text-center q-my-sm">
-            <q-icon name="scale" color="amber-9" size="36px" class="q-mb-xs" />
-            <div class="text-subtitle2 text-weight-bolder text-amber-10">
-              ชั่งน้ำหนักทุเรียนก่อนสร้าง QR รับเงิน
-            </div>
-          </div>
+        <q-separator />
 
-          <!-- Ready State: Display High-Quality PromptPay QR Code -->
-          <div v-else class="text-center q-py-sm">
-            <div v-if="isGeneratingQR" class="q-pa-xl">
-              <q-spinner color="primary" size="48px" />
-              <div class="text-caption text-grey-7 q-mt-sm">กำลังสร้าง QR พร้อมเพย์...</div>
-            </div>
-
-            <div v-else-if="promptPayQrUrl" class="column items-center">
-              <div class="bg-white q-pa-sm rounded-borders shadow-2 inline-block border-positive">
-                <q-img
-                  :src="promptPayQrUrl"
-                  style="width: 220px; height: 220px;"
-                  fit="contain"
-                  alt="PromptPay QR Code"
-                />
-              </div>
-
-              <div class="text-subtitle2 text-weight-bolder text-primary q-mt-sm">
-                ยอดชำระ: {{ currentFinalPrice }} บาท
-              </div>
-              <div class="text-caption text-grey-8">
-                พร้อมเพย์: <strong>{{ activeRound?.promptPayNumber || '0878902935' }}</strong> ({{ activeRound?.promptPayName || 'นาตยา บุญณะ' }})
-              </div>
-              <div class="text-caption text-grey-7">
-                หรือโอน ธ.กสิกรไทย <strong>{{ activeRound?.bankAccountNumber || '8172235408' }}</strong>
-              </div>
-              <div class="text-caption text-positive text-weight-bold q-mt-xs">
-                📱 ให้ลูกค้าเปิดแอปธนาคารสแกนหน้าจอนี้ได้ทันที
-              </div>
-            </div>
-          </div>
-        </q-card-section>
-      </q-card>
-
-      <!-- 5. Payment Slip / Handover Photo Proof -->
-      <q-card class="bg-white shadow-1 rounded-borders q-mb-md" data-audit-id="card-photo-proof">
-        <q-card-section class="q-pa-md">
+        <!-- 5. Payment Slip / Handover Photo Proof -->
+        <div class="q-pa-md" data-audit-id="section-photo-proof">
           <div class="text-subtitle2 text-weight-bold text-grey-8 q-mb-sm row items-center justify-between">
             <div class="row items-center">
               <q-icon name="photo_camera" color="primary" class="q-mr-xs" size="20px" />
@@ -335,83 +334,85 @@
               @click="triggerGallery"
             />
           </div>
-        </q-card-section>
-      </q-card>
+        </div>
 
-      <!-- 6. Handover Action Commands (Strict Semantic Colors) -->
-      <q-card class="bg-white q-pa-md shadow-2 q-mb-xl" data-audit-id="card-dispatch-actions">
-        <!-- A. When Order is Waiting Pickup -->
-        <template v-if="order.orderStatus !== 'COMPLETED'">
-          <div class="text-subtitle1 text-weight-bold text-grey-9 q-mb-sm">
-            บันทึกการส่งมอบผลไม้:
-          </div>
+        <q-separator />
 
-          <div v-if="hasUnweighedFruit" class="text-caption text-negative text-weight-bold q-mb-sm">
-            * ต้องชั่งน้ำหนักทุเรียนให้ครบก่อน จึงจะสามารถยืนยันส่งมอบได้
-          </div>
+        <!-- 6. Handover Action Commands (Strict Semantic Colors) -->
+        <div class="q-pa-md" data-audit-id="section-dispatch-actions">
+          <!-- A. When Order is Waiting Pickup -->
+          <template v-if="order.orderStatus !== 'COMPLETED'">
+            <div class="text-subtitle1 text-weight-bold text-grey-9 q-mb-sm">
+              บันทึกการส่งมอบผลไม้:
+            </div>
 
-          <div class="row">
-            <!-- Command: Collect Cash & Deliver -->
-            <div class="col-12 col-sm-6 q-pa-xs">
+            <div v-if="hasUnweighedFruit" class="text-caption text-negative text-weight-bold q-mb-sm">
+              * ต้องชั่งน้ำหนักทุเรียนให้ครบก่อน จึงจะสามารถยืนยันส่งมอบได้
+            </div>
+
+            <div class="row">
+              <!-- Command: Collect Cash & Deliver -->
+              <div class="col-12 col-sm-6 q-pa-xs">
+                <q-btn
+                  color="warning"
+                  class="full-width q-py-md text-weight-bolder text-subtitle2 shadow-2 btn-gradient-warning"
+                  no-caps
+                  rounded
+                  icon="payments"
+                  :disable="hasUnweighedFruit"
+                  :loading="isSubmittingAction"
+                  @click="handleCollectCashAndDeliver"
+                >
+                  <span>รับเงินสด {{ currentFinalPrice }} บ. & ส่งมอบ</span>
+                </q-btn>
+              </div>
+
+              <!-- Command: Confirm Transfer & Deliver -->
+              <div class="col-12 col-sm-6 q-pa-xs">
+                <q-btn
+                  color="positive"
+                  class="full-width q-py-md text-weight-bolder text-subtitle2 shadow-2 btn-gradient-primary"
+                  no-caps
+                  rounded
+                  icon="done_all"
+                  :disable="hasUnweighedFruit"
+                  :loading="isSubmittingAction"
+                  @click="handleConfirmTransferAndDeliver"
+                >
+                  <span>ลูกค้าโอนเงินแล้ว & ส่งมอบ</span>
+                </q-btn>
+              </div>
+            </div>
+          </template>
+
+          <!-- B. When Order is Already Delivered (Completed) -->
+          <template v-else>
+            <div class="bg-green-1 q-pa-md rounded-borders text-center q-mb-md">
+              <q-icon name="check_circle" color="positive" size="44px" class="q-mb-xs" />
+              <div class="text-subtitle1 text-weight-bolder text-positive">
+                ส่งมอบผลไม้ให้ออเดอร์นี้เรียบร้อยแล้ว
+              </div>
+              <div v-if="order.attribution" class="text-caption text-grey-8 q-mt-xs">
+                ส่งโดย: <strong>{{ order.attribution.handledByName }}</strong> ({{ order.attribution.handledByRole }})
+                <span v-if="order.completedAt"> • {{ formatTimestamp(order.completedAt) }}</span>
+              </div>
+            </div>
+
+            <div class="row justify-center">
               <q-btn
-                color="warning"
-                class="full-width q-py-md text-weight-bolder text-subtitle2 shadow-2 btn-gradient-warning"
+                flat
+                dense
                 no-caps
-                rounded
-                icon="payments"
-                :disable="hasUnweighedFruit"
+                color="grey-6"
+                icon="undo"
+                label="ยกเลิกการส่งมอบ"
+                class="text-weight-bold"
                 :loading="isSubmittingAction"
-                @click="handleCollectCashAndDeliver"
-              >
-                <span>รับเงินสด {{ currentFinalPrice }} บ. & ส่งมอบ</span>
-              </q-btn>
+                @click="handleRevertDelivery"
+              />
             </div>
-
-            <!-- Command: Confirm Transfer & Deliver -->
-            <div class="col-12 col-sm-6 q-pa-xs">
-              <q-btn
-                color="positive"
-                class="full-width q-py-md text-weight-bolder text-subtitle2 shadow-2 btn-gradient-primary"
-                no-caps
-                rounded
-                icon="done_all"
-                :disable="hasUnweighedFruit"
-                :loading="isSubmittingAction"
-                @click="handleConfirmTransferAndDeliver"
-              >
-                <span>ลูกค้าโอนเงินแล้ว & ส่งมอบ</span>
-              </q-btn>
-            </div>
-          </div>
-        </template>
-
-        <!-- B. When Order is Already Delivered (Completed) -->
-        <template v-else>
-          <div class="bg-green-1 q-pa-md rounded-borders text-center q-mb-md">
-            <q-icon name="check_circle" color="positive" size="44px" class="q-mb-xs" />
-            <div class="text-subtitle1 text-weight-bolder text-positive">
-              ส่งมอบผลไม้ให้ออเดอร์นี้เรียบร้อยแล้ว
-            </div>
-            <div v-if="order.attribution" class="text-caption text-grey-8 q-mt-xs">
-              ส่งโดย: <strong>{{ order.attribution.handledByName }}</strong> ({{ order.attribution.handledByRole }})
-              <span v-if="order.completedAt"> • {{ formatTimestamp(order.completedAt) }}</span>
-            </div>
-          </div>
-
-          <div class="row justify-center">
-            <q-btn
-              flat
-              dense
-              no-caps
-              color="grey-6"
-              icon="undo"
-              label="ยกเลิกการส่งมอบ"
-              class="text-weight-bold"
-              :loading="isSubmittingAction"
-              @click="handleRevertDelivery"
-            />
-          </div>
-        </template>
+          </template>
+        </div>
       </q-card>
     </div>
   </q-page>

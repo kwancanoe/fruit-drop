@@ -1,6 +1,6 @@
 <template>
   <!-- Section: Admin Tailgate Dispatch Desk & Scale Engine -->
-  <q-page id="admin-dispatch-page" data-audit-id="admin-dispatch-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 76px;">
+  <q-page id="admin-dispatch-page" data-audit-id="admin-dispatch-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 84px;">
     <!-- Live Statistics Strip -->
     <q-card id="dispatch-summary-kpi-card" data-audit-id="dispatch-summary-kpi-card" class="bg-white text-grey-9 q-pa-sm q-mb-md shadow-1">
       <div class="row items-center justify-around text-center text-caption">
