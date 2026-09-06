@@ -13,13 +13,15 @@
         </div>
         <template #action>
           <q-btn
+            id="btn-view-order-detail"
+            data-audit-id="btn-view-order-detail"
             flat
             dense
             no-caps
-            label="ดูบัตรคิว"
+            label="รายละเอียดคำสั่งซื้อ"
             color="white"
             class="text-weight-bold"
-            @click="showActiveQueueModal = true"
+            :to="`/orders/${activeCustomerOrder.orderId}`"
           />
         </template>
       </q-banner>
@@ -162,35 +164,12 @@
         </div>
       </div>
     </div>
-
-    <!-- Order Completed Queue Dialog -->
-    <q-dialog v-model="showSuccessModal" persistent>
-      <div style="width: 95vw; max-width: 480px;">
-        <OrderQueueCard v-if="completedOrder" :order="completedOrder" />
-        <div class="q-mt-sm row justify-center">
-          <q-btn
-            color="primary"
-            label="สั่งเพิ่มอีกออเดอร์"
-            no-caps
-            rounded
-            class="q-px-md"
-            @click="resetOrderForm"
-          />
-        </div>
-      </div>
-    </q-dialog>
-
-    <!-- Active Order Queue Dialog -->
-    <q-dialog v-model="showActiveQueueModal">
-      <div style="width: 95vw; max-width: 480px;">
-        <OrderQueueCard v-if="activeCustomerOrder" :order="activeCustomerOrder" />
-      </div>
-    </q-dialog>
   </q-page>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import { useCustomerStorage } from '@/composables/useCustomerStorage';
@@ -201,8 +180,8 @@ import BatchHeaderCard from '@/components/customer/BatchHeaderCard.vue';
 import FruitSelector from '@/components/customer/FruitSelector.vue';
 import ContactPicker from '@/components/customer/ContactPicker.vue';
 import PickupSlotPicker from '@/components/customer/PickupSlotPicker.vue';
-import OrderQueueCard from '@/components/customer/OrderQueueCard.vue';
 
+const router = useRouter();
 const $q = useQuasar();
 const fruitStore = useFruitStore();
 const { customerProfile, lastOrderId, loadProfile, saveProfile, saveLastOrderId, loadLastOrderId } = useCustomerStorage();
@@ -231,11 +210,6 @@ const customerInfo = ref<CustomerInfo>({
 });
 const selectedSlot = ref<string>('19:30 น.');
 const isSlotValid = ref<boolean>(true);
-
-// Modal states
-const showSuccessModal = ref<boolean>(false);
-const showActiveQueueModal = ref<boolean>(false);
-const completedOrder = ref<Order | null>(null);
 
 // Available pickup slots
 const availablePickupSlots = computed<string[]>(() => {
@@ -325,24 +299,7 @@ async function handlePlaceOrder() {
     });
 
     saveLastOrderId(generatedOrderId);
-
-    // Prepare completed order preview
-    completedOrder.value = {
-      orderId: generatedOrderId,
-      roundId: targetRoundId,
-      customer: { ...customerInfo.value },
-      items: [...orderedItems.value],
-      pickupSlot: selectedSlot.value,
-      pickupTime: selectedSlot.value,
-      orderStatus: 'WAITING_PICKUP',
-      paymentMethod: 'PAY_AT_CAR',
-      paymentStatus: 'UNPAID',
-      totalEstimatedPrice: totalEstimatedPrice.value,
-      totalFinalPrice: totalEstimatedPrice.value,
-      createdAt: Date.now()
-    };
-
-    showSuccessModal.value = true;
+    orderedItems.value = [];
 
     $q.notify({
       type: 'positive',
@@ -350,6 +307,8 @@ async function handlePlaceOrder() {
       position: 'top',
       timeout: 2500
     });
+
+    void router.push(`/orders/${generatedOrderId}`);
   } catch (error) {
     console.error('Error submitting order:', error);
     $q.notify({
@@ -357,12 +316,6 @@ async function handlePlaceOrder() {
       message: 'เกิดข้อผิดพลาดในการสั่งจอง โปรดลองใหม่อีกครั้ง'
     });
   }
-}
-
-// Reset form for next order
-function resetOrderForm() {
-  showSuccessModal.value = false;
-  orderedItems.value = [];
 }
 
 onMounted(() => {

@@ -59,36 +59,28 @@
       :orders="fruitStore.orders"
       @found="onOrderFound"
     />
-
-    <!-- Queue Card Modal (if looked up) -->
-    <q-dialog v-model="isQueueModalOpen">
-      <div style="width: 95vw; max-width: 480px;">
-        <OrderQueueCard v-if="selectedOrder" :order="selectedOrder" />
-      </div>
-    </q-dialog>
   </q-layout>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useFruitStore } from '@/stores/fruitStore';
 import type { Order } from '@/types/fruit_app';
 import OrderLookupModal from '@/components/customer/OrderLookupModal.vue';
-import OrderQueueCard from '@/components/customer/OrderQueueCard.vue';
 
+const router = useRouter();
 const fruitStore = useFruitStore();
 
 const isLookupOpen = ref<boolean>(false);
-const isQueueModalOpen = ref<boolean>(false);
-const selectedOrder = ref<Order | null>(null);
 
 function openLookupModal() {
   isLookupOpen.value = true;
 }
 
+// Navigate directly to full customer order ticket page
 function onOrderFound(order: Order) {
-  selectedOrder.value = order;
-  isQueueModalOpen.value = true;
+  void router.push(`/orders/${order.orderId}`);
 }
 
 onMounted(() => {

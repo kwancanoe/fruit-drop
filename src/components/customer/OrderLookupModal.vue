@@ -10,14 +10,14 @@
       <q-card-section class="bg-primary text-white row items-center justify-between q-pa-md">
         <div class="row items-center">
           <q-icon name="search" size="24px" class="q-mr-sm" />
-          <div class="text-subtitle1 text-weight-bolder">ค้นหาบัตรคิวออเดอร์ของฉัน</div>
+          <div class="text-subtitle1 text-weight-bolder">ค้นหารายละเอียดคำสั่งซื้อ</div>
         </div>
         <q-btn flat round dense icon="close" color="white" @click="$emit('update:isOpen', false)" />
       </q-card-section>
 
       <q-card-section class="q-pa-md">
         <div class="text-caption text-grey-8 q-mb-md">
-          กรอกเบอร์โทรศัพท์ที่ใช้สั่งซื้อ หรือรหัสออเดอร์ (เช่น FD-1082) เพื่อเปิดดูบัตรคิว
+          กรอกเบอร์โทรศัพท์ที่ใช้สั่งซื้อ หรือรหัสออเดอร์ (เช่น FD-1082) เพื่อดูรายละเอียดคำสั่งซื้อ
         </div>
 
         <q-input
