@@ -457,7 +457,7 @@ function onCalendarDatePicked(val: string) {
   form.value.pickupDate = formatThaiDateFromIso(val);
 }
 
-// Default Master 7 Fruits
+// Default Master 7 Fruits (Template catalog for rounds)
 function getDefaultFruitConfigs(): RoundCreationFruitConfig[] {
   return [
     {
@@ -467,7 +467,7 @@ function getDefaultFruitConfigs(): RoundCreationFruitConfig[] {
       pricePerKg: 35,
       costPerKg: 20,
       totalQuotaKg: 200,
-      isEnabled: true
+      isEnabled: false
     },
     {
       fruitKey: 'thurian',
@@ -476,7 +476,7 @@ function getDefaultFruitConfigs(): RoundCreationFruitConfig[] {
       pricePerKg: 160,
       costPerKg: 110,
       totalQuotaKg: 150,
-      isEnabled: true
+      isEnabled: false
     },
     {
       fruitKey: 'mangkut',
@@ -612,6 +612,7 @@ async function loadRoundData(id: string) {
     // Fetch existing products to configure prices and costs
     const prods = await fruitStore.getProductsByRoundId(id);
     const prodMap = new Map(prods.map(p => [p.mascotKey, p]));
+    const summaryList = roundData.fruitSummary || [];
 
     const defaultFruits = getDefaultFruitConfigs();
     form.value.fruits = defaultFruits.map(df => {
@@ -627,7 +628,17 @@ async function loadRoundData(id: string) {
           isEnabled: true
         };
       }
-      return df;
+
+      // Check if fruit was listed in roundData.fruitSummary
+      const inSummary = summaryList.some(name => {
+        const n = name.trim().toLowerCase();
+        return n.includes(df.name.toLowerCase()) || n.includes(df.fruitKey);
+      });
+
+      return {
+        ...df,
+        isEnabled: inSummary
+      };
     });
   } catch (err) {
     console.error('Error loading round for editing:', err);

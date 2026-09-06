@@ -94,13 +94,20 @@
           </div>
         </div>
 
-        <!-- Fruit Summary Chips -->
-        <div v-if="round.fruitSummary && round.fruitSummary.length > 0" class="row items-center q-mb-md">
-          <FruitChip
-            v-for="fruit in round.fruitSummary"
-            :key="fruit"
-            :name="fruit"
-          />
+        <!-- Fruit Summary Avatars with Names (Identical to Customer Storefront) -->
+        <div
+          v-if="round.fruitSummary && round.fruitSummary.length > 0"
+          class="q-mb-md"
+          data-audit-id="round-fruit-avatars-section"
+        >
+          <div class="row items-start wrap" style="gap: 12px;" data-audit-id="round-fruit-avatars-row">
+            <FruitMascotAvatar
+              v-for="fruit in round.fruitSummary"
+              :key="fruit"
+              :name="fruit"
+              size="54px"
+            />
+          </div>
         </div>
 
         <q-separator color="grey-3" class="q-mb-sm" />
@@ -142,7 +149,7 @@
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
-import FruitChip from '@/components/common/FruitChip.vue';
+import FruitMascotAvatar from '@/components/common/FruitMascotAvatar.vue';
 
 const router = useRouter();
 const $q = useQuasar();
