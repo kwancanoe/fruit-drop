@@ -1,6 +1,6 @@
 <template>
   <!-- Section: Deep Profit & Loss Performance Analytics -->
-  <q-page id="admin-analytics-page" data-audit-id="admin-analytics-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 780px; margin: 0 auto; padding-bottom: 76px;">
+  <q-page id="admin-analytics-page" data-audit-id="admin-analytics-page" class="q-pa-sm q-pa-md-md bg-grey-1 text-grey-9" style="max-width: 780px; margin: 0 auto; padding-bottom: 76px;">
     <!-- Page Header with Back Navigation -->
     <div class="row items-center justify-between q-mb-md">
       <div class="row items-center">
@@ -145,8 +145,9 @@
     </div>
 
     <!-- Section: Fruit Breakdown Analysis -->
-    <q-card class="bg-white text-grey-9 q-pa-md rounded-borders q-mb-md shadow-1">
-      <div class="row items-center justify-between q-mb-sm">
+    <q-card class="bg-white text-grey-9 rounded-borders q-mb-md shadow-1 overflow-hidden">
+      <!-- Section Header -->
+      <div class="q-px-md q-py-sm row items-center justify-between">
         <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
           <q-icon name="pie_chart" size="20px" class="q-mr-xs" />
           กำไรตามชนิดผลไม้
@@ -156,25 +157,28 @@
         </div>
       </div>
 
+      <q-separator />
+
       <div v-if="fruitStats.length === 0" class="text-center q-pa-lg text-grey-6">
         ไม่มีรายการ
       </div>
 
-      <div v-else class="column">
+      <!-- Native Quasar Flush List (No Card-in-Card) -->
+      <q-list v-else separator>
         <div
           v-for="stat in fruitStats"
           :key="stat.mascotKey"
-          class="bg-grey-1 q-pa-sm rounded-borders q-mb-sm border-light"
+          class="q-pa-md"
           :data-audit-id="`stat-row-${stat.mascotKey}`"
         >
           <!-- Fruit Header Row -->
           <div class="row items-center justify-between q-mb-xs">
             <div class="row items-center">
-              <q-avatar size="34px" class="q-mr-sm bg-white shadow-1">
+              <q-avatar size="36px" class="q-mr-sm bg-grey-1 shadow-1">
                 <q-img :src="`/mascots/mascot_${stat.mascotKey}.png`" fit="contain" />
               </q-avatar>
               <div>
-                <div class="text-subtitle2 text-weight-bold leading-tight text-grey-9">
+                <div class="text-subtitle2 text-weight-bolder leading-tight text-grey-9">
                   {{ stat.name }}
                 </div>
                 <div class="text-caption text-grey-7" style="font-size: 11px;">
@@ -203,7 +207,7 @@
             </div>
           </div>
 
-          <!-- Mini Progress Bar / Breakdown Strip -->
+          <!-- Mini Breakdown Strip -->
           <div class="row items-center justify-between text-caption text-grey-7 q-pt-xs border-top-light">
             <div>
               ยอดขาย: <strong class="text-grey-9">฿{{ stat.revenue.toLocaleString() }}</strong>
@@ -216,12 +220,13 @@
             </div>
           </div>
         </div>
-      </div>
+      </q-list>
     </q-card>
 
     <!-- Section: Order-Level Profit Breakdown -->
-    <q-card class="bg-white text-grey-9 q-pa-md rounded-borders shadow-1">
-      <div class="row items-center justify-between q-mb-sm">
+    <q-card class="bg-white text-grey-9 rounded-borders shadow-1 overflow-hidden">
+      <!-- Section Header -->
+      <div class="q-px-md q-py-sm row items-center justify-between">
         <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
           <q-icon name="receipt_long" size="20px" class="q-mr-xs" />
           สรุปรายออเดอร์
@@ -231,23 +236,25 @@
         </div>
       </div>
 
+      <q-separator />
+
       <div v-if="filteredOrders.length === 0" class="text-center q-pa-lg text-grey-6">
         ไม่พบออเดอร์
       </div>
 
-      <div v-else>
+      <!-- Native Quasar Flush List (No Card-in-Card) -->
+      <q-list v-else separator>
         <q-expansion-item
           v-for="order in orderAnalysisList"
           :key="order.orderId"
-          class="bg-grey-1 rounded-borders q-mb-sm border-light"
-          header-class="q-pa-sm"
+          header-class="q-pa-md"
           dense-toggle
           :data-audit-id="`order-analysis-${order.orderId}`"
         >
           <template #header>
-            <q-item-section avatar style="min-width: 42px; padding-right: 8px;">
+            <q-item-section avatar style="min-width: 44px; padding-right: 10px;">
               <q-avatar
-                size="34px"
+                size="36px"
                 :color="order.profit >= 0 ? 'positive' : 'negative'"
                 text-color="white"
                 icon="account_balance_wallet"
@@ -280,9 +287,8 @@
             </q-item-section>
           </template>
 
-          <q-card class="bg-grey-1 text-grey-9 q-px-md q-pb-md">
-            <q-separator color="grey-3" class="q-mb-sm" />
-
+          <!-- Expanded Content: Clean Inset Section (No Inner Card) -->
+          <div class="bg-grey-1 text-grey-9 q-pa-md border-top-light">
             <!-- Order Item List -->
             <div class="text-caption text-grey-8 q-mb-xs text-weight-bold">
               รายการสินค้าและต้นทุนออเดอร์นี้:
@@ -317,9 +323,9 @@
                 </q-badge>
               </div>
             </div>
-          </q-card>
+          </div>
         </q-expansion-item>
-      </div>
+      </q-list>
     </q-card>
   </q-page>
 </template>
