@@ -20,8 +20,15 @@
           <div class="text-h6 text-weight-bolder leading-tight text-grey-9">
             จัดการผู้ใช้และทีมงาน
           </div>
-          <div class="text-caption text-grey-7">
-            สิทธิ์ของคุณ: <strong class="text-positive">{{ formatRole(userStore.currentUserRole) }}</strong>
+          <div class="text-caption text-grey-7 row items-center">
+            <span>สิทธิ์ของคุณ:</span>
+            <q-badge
+              :color="getRoleColor(userStore.currentUserRole)"
+              class="q-ml-xs text-weight-bolder"
+              rounded
+            >
+              {{ getRoleShortLabel(userStore.currentUserRole) }}
+            </q-badge>
           </div>
         </div>
       </div>
@@ -35,11 +42,11 @@
         no-caps
         class="text-weight-bold shadow-1 q-px-sm"
         data-audit-id="btn-open-add-user-dialog"
-        @click="showAddUserDialog = true"
+        @click="openAddDialog"
       />
     </div>
 
-    <!-- AppSheet-Style Team Member Deck View (No Nested Cards) -->
+    <!-- AppSheet-Style Team Member Deck View (No Avatars, No Device Clutter, Direct Clean Rows) -->
     <q-card class="bg-white text-grey-9 rounded-borders shadow-1 overflow-hidden q-mb-xl" data-audit-id="card-users-deck">
       <div class="q-px-md q-py-sm row items-center justify-between">
         <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
@@ -60,11 +67,11 @@
           icon="person_add"
           label="เพิ่มผู้ใช้งานคนแรก"
           no-caps
-          @click="showAddUserDialog = true"
+          @click="openAddDialog"
         />
       </div>
 
-      <!-- Native Flush Deck List -->
+      <!-- Native Flush Deck List (Clean Text Rows, No Avatars, Direct Click-to-Call) -->
       <q-list v-else separator>
         <div
           v-for="user in userStore.users"
@@ -72,42 +79,45 @@
           class="q-pa-md row items-center justify-between no-wrap"
           :data-audit-id="`user-row-${user.email}`"
         >
-          <!-- User Details (Left Avatar + Contact Block) -->
-          <div class="row items-center col ellipsis q-pr-sm">
-            <q-avatar
-              :color="getRoleColor(user.role)"
-              text-color="white"
-              icon="person"
-              size="44px"
-              class="q-mr-md shadow-1 flex-shrink-0"
-            />
-            <div class="col ellipsis">
-              <div class="row items-center q-mb-xs">
-                <span class="text-subtitle1 text-weight-bolder text-grey-9 q-mr-sm ellipsis">
-                  {{ user.displayName }}
-                </span>
-                <q-badge :color="getRoleColor(user.role)" class="text-weight-bold" rounded>
-                  {{ formatRole(user.role) }}
-                </q-badge>
-              </div>
-              <div class="text-caption text-grey-8 row items-center">
-                <q-icon name="mail" size="14px" class="q-mr-xs text-grey-6" />
-                <span class="ellipsis">{{ user.email }}</span>
-              </div>
-              <div class="text-caption text-grey-8 row items-center q-mt-xs">
-                <q-icon name="phone" size="14px" class="q-mr-xs text-positive" />
-                <a :href="`tel:${user.phone}`" class="text-grey-9 text-weight-bold text-decoration-none">
-                  {{ user.phone }}
-                </a>
-              </div>
-              <div v-if="user.lastLoginDevice" class="text-caption text-grey-6 text-italic q-mt-xs" style="font-size: 11px;">
-                อุปกรณ์: {{ user.lastLoginDevice.deviceModel }} ({{ user.lastLoginDevice.platform }})
-              </div>
+          <!-- User Details Block -->
+          <div class="col ellipsis q-pr-sm">
+            <div class="row items-center q-mb-xs">
+              <span class="text-subtitle1 text-weight-bolder text-grey-9 q-mr-sm ellipsis">
+                {{ user.displayName }}
+              </span>
+              <q-badge :color="getRoleColor(user.role)" class="text-weight-bolder" rounded>
+                {{ getRoleShortLabel(user.role) }}
+              </q-badge>
+            </div>
+            <div class="text-caption text-grey-8 row items-center">
+              <q-icon name="mail" size="14px" class="q-mr-xs text-grey-6" />
+              <span class="ellipsis">{{ user.email }}</span>
+            </div>
+            <div class="text-caption text-grey-8 row items-center q-mt-xs">
+              <q-icon name="phone" size="14px" class="q-mr-xs text-positive" />
+              <a :href="`tel:${user.phone}`" class="text-grey-9 text-weight-bold text-decoration-none">
+                {{ user.phone }}
+              </a>
             </div>
           </div>
 
-          <!-- Delete Action -->
-          <div class="col-auto text-right">
+          <!-- Actions: Edit & Delete -->
+          <div class="col-auto row items-center no-wrap">
+            <q-btn
+              v-if="canEdit(user)"
+              flat
+              round
+              dense
+              color="grey-8"
+              icon="edit"
+              size="md"
+              class="q-mr-xs"
+              :data-audit-id="`btn-edit-user-${user.email}`"
+              @click="openEditDialog(user)"
+            >
+              <q-tooltip>แก้ไขข้อมูลผู้ใช้</q-tooltip>
+            </q-btn>
+
             <q-btn
               v-if="canDelete(user)"
               flat
@@ -126,30 +136,31 @@
       </q-list>
     </q-card>
 
-    <!-- Dialog: Add New Staff Member Modal (On-Demand) -->
-    <q-dialog v-model="showAddUserDialog" persistent>
+    <!-- Dialog: Add / Edit Staff Member Modal (On-Demand) -->
+    <q-dialog v-model="showUserDialog" persistent>
       <q-card style="width: 100%; max-width: 500px;" class="rounded-borders overflow-hidden">
         <!-- Dialog Header -->
         <div class="q-pa-md bg-positive text-white row items-center justify-between">
           <div class="text-subtitle1 text-weight-bolder row items-center">
-            <q-icon name="person_add" size="22px" class="q-mr-xs" />
-            เพิ่มผู้ช่วยขาย / ผู้ใช้งานใหม่
+            <q-icon :name="isEditing ? 'edit' : 'person_add'" size="22px" class="q-mr-xs" />
+            {{ isEditing ? 'แก้ไขข้อมูลผู้ใช้งาน' : 'เพิ่มผู้ช่วยขาย / ผู้ใช้งานใหม่' }}
           </div>
           <q-btn flat round dense icon="close" color="white" v-close-popup />
         </div>
 
         <q-card-section class="q-pa-md">
-          <q-form @submit.prevent="handleSaveNewUser">
+          <q-form @submit.prevent="handleSaveUser">
             <div class="q-mb-sm">
               <q-input
-                v-model="newUserForm.email"
+                v-model="userForm.email"
                 outlined
                 dense
                 type="email"
                 label="Gmail ของผู้ใช้ *"
                 placeholder="example@gmail.com"
+                :readonly="isEditing"
                 :rules="[val => !!val && val.includes('@') || 'ระบุ Gmail ให้ถูกต้อง']"
-                data-audit-id="input-new-user-email"
+                data-audit-id="input-user-email"
               >
                 <template #prepend>
                   <q-icon name="mail" color="positive" />
@@ -159,13 +170,13 @@
 
             <div class="q-mb-sm">
               <q-input
-                v-model="newUserForm.displayName"
+                v-model="userForm.displayName"
                 outlined
                 dense
                 label="ชื่อ-นามสกุล หรือชื่อเล่น *"
                 placeholder="เช่น น้องบอย Garmin"
                 :rules="[val => !!val && val.trim().length > 0 || 'ระบุชื่อ']"
-                data-audit-id="input-new-user-name"
+                data-audit-id="input-user-name"
               >
                 <template #prepend>
                   <q-icon name="person" color="positive" />
@@ -175,7 +186,7 @@
 
             <div class="q-mb-sm">
               <q-input
-                v-model="newUserForm.phone"
+                v-model="userForm.phone"
                 outlined
                 dense
                 type="tel"
@@ -184,7 +195,7 @@
                 mask="###-###-####"
                 unmasked-value
                 :rules="[val => !!val && val.length >= 9 || 'ระบุเบอร์โทรศัพท์']"
-                data-audit-id="input-new-user-phone"
+                data-audit-id="input-user-phone"
               >
                 <template #prepend>
                   <q-icon name="phone" color="positive" />
@@ -194,7 +205,7 @@
 
             <div class="q-mb-sm">
               <q-select
-                v-model="newUserForm.role"
+                v-model="userForm.role"
                 :options="roleOptions"
                 emit-value
                 map-options
@@ -202,7 +213,7 @@
                 dense
                 label="ระดับสิทธิ์ในระบบ *"
                 :readonly="userStore.isShopOwner"
-                data-audit-id="select-new-user-role"
+                data-audit-id="select-user-role"
               >
                 <template #prepend>
                   <q-icon name="badge" color="positive" />
@@ -211,20 +222,20 @@
             </div>
 
             <div v-if="userStore.isShopOwner" class="text-caption text-grey-7 q-mb-sm">
-              * เจ้าของร้านสามารถเพิ่มผู้ใช้ระดับ "ผู้ช่วยขาย (Seller)" ได้เท่านั้น
+              * เจ้าของร้านสามารถกำหนดสิทธิ์ระดับ "Seller" ได้เท่านั้น
             </div>
 
             <div class="row items-center justify-end q-mt-md">
               <q-btn flat label="ยกเลิก" color="grey-7" v-close-popup class="q-mr-sm" no-caps />
               <q-btn
                 color="positive"
-                icon="add"
-                label="บันทึกและให้สิทธิ์ผู้ใช้"
+                :icon="isEditing ? 'save' : 'add'"
+                :label="isEditing ? 'บันทึกการแก้ไข' : 'บันทึกและให้สิทธิ์ผู้ใช้'"
                 no-caps
                 type="submit"
                 class="q-px-md text-weight-bold shadow-1"
                 :loading="userStore.isLoading"
-                data-audit-id="btn-save-new-user"
+                data-audit-id="btn-save-user"
               />
             </div>
           </q-form>
@@ -241,13 +252,16 @@ import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useUserStore } from '@/stores/userStore';
 import type { AppUser, UserRole } from '@/types/fruit_app';
+import { ROLES, getRoleShortLabel, getRoleColor } from '@/utils/roles';
 
 const router = useRouter();
 const $q = useQuasar();
 const userStore = useUserStore();
 
-// Modal visibility for add user
-const showAddUserDialog = ref(false);
+// Modal visibility & state for add/edit user
+const showUserDialog = ref(false);
+const isEditing = ref(false);
+const editingDocId = ref('');
 
 // Back navigation handler
 function handleBack() {
@@ -258,7 +272,7 @@ function handleBack() {
   }
 }
 
-const newUserForm = ref<{
+const userForm = ref<{
   email: string;
   displayName: string;
   phone: string;
@@ -270,38 +284,58 @@ const newUserForm = ref<{
   role: 'SELLER'
 });
 
-// Role options
+// Role dropdown options for form
 const roleOptions = computed(() => {
   if (userStore.isSystemAdmin) {
     return [
-      { label: 'System Admin (ผู้ดูแลระบบสูงสุด)', value: 'SYSTEM_ADMIN' },
-      { label: 'Shop Owner (เจ้าของร้าน)', value: 'SHOP_OWNER' },
-      { label: 'Seller (ผู้ช่วยขาย)', value: 'SELLER' }
+      { label: `${ROLES.SYSTEM_ADMIN.shortLabel} - ${ROLES.SYSTEM_ADMIN.fullLabel}`, value: 'SYSTEM_ADMIN' },
+      { label: `${ROLES.SHOP_OWNER.shortLabel} - ${ROLES.SHOP_OWNER.fullLabel}`, value: 'SHOP_OWNER' },
+      { label: `${ROLES.SELLER.shortLabel} - ${ROLES.SELLER.fullLabel}`, value: 'SELLER' }
     ];
   }
   return [
-    { label: 'Seller (ผู้ช่วยขาย)', value: 'SELLER' }
+    { label: `${ROLES.SELLER.shortLabel} - ${ROLES.SELLER.fullLabel}`, value: 'SELLER' }
   ];
 });
 
-function formatRole(role: UserRole | null | undefined): string {
-  switch (role) {
-    case 'SYSTEM_ADMIN': return 'System Admin (แอดมินสูงสุด)';
-    case 'SHOP_OWNER': return 'Shop Owner (เจ้าของร้าน)';
-    case 'SELLER': return 'Seller (ผู้ช่วยขาย)';
-    default: return 'ไม่มีสิทธิ์';
-  }
+// Open Add User Dialog
+function openAddDialog() {
+  isEditing.value = false;
+  editingDocId.value = '';
+  userForm.value = {
+    email: '',
+    displayName: '',
+    phone: '',
+    role: 'SELLER'
+  };
+  showUserDialog.value = true;
 }
 
-function getRoleColor(role: UserRole): string {
-  switch (role) {
-    case 'SYSTEM_ADMIN': return 'purple-9';
-    case 'SHOP_OWNER': return 'positive';
-    case 'SELLER': return 'warning';
-    default: return 'grey-7';
-  }
+// Open Edit User Dialog
+function openEditDialog(user: AppUser) {
+  isEditing.value = true;
+  editingDocId.value = user.id || user.email;
+  userForm.value = {
+    email: user.email,
+    displayName: user.displayName,
+    phone: user.phone,
+    role: user.role
+  };
+  showUserDialog.value = true;
 }
 
+// Edit permission check
+function canEdit(targetUser: AppUser): boolean {
+  if (userStore.isSystemAdmin) {
+    return true;
+  }
+  if (userStore.isShopOwner) {
+    return targetUser.role === 'SELLER';
+  }
+  return false;
+}
+
+// Delete permission check
 function canDelete(targetUser: AppUser): boolean {
   if (userStore.isSystemAdmin) {
     return true;
@@ -312,35 +346,49 @@ function canDelete(targetUser: AppUser): boolean {
   return false;
 }
 
-// Add User
-async function handleSaveNewUser() {
-  if (!newUserForm.value.email || !newUserForm.value.displayName || !newUserForm.value.phone) {
+// Save User (Create or Update)
+async function handleSaveUser() {
+  if (!userForm.value.email || !userForm.value.displayName || !userForm.value.phone) {
     $q.notify({ type: 'warning', message: 'ระบุข้อมูลให้ครบทุกช่อง' });
     return;
   }
 
   try {
-    await userStore.addUser(newUserForm.value);
-    $q.notify({
-      type: 'positive',
-      message: `เพิ่มผู้ใช้ ${newUserForm.value.email} เรียบร้อยแล้ว`,
-      position: 'top',
-      timeout: 2000
-    });
+    if (isEditing.value) {
+      await userStore.updateUser(editingDocId.value, {
+        displayName: userForm.value.displayName.trim(),
+        phone: userForm.value.phone.trim(),
+        role: userForm.value.role
+      });
+      $q.notify({
+        type: 'positive',
+        message: `แก้ไขข้อมูลผู้ใช้ ${userForm.value.displayName} เรียบร้อยแล้ว`,
+        position: 'top',
+        timeout: 2000
+      });
+    } else {
+      await userStore.addUser(userForm.value);
+      $q.notify({
+        type: 'positive',
+        message: `เพิ่มผู้ใช้ ${userForm.value.email} เรียบร้อยแล้ว`,
+        position: 'top',
+        timeout: 2000
+      });
+    }
 
     // Reset Form & Close Dialog
-    newUserForm.value = {
+    userForm.value = {
       email: '',
       displayName: '',
       phone: '',
       role: 'SELLER'
     };
-    showAddUserDialog.value = false;
+    showUserDialog.value = false;
   } catch (err: unknown) {
     const error = err as Error;
     $q.notify({
       type: 'negative',
-      message: error.message || 'เกิดข้อผิดพลาดในการเพิ่มผู้ใช้',
+      message: error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
       position: 'top'
     });
   }

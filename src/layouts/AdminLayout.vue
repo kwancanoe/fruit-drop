@@ -23,11 +23,11 @@
             {{ userStore.currentAppUser?.displayName || fruitStore.authUser.displayName || fruitStore.authUser.email }}
           </span>
           <q-badge
-            :color="userStore.isSystemAdmin ? 'purple-9' : userStore.isShopOwner ? 'positive' : 'warning'"
+            :color="getRoleColor(userStore.currentUserRole)"
             class="q-ml-xs text-weight-bolder"
             rounded
           >
-            {{ userStore.isSystemAdmin ? 'Admin' : userStore.isShopOwner ? 'Owner' : 'Seller' }}
+            {{ getRoleShortLabel(userStore.currentUserRole) }}
           </q-badge>
         </div>
 
@@ -182,6 +182,7 @@ import { onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import { useUserStore } from '@/stores/userStore';
+import { getRoleShortLabel, getRoleColor } from '@/utils/roles';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton.vue';
 
 const $q = useQuasar();
