@@ -235,16 +235,17 @@
         ไม่พบออเดอร์
       </div>
 
-      <div v-else class="column">
+      <div v-else>
         <q-expansion-item
           v-for="order in orderAnalysisList"
           :key="order.orderId"
           class="bg-grey-1 rounded-borders q-mb-sm border-light"
-          header-class="q-py-sm"
+          header-class="q-pa-sm"
+          dense-toggle
           :data-audit-id="`order-analysis-${order.orderId}`"
         >
           <template #header>
-            <q-item-section avatar>
+            <q-item-section avatar style="min-width: 42px; padding-right: 8px;">
               <q-avatar
                 size="34px"
                 :color="order.profit >= 0 ? 'positive' : 'negative'"
@@ -255,8 +256,8 @@
 
             <q-item-section>
               <!-- Row 1: Order ID + Customer Name (Left) & Profit (Right) -->
-              <div class="row items-center justify-between no-wrap">
-                <div class="text-subtitle2 text-weight-bolder text-grey-9 ellipsis q-mr-xs">
+              <div class="row items-center justify-between no-wrap full-width">
+                <div class="col text-subtitle2 text-weight-bolder text-grey-9 ellipsis q-mr-xs">
                   #{{ order.orderId }} - {{ order.customer.name }}
                 </div>
                 <div
@@ -268,12 +269,12 @@
               </div>
 
               <!-- Row 2: Customer Location & Slot (Left) | Revenue & Margin (Right) -->
-              <div class="row items-center justify-between no-wrap text-caption text-grey-7 q-mt-xs">
-                <div class="ellipsis q-mr-xs">
+              <div class="row items-center justify-between no-wrap full-width text-caption text-grey-7 q-mt-xs">
+                <div class="col ellipsis q-mr-xs">
                   {{ order.customer.shop }} ({{ order.customer.floor }}) | {{ order.pickupSlot }}
                 </div>
                 <div class="text-no-wrap text-right" style="font-size: 11px;">
-                  ขาย ฿{{ order.revenue.toLocaleString() }} (มาร์จิ้น {{ order.marginPercent }}%)
+                  ขาย ฿{{ order.revenue.toLocaleString() }} ({{ order.marginPercent }}%)
                 </div>
               </div>
             </q-item-section>
