@@ -30,24 +30,65 @@
       </div>
     </q-card>
 
-    <!-- Active Round Indicator -->
-    <q-card v-if="fruitStore.activeRound" id="dispatch-active-round-banner" data-audit-id="dispatch-active-round-banner" class="bg-green-1 text-grey-9 q-pa-sm q-mb-md row items-center justify-between shadow-1">
-      <div class="row items-center">
-        <q-icon name="event_available" color="positive" size="20px" class="q-mr-xs" />
-        <span class="text-caption text-grey-9">
-          รอบปัจจุบัน: <strong>{{ fruitStore.activeRound.title }}</strong> ({{ fruitStore.activeRound.pickupDate }})
-        </span>
+    <!-- Section: Round Selector & Tailgate Session -->
+    <q-card id="dispatch-round-selector-card" data-audit-id="dispatch-round-selector-card" class="bg-white text-grey-9 q-pa-sm q-mb-md shadow-1">
+      <div class="row items-center no-wrap">
+        <div class="col">
+          <q-select
+            v-if="roundOptions.length > 0"
+            id="select-active-round"
+            data-audit-id="select-active-round"
+            dense
+            outlined
+            emit-value
+            map-options
+            options-dense
+            v-model="selectedRoundId"
+            :options="roundOptions"
+            label="รอบส่งที่กำลังจ่ายของ"
+            color="positive"
+            class="text-weight-bold"
+            @update:model-value="handleRoundChange"
+          >
+            <template #prepend>
+              <q-icon name="event_available" color="positive" size="20px" />
+            </template>
+            <template #option="scope">
+              <q-item v-bind="scope.itemProps" dense class="q-py-xs">
+                <q-item-section>
+                  <q-item-label class="text-weight-bold text-subtitle2">{{ scope.opt.title }}</q-item-label>
+                  <q-item-label caption class="text-grey-7">{{ scope.opt.date }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-badge
+                    :color="scope.opt.isOpen ? 'positive' : 'grey-5'"
+                    :label="scope.opt.isOpen ? 'เปิดรับจอง' : 'ปิดรับจอง'"
+                    class="text-weight-bold"
+                  />
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+
+          <div v-else class="text-caption text-grey-7 q-pa-xs">
+            ยังไม่มีรอบส่งในระบบ
+          </div>
+        </div>
+
+        <q-btn
+          id="btn-manage-rounds-shortcut"
+          data-audit-id="btn-manage-rounds-shortcut"
+          flat
+          round
+          dense
+          icon="tune"
+          color="grey-8"
+          class="q-ml-sm"
+          to="/admin/rounds"
+        >
+          <q-tooltip>จัดการรอบส่งทั้งหมด</q-tooltip>
+        </q-btn>
       </div>
-      <q-btn
-        flat
-        dense
-        no-caps
-        color="positive"
-        icon="swap_horiz"
-        label="เปลี่ยนรอบ"
-        size="sm"
-        to="/admin/rounds"
-      />
     </q-card>
 
 
@@ -101,7 +142,45 @@ import TimeSlotTabs from '@/components/admin/TimeSlotTabs.vue';
 import TailgateOrderCard from '@/components/admin/TailgateOrderCard.vue';
 import { generateTimeSlots, normalizeSlotLabel, isRangeSlot, parseTimeToMinutes } from '@/utils/timeSlots';
 
+const $q = useQuasar();
 const fruitStore = useFruitStore();
+
+// Round selection states
+const selectedRoundId = computed<string>({
+  get: () => fruitStore.activeRound?.roundId || '',
+  set: (val: string) => {
+    const found = fruitStore.allRounds.find(r => r.roundId === val);
+    if (found) {
+      fruitStore.selectActiveRound(found);
+    }
+  }
+});
+
+const roundOptions = computed(() => {
+  return fruitStore.allRounds.map(r => ({
+    label: `${r.title} (${r.pickupDate || 'ไม่ระบุวันที่'})`,
+    value: r.roundId,
+    title: r.title,
+    date: r.pickupDate || 'ไม่ระบุวันที่',
+    isOpen: !!r.isOpen
+  }));
+});
+
+// Handle changing active dispatch round
+function handleRoundChange(roundId: string) {
+  const target = fruitStore.allRounds.find(r => r.roundId === roundId);
+  if (target) {
+    fruitStore.selectActiveRound(target);
+    selectedSlot.value = 'ALL';
+    searchQuery.value = '';
+    $q.notify({
+      type: 'info',
+      message: `เลือก '${target.title}' แล้ว`,
+      position: 'top',
+      timeout: 1200
+    });
+  }
+}
 
 // Filter states
 const selectedSlot = ref<string>('ALL');

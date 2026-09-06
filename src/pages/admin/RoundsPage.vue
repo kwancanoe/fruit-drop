@@ -60,13 +60,20 @@
         class="bg-white text-grey-9 q-pa-md rounded-borders q-mb-md shadow-1"
         :data-audit-id="`round-card-${round.roundId}`"
       >
-        <!-- Top Row: Title & Status Badge -->
+        <!-- Top Row: Title, Desk Active Indicator & Status Badge -->
         <div class="row items-center justify-between q-mb-xs">
           <div class="row items-center">
             <q-icon name="event_note" color="positive" size="22px" class="q-mr-xs" />
             <span class="text-subtitle1 text-weight-bolder text-grey-9">
               {{ round.title }}
             </span>
+            <q-badge
+              v-if="fruitStore.activeRoundId === round.roundId"
+              color="primary"
+              label="กำลังดูที่ท้ายรถ"
+              class="q-ml-sm text-weight-bold"
+              :data-audit-id="`badge-desk-active-${round.roundId}`"
+            />
           </div>
           <RoundStatusBadge :is-open="round.isOpen" />
         </div>
@@ -128,13 +135,13 @@
               :data-audit-id="`btn-edit-round-${round.roundId}`"
             />
 
-            <!-- Select Active Button -->
+            <!-- View Orders at Desk Button -->
             <q-btn
               size="sm"
               no-caps
-              :color="fruitStore.activeRoundId === round.roundId ? 'positive' : 'grey-7'"
-              :icon="fruitStore.activeRoundId === round.roundId ? 'check_circle' : 'visibility'"
-              :label="fruitStore.activeRoundId === round.roundId ? 'รอบปัจจุบัน' : 'ดูออเดอร์'"
+              color="primary"
+              icon="inventory_2"
+              label="ดูออเดอร์"
               class="q-px-sm text-weight-bold shadow-1"
               :data-audit-id="`btn-select-round-${round.roundId}`"
               @click="handleSelectActive(round)"
@@ -188,7 +195,7 @@ function handleSelectActive(round: PreorderRound) {
   fruitStore.selectActiveRound(round);
   $q.notify({
     type: 'info',
-    message: `เลือก '${round.title}' เป็นรอบปัจจุบันแล้ว`,
+    message: `เปิดดูออเดอร์ '${round.title}' ที่ท้ายรถแล้ว`,
     position: 'top',
     timeout: 1500
   });

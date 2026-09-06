@@ -167,6 +167,16 @@ export const useFruitStore = defineStore('fruit', () => {
         ...docSnap.data() as PreorderRound,
         id: docSnap.id
       }));
+
+      // Auto-select latest round or sync existing active round with latest data
+      if (allRounds.value.length > 0) {
+        const currentActive = allRounds.value.find(r => r.roundId === activeRound.value?.roundId);
+        if (currentActive) {
+          activeRound.value = currentActive;
+        } else if (allRounds.value[0]) {
+          selectActiveRound(allRounds.value[0]);
+        }
+      }
     }, (error) => {
       console.warn('Snapshot all rounds error:', error);
     });
