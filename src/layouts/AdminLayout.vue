@@ -116,7 +116,7 @@
               color="primary"
               class="q-px-md text-weight-bold"
               icon="storefront"
-              label="กลับหน้าร้านลูกค้า"
+              label="ย้อนกลับ"
               no-caps
               rounded
               to="/"

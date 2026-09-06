@@ -99,6 +99,7 @@ import { useFruitStore } from '@/stores/fruitStore';
 import type { Order } from '@/types/fruit_app';
 import TimeSlotTabs from '@/components/admin/TimeSlotTabs.vue';
 import TailgateOrderCard from '@/components/admin/TailgateOrderCard.vue';
+import { generateTimeSlots, normalizeSlotLabel, isRangeSlot, parseTimeToMinutes } from '@/utils/timeSlots';
 
 const fruitStore = useFruitStore();
 
@@ -106,17 +107,37 @@ const fruitStore = useFruitStore();
 const selectedSlot = ref<string>('ALL');
 const searchQuery = ref<string>('');
 
-// Slots
+// Slots: Single-time tabs generated from seller standby window + custom order times
 const availableSlots = computed<string[]>(() => {
-  return fruitStore.activeRound?.pickupSlots || [
-    '19:00 - 19:30',
-    '19:30 - 20:00',
-    '20:00 - 20:30',
-    '21:00+ (หลังห้างปิด)'
-  ];
+  const round = fruitStore.activeRound;
+  const start = round?.standbyStartTime || '19:00';
+  const end = round?.standbyEndTime || '23:00';
+
+  // 1. Generate base 30-min intervals from seller standby window
+  const slots = generateTimeSlots(start, end, 30);
+  const slotsSet = new Set<string>(slots);
+
+  // 2. Add round pickupSlots if they are single times
+  if (round?.pickupSlots && Array.isArray(round.pickupSlots)) {
+    for (const s of round.pickupSlots) {
+      if (s && !isRangeSlot(s)) {
+        slotsSet.add(normalizeSlotLabel(s));
+      }
+    }
+  }
+
+  // 3. Add any order's single pickupSlot (e.g. custom time entered by customer)
+  for (const o of fruitStore.orders) {
+    if (o.pickupSlot && !isRangeSlot(o.pickupSlot)) {
+      slotsSet.add(normalizeSlotLabel(o.pickupSlot));
+    }
+  }
+
+  // Sort chronologically
+  return Array.from(slotsSet).sort((a, b) => parseTimeToMinutes(a) - parseTimeToMinutes(b));
 });
 
-// Slot counts
+// Slot counts for single-time tabs
 const slotCounts = computed<Record<string, number>>(() => {
   const counts: Record<string, number> = { ALL: 0 };
   for (const slot of availableSlots.value) {
@@ -126,9 +147,9 @@ const slotCounts = computed<Record<string, number>>(() => {
   for (const o of fruitStore.orders) {
     if (o.orderStatus === 'WAITING_PICKUP') {
       counts.ALL = (counts.ALL || 0) + 1;
-      const slotVal = counts[o.pickupSlot];
-      if (slotVal !== undefined) {
-        counts[o.pickupSlot] = slotVal + 1;
+      const normalizedSlot = normalizeSlotLabel(o.pickupSlot);
+      if (counts[normalizedSlot] !== undefined) {
+        counts[normalizedSlot] = (counts[normalizedSlot] || 0) + 1;
       }
     }
   }
@@ -163,9 +184,9 @@ const prepaidTotal = computed<number>(() => {
 const filteredOrders = computed<Order[]>(() => {
   let list = fruitStore.orders;
 
-  // Filter by slot
+  // Filter by single-time slot
   if (selectedSlot.value !== 'ALL') {
-    list = list.filter(o => o.pickupSlot === selectedSlot.value);
+    list = list.filter(o => normalizeSlotLabel(o.pickupSlot) === selectedSlot.value);
   }
 
   // Filter by search query

@@ -414,6 +414,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import type { RoundCreationFruitConfig } from '@/types/fruit_app';
+import { generateTimeSlots } from '@/utils/timeSlots';
 
 const route = useRoute();
 const router = useRouter();
@@ -528,9 +529,7 @@ const form = ref({
   pickupLocation: 'ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B',
   standbyStartTime: '19:00',
   standbyEndTime: '23:00',
-  pickupSlots: [
-    '19:00 - 23:00'
-  ],
+  pickupSlots: generateTimeSlots('19:00', '23:00', 30),
   promptPayNumber: '0878902935',
   promptPayName: 'นาตยา บุญณะ',
   bankName: 'KBANK (กสิกรไทย)',
@@ -599,7 +598,7 @@ async function loadRoundData(id: string) {
       }
     }
 
-    form.value.pickupSlots = [computedStandbyTime.value];
+    form.value.pickupSlots = generateTimeSlots(form.value.standbyStartTime, form.value.standbyEndTime, 30);
     form.value.promptPayNumber = roundData.promptPayNumber || '0878902935';
     form.value.promptPayName = roundData.promptPayName || 'นาตยา บุญณะ';
     form.value.bankName = roundData.bankName || 'KBANK (กสิกรไทย)';
@@ -649,7 +648,7 @@ async function handleSubmit() {
         standbyTime: standbyTimeStr,
         standbyStartTime: form.value.standbyStartTime.trim(),
         standbyEndTime: form.value.standbyEndTime.trim(),
-        pickupSlots: [standbyTimeStr],
+        pickupSlots: generateTimeSlots(form.value.standbyStartTime.trim(), form.value.standbyEndTime.trim(), 30),
         promptPayNumber: form.value.promptPayNumber.trim(),
         promptPayName: form.value.promptPayName.trim(),
         bankName: form.value.bankName.trim(),
@@ -672,7 +671,7 @@ async function handleSubmit() {
         standbyTime: standbyTimeStr,
         standbyStartTime: form.value.standbyStartTime.trim(),
         standbyEndTime: form.value.standbyEndTime.trim(),
-        pickupSlots: [standbyTimeStr],
+        pickupSlots: generateTimeSlots(form.value.standbyStartTime.trim(), form.value.standbyEndTime.trim(), 30),
         promptPayNumber: form.value.promptPayNumber.trim(),
         promptPayName: form.value.promptPayName.trim(),
         bankName: form.value.bankName.trim(),

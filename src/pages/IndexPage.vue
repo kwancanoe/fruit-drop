@@ -50,7 +50,7 @@
           dense
           no-caps
           icon="arrow_back"
-          label="เลือกรอบอื่น"
+          label="ย้อนกลับ"
           color="primary"
           class="text-weight-bold"
           @click="selectedRoundId = null"
@@ -181,6 +181,7 @@ import { useFruitStore } from '@/stores/fruitStore';
 import { useCustomerStorage } from '@/composables/useCustomerStorage';
 import type { OrderItem, CustomerInfo, Order, PreorderRound } from '@/types/fruit_app';
 import { calculateItemSubtotal } from '@/utils/pricing';
+import { generateTimeSlots } from '@/utils/timeSlots';
 import ActiveRoundsList from '@/components/customer/ActiveRoundsList.vue';
 import BatchHeaderCard from '@/components/customer/BatchHeaderCard.vue';
 import FruitSelector from '@/components/customer/FruitSelector.vue';
@@ -217,14 +218,13 @@ const customerInfo = ref<CustomerInfo>({
 const selectedSlot = ref<string>('19:30 น.');
 const isSlotValid = ref<boolean>(true);
 
-// Available pickup slots
+// Available pickup slots (single times e.g. 19:00 น., 19:30 น.)
 const availablePickupSlots = computed<string[]>(() => {
-  return currentRound.value?.pickupSlots || [
-    '19:00 - 19:30',
-    '19:30 - 20:00',
-    '20:00 - 20:30',
-    '21:00+ (หลังห้างปิด)'
-  ];
+  const round = currentRound.value;
+  if (!round) return ['19:00 น.', '19:30 น.', '20:00 น.', '20:30 น.', '21:00 น.'];
+  const start = round.standbyStartTime || '19:00';
+  const end = round.standbyEndTime || '23:00';
+  return generateTimeSlots(start, end, 30);
 });
 
 // Calculate total estimated price

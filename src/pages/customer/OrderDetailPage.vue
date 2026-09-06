@@ -15,7 +15,7 @@
         dense
         no-caps
         icon="arrow_back"
-        label="กลับหน้าร้าน"
+        label="ย้อนกลับ"
         color="grey-8"
         class="text-weight-bold"
         @click="handleBack"
