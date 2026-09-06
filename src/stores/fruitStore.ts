@@ -12,6 +12,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   onSnapshot,
   serverTimestamp,
   type Unsubscribe
@@ -177,11 +178,23 @@ export const useFruitStore = defineStore('fruit', () => {
         id: docSnap.id
       }));
 
-      // Auto-select latest OPEN round or sync existing active round with latest data
+      // Auto-select saved round or latest OPEN round
       if (allRounds.value.length > 0) {
+        let savedRound: PreorderRound | undefined;
+        try {
+          const savedId = localStorage.getItem('fruit_drop_admin_selected_round');
+          if (savedId) {
+            savedRound = allRounds.value.find(r => r.roundId === savedId);
+          }
+        } catch {
+          // Ignore localStorage errors
+        }
+
         const currentActive = allRounds.value.find(r => r.roundId === activeRound.value?.roundId);
-        if (currentActive && currentActive.isOpen) {
+        if (currentActive) {
           activeRound.value = currentActive;
+        } else if (savedRound) {
+          selectActiveRound(savedRound);
         } else {
           const firstOpen = allRounds.value.find(r => r.isOpen);
           if (firstOpen) {
@@ -199,6 +212,11 @@ export const useFruitStore = defineStore('fruit', () => {
   // Select active round to view products and orders
   function selectActiveRound(round: PreorderRound) {
     activeRound.value = round;
+    try {
+      localStorage.setItem('fruit_drop_admin_selected_round', round.roundId);
+    } catch {
+      // Ignore localStorage errors
+    }
     subscribeToProducts(round.roundId);
     subscribeToOrders(round.roundId);
   }
@@ -629,6 +647,61 @@ export const useFruitStore = defineStore('fruit', () => {
     return null;
   }
 
+  // Search single order across all rounds in memory and Firestore by Order ID or Phone number
+  async function searchOrderAcrossRounds(searchQuery: string): Promise<Order | null> {
+    const raw = searchQuery.trim();
+    if (!raw) return null;
+    const cleanDigits = raw.replace(/\D/g, '');
+    const cleanUpper = raw.toUpperCase().replace(/\s/g, '');
+
+    // 1. Search in local active memory first
+    const inMemory = orders.value.find(o => {
+      const orderPhone = (o.customer?.phone || '').replace(/\D/g, '');
+      const orderIdClean = (o.orderId || '').toUpperCase().replace(/\s/g, '');
+      return (
+        orderIdClean === cleanUpper ||
+        (cleanDigits.length >= 4 && orderPhone.includes(cleanDigits)) ||
+        (o.customer?.name && o.customer.name.toLowerCase().includes(raw.toLowerCase()))
+      );
+    });
+    if (inMemory) return inMemory;
+
+    // 2. Query Firestore by Order ID (exact match)
+    const ordersRef = collection(db, 'orders');
+    const orderIdQuery = query(ordersRef, where('orderId', '==', cleanUpper));
+    const orderIdSnap = await getDocs(orderIdQuery);
+    if (!orderIdSnap.empty && orderIdSnap.docs[0]) {
+      return { ...orderIdSnap.docs[0].data() as Order, id: orderIdSnap.docs[0].id };
+    }
+
+    // 3. Query Firestore by customer phone
+    if (cleanDigits.length >= 9) {
+      const phoneQuery = query(ordersRef, where('customer.phone', '==', raw));
+      const phoneSnap = await getDocs(phoneQuery);
+      if (!phoneSnap.empty && phoneSnap.docs[0]) {
+        return { ...phoneSnap.docs[0].data() as Order, id: phoneSnap.docs[0].id };
+      }
+    }
+
+    // 4. Fallback search among recent orders
+    const recentQuery = query(ordersRef, orderBy('createdAt', 'desc'), limit(50));
+    const recentSnap = await getDocs(recentQuery);
+    for (const d of recentSnap.docs) {
+      const data = d.data() as Order;
+      const orderPhone = (data.customer?.phone || '').replace(/\D/g, '');
+      const orderIdClean = (data.orderId || '').toUpperCase().replace(/\s/g, '');
+      if (
+        orderIdClean === cleanUpper ||
+        (cleanDigits.length >= 4 && orderPhone.includes(cleanDigits)) ||
+        (data.customer?.name && data.customer.name.toLowerCase().includes(raw.toLowerCase()))
+      ) {
+        return { ...data, id: d.id };
+      }
+    }
+
+    return null;
+  }
+
   // Toggle round open/closed status
   async function toggleRoundStatus(roundId: string, isOpen: boolean) {
     await updateDoc(doc(db, 'rounds', roundId), {
@@ -770,6 +843,7 @@ export const useFruitStore = defineStore('fruit', () => {
     getRoundById,
     getProductsByRoundId,
     getOrderByOrderId,
+    searchOrderAcrossRounds,
     toggleRoundStatus,
     saveMasterFruit,
     toggleMasterFruitActive,

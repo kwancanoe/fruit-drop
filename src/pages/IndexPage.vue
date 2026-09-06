@@ -261,12 +261,22 @@ const isContactValid = computed<boolean>(() => {
   );
 });
 
-// Check if customer has an existing active order in the system
-const activeCustomerOrder = computed<Order | null>(() => {
+// Check if customer has an existing active order in the system across all rounds
+const activeCustomerOrder = ref<Order | null>(null);
+
+async function checkActiveCustomerOrder() {
   const storedId = lastOrderId.value;
-  if (!storedId) return null;
-  return fruitStore.orders.find(o => o.orderId === storedId && o.orderStatus !== 'COMPLETED') || null;
-});
+  if (!storedId) {
+    activeCustomerOrder.value = null;
+    return;
+  }
+  const ord = await fruitStore.getOrderByOrderId(storedId);
+  if (ord && ord.orderStatus !== 'COMPLETED') {
+    activeCustomerOrder.value = ord;
+  } else {
+    activeCustomerOrder.value = null;
+  }
+}
 
 // Submit Order Handler
 async function handlePlaceOrder() {
@@ -324,10 +334,11 @@ async function handlePlaceOrder() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   fruitStore.subscribeToOpenRounds();
   const loaded = loadProfile();
   customerInfo.value = { ...loaded };
   loadLastOrderId();
+  await checkActiveCustomerOrder();
 });
 </script>

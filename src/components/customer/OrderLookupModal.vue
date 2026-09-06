@@ -26,17 +26,18 @@
           dense
           autofocus
           placeholder="กรอกเบอร์โทรศัพท์ หรือรหัสออเดอร์..."
+          :loading="isSearching"
           @keyup.enter="handleSearch"
         >
           <template #prepend>
             <q-icon name="phone" color="primary" />
           </template>
           <template #append>
-            <q-btn flat dense color="primary" label="ค้นหา" @click="handleSearch" />
+            <q-btn flat dense color="primary" label="ค้นหา" :loading="isSearching" @click="handleSearch" />
           </template>
         </q-input>
 
-        <div v-if="searchResult === null && hasSearched" class="text-caption text-negative q-mt-sm text-center">
+        <div v-if="searchResult === null && hasSearched && !isSearching" class="text-caption text-negative q-mt-sm text-center">
           ไม่พบรายการออเดอร์ที่ตรงกับข้อมูลนี้ ตรวจสอบเบอร์โทรศัพท์อีกครั้ง
         </div>
       </q-card-section>
@@ -47,41 +48,50 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { Order } from '@/types/fruit_app';
+import { useFruitStore } from '@/stores/fruitStore';
 
-const props = defineProps<{
-  isOpen: boolean;
-  orders: Order[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    isOpen: boolean;
+    orders?: Order[];
+  }>(),
+  {
+    orders: () => []
+  }
+);
 
 const emit = defineEmits<{
   (e: 'update:isOpen', val: boolean): void;
   (e: 'found', order: Order): void;
 }>();
 
+const fruitStore = useFruitStore();
 const queryInput = ref<string>('');
 const hasSearched = ref<boolean>(false);
+const isSearching = ref<boolean>(false);
 const searchResult = ref<Order | null>(null);
 
-function handleSearch() {
-  hasSearched.value = true;
-  const q = queryInput.value.trim().toLowerCase().replace(/[-\s]/g, '');
+// Search across all rounds in store & Firestore
+async function handleSearch() {
+  const q = queryInput.value.trim();
   if (!q) {
     searchResult.value = null;
     return;
   }
 
-  const found = props.orders.find(o => {
-    const cleanPhone = o.customer.phone.replace(/[-\s]/g, '');
-    const cleanOrderId = o.orderId.toLowerCase().replace(/[-\s]/g, '');
-    return cleanPhone.includes(q) || cleanOrderId.includes(q) || o.customer.name.toLowerCase().includes(q);
-  });
-
-  if (found) {
-    searchResult.value = found;
-    emit('found', found);
-    emit('update:isOpen', false);
-  } else {
-    searchResult.value = null;
+  hasSearched.value = true;
+  isSearching.value = true;
+  try {
+    const found = await fruitStore.searchOrderAcrossRounds(q);
+    if (found) {
+      searchResult.value = found;
+      emit('found', found);
+      emit('update:isOpen', false);
+    } else {
+      searchResult.value = null;
+    }
+  } finally {
+    isSearching.value = false;
   }
 }
 </script>

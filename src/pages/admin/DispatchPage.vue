@@ -142,7 +142,7 @@ const fruitStore = useFruitStore();
 const selectedRoundId = computed<string>({
   get: () => {
     const active = fruitStore.activeRound;
-    if (active && active.isOpen && roundOptions.value.some(opt => opt.value === active.roundId)) {
+    if (active && roundOptions.value.some(opt => opt.value === active.roundId)) {
       return active.roundId;
     }
     return roundOptions.value[0]?.value || '';
@@ -156,14 +156,13 @@ const selectedRoundId = computed<string>({
 });
 
 const roundOptions = computed(() => {
-  return fruitStore.allRounds
-    .filter(r => r.isOpen)
-    .map(r => ({
-      label: `${r.title} (${r.pickupDate || 'ไม่ระบุวันที่'})`,
-      value: r.roundId,
-      title: r.title,
-      date: r.pickupDate || 'ไม่ระบุวันที่'
-    }));
+  return fruitStore.allRounds.map(r => ({
+    label: `${r.title} (${r.pickupDate || 'ไม่ระบุวันที่'})${r.isOpen ? '' : ' [ปิดรับแล้ว]'}`,
+    value: r.roundId,
+    title: r.title,
+    date: r.pickupDate || 'ไม่ระบุวันที่',
+    isOpen: r.isOpen
+  }));
 });
 
 // Handle changing active dispatch round
