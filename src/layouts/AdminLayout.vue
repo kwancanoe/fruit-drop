@@ -165,12 +165,6 @@
           data-audit-id="tab-admin-analytics"
         />
         <q-route-tab
-          to="/admin/harvest"
-          icon="content_paste"
-          label="ยอดเก็บ"
-          data-audit-id="tab-admin-harvest"
-        />
-        <q-route-tab
           v-if="userStore.canManageUsers"
           to="/admin/users"
           icon="group"

@@ -68,13 +68,7 @@
               {{ round.title }}
             </span>
           </div>
-          <q-badge
-            :color="round.isOpen ? 'positive' : 'grey-5'"
-            class="text-weight-bold text-caption q-py-xs q-px-sm"
-            rounded
-          >
-            {{ round.isOpen ? '🟢 เปิดรับจอง' : '⚪ ปิดรับจอง' }}
-          </q-badge>
+          <RoundStatusBadge :is-open="round.isOpen" />
         </div>
 
         <!-- Details: Date, Standby & Location -->
@@ -96,17 +90,11 @@
 
         <!-- Fruit Summary Chips -->
         <div v-if="round.fruitSummary && round.fruitSummary.length > 0" class="row items-center q-mb-md">
-          <q-chip
+          <FruitChip
             v-for="fruit in round.fruitSummary"
             :key="fruit"
-            dense
-            size="sm"
-            color="green-1"
-            text-color="primary"
-            class="text-weight-bold q-mr-xs q-mb-none"
-          >
-            {{ fruit }}
-          </q-chip>
+            :name="fruit"
+          />
         </div>
 
         <q-separator color="grey-3" class="q-mb-sm" />
@@ -164,6 +152,8 @@ import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import type { PreorderRound } from '@/types/fruit_app';
+import RoundStatusBadge from '@/components/common/RoundStatusBadge.vue';
+import FruitChip from '@/components/common/FruitChip.vue';
 
 const router = useRouter();
 const $q = useQuasar();

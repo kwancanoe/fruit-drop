@@ -122,14 +122,7 @@
 
       <!-- Order Status Badge -->
       <div class="text-center q-mb-sm">
-        <q-badge
-          :color="order.orderStatus === 'COMPLETED' ? 'positive' : 'warning'"
-          class="text-subtitle2 q-px-md q-py-xs"
-          rounded
-        >
-          <q-icon :name="order.orderStatus === 'COMPLETED' ? 'task_alt' : 'hourglass_empty'" class="q-mr-xs" />
-          {{ order.orderStatus === 'COMPLETED' ? 'ส่งมอบผลไม้เรียบร้อยแล้ว' : 'รอมารับของที่ท้ายรถตามเวลานัด' }}
-        </q-badge>
+        <OrderStatusBadge :order="order" />
       </div>
     </q-card-section>
   </q-card>
@@ -140,6 +133,7 @@ import { ref, onMounted, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import QRCode from 'qrcode';
 import type { Order } from '@/types/fruit_app';
+import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
 
 const props = defineProps<{
   order: Order;

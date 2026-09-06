@@ -39,9 +39,7 @@
             <div class="text-subtitle1 text-weight-bolder text-primary">
               {{ round.title }}
             </div>
-            <q-badge color="positive" class="text-weight-bold" rounded>
-              🟢 เปิดรับจอง
-            </q-badge>
+            <RoundStatusBadge :is-open="round.isOpen" />
           </div>
 
           <q-separator class="q-my-sm" />
@@ -66,23 +64,18 @@
           <div v-if="round.fruitSummary && round.fruitSummary.length > 0" class="q-mb-md">
             <div class="text-caption text-grey-7 q-mb-xs">ผลไม้ในรอบนี้:</div>
             <div class="row items-center">
-              <q-chip
+              <FruitChip
                 v-for="fruit in round.fruitSummary"
                 :key="fruit"
-                dense
-                color="green-1"
-                text-color="primary"
-                class="text-weight-bold q-mr-xs q-mb-xs"
-              >
-                {{ fruit }}
-              </q-chip>
+                :name="fruit"
+              />
             </div>
           </div>
 
           <!-- CTA Button -->
           <q-btn
             color="positive"
-            class="full-width q-py-sm text-weight-bolder text-subtitle2 shadow-2"
+            class="full-width q-py-sm text-weight-bolder text-subtitle2 shadow-2 btn-gradient-primary"
             no-caps
             rounded
             icon-right="arrow_forward"
@@ -97,6 +90,8 @@
 
 <script setup lang="ts">
 import type { PreorderRound } from '@/types/fruit_app';
+import RoundStatusBadge from '@/components/common/RoundStatusBadge.vue';
+import FruitChip from '@/components/common/FruitChip.vue';
 
 defineProps<{
   rounds: PreorderRound[];

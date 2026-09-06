@@ -109,3 +109,74 @@
 .outline-soft {
   border: 1px solid color-mix(in srgb, currentColor 35%, transparent) !important;
 }
+
+// 3. 2026 Google I/O Material Design (M3 Expressive) Tonal Palettes
+// -----------------------------------------------------------------------------
+.m3-tonal-positive {
+  background: $gradient-tonal-positive !important;
+}
+.m3-tonal-warning {
+  background: $gradient-tonal-warning !important;
+}
+.m3-tonal-info {
+  background: $gradient-tonal-info !important;
+}
+.m3-tonal-negative {
+  background: $gradient-tonal-negative !important;
+}
+.m3-tonal-neutral {
+  background: $gradient-tonal-neutral !important;
+}
+
+.m3-border-positive {
+  border-color: rgba($primary, 0.32) !important;
+}
+.m3-border-warning {
+  border-color: rgba($warning, 0.35) !important;
+}
+.m3-border-info {
+  border-color: rgba(100, 116, 139, 0.30) !important;
+}
+.m3-border-negative {
+  border-color: rgba($negative, 0.35) !important;
+}
+.m3-border-neutral {
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+.text-positive-dark {
+  color: $color-positive-dark !important;
+}
+.text-warning-dark {
+  color: $color-warning-dark !important;
+}
+.text-info-dark {
+  color: $color-info-dark !important;
+}
+.text-negative-dark {
+  color: $color-negative-dark !important;
+}
+
+// 4. M3 Expressive Buttons & Surface Cards
+// -----------------------------------------------------------------------------
+.btn-gradient-primary {
+  background: $gradient-primary !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 2px 6px rgba(46, 125, 50, 0.28) !important;
+}
+
+.btn-gradient-warning {
+  background: $gradient-warning !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 2px 6px rgba(239, 108, 0, 0.28) !important;
+}
+
+// Clean M3 Card surfaces with subtle border and airy gradient
+.m3-surface-card,
+.q-card.rounded-borders {
+  border-radius: 16px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: $gradient-surface-card !important;
+}

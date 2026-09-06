@@ -74,13 +74,7 @@
                   <span class="text-subtitle2 text-weight-bolder text-grey-9 q-mr-sm">
                     {{ round.title }}
                   </span>
-                  <q-badge
-                    :color="round.isOpen ? 'positive' : 'grey-6'"
-                    class="text-weight-bold"
-                    rounded
-                  >
-                    {{ round.isOpen ? '🟢 เปิดรับจอง' : '⚪ ปิดรับจอง' }}
-                  </q-badge>
+                  <RoundStatusBadge :is-open="round.isOpen" />
                 </div>
 
                 <div class="text-caption text-grey-8 row items-center q-mb-xs">
@@ -92,17 +86,11 @@
 
                 <!-- Fruit Summary Chips -->
                 <div v-if="round.fruitSummary && round.fruitSummary.length > 0" class="row items-center q-mt-xs">
-                  <q-chip
+                  <FruitChip
                     v-for="fruit in round.fruitSummary"
                     :key="fruit"
-                    dense
-                    size="sm"
-                    color="green-1"
-                    text-color="primary"
-                    class="text-weight-bold q-mr-xs q-mb-none"
-                  >
-                    {{ fruit }}
-                  </q-chip>
+                    :name="fruit"
+                  />
                 </div>
               </q-item-section>
 
@@ -340,6 +328,8 @@ import { ref, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import type { PreorderRound, RoundCreationFruitConfig } from '@/types/fruit_app';
+import RoundStatusBadge from '@/components/common/RoundStatusBadge.vue';
+import FruitChip from '@/components/common/FruitChip.vue';
 
 const props = defineProps<{
   isOpen: boolean;

@@ -23,40 +23,7 @@
         </div>
 
         <!-- Status Badge -->
-        <div>
-          <q-badge
-            v-if="order.orderStatus === 'COMPLETED'"
-            color="positive"
-            class="text-weight-bold"
-            rounded
-          >
-            ✓ ส่งมอบแล้ว
-          </q-badge>
-          <q-badge
-            v-else-if="hasUnweighedFruit"
-            color="amber-9"
-            class="text-weight-bold"
-            rounded
-          >
-            ⚖️ รอชั่งน้ำหนัก
-          </q-badge>
-          <q-badge
-            v-else-if="order.paymentStatus === 'PAID'"
-            color="info"
-            class="text-weight-bold"
-            rounded
-          >
-            ✓ โอนเงินแล้ว
-          </q-badge>
-          <q-badge
-            v-else
-            color="warning"
-            class="text-weight-bold text-white"
-            rounded
-          >
-            ⚠️ เก็บเงินสด {{ order.totalFinalPrice || order.totalEstimatedPrice }} บ.
-          </q-badge>
-        </div>
+        <OrderStatusBadge :order="order" />
       </div>
 
       <!-- Customer Location & Contact -->
@@ -138,6 +105,7 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Order } from '@/types/fruit_app';
+import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
 
 const props = defineProps<{
   order: Order;

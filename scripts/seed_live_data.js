@@ -251,22 +251,12 @@ async function seed() {
         }
       ],
       pickupSlot: '19:30 - 20:00',
-      orderStatus: 'COMPLETED',
-      paymentMethod: 'PROMPTPAY_PREPAID',
-      paymentStatus: 'PAID',
+      orderStatus: 'WAITING_PICKUP',
+      paymentMethod: 'PAY_AT_CAR',
+      paymentStatus: 'UNPAID',
       totalEstimatedPrice: 350,
       totalFinalPrice: 350,
-      paidAt: Date.now() - 5400000,
-      completedAt: Date.now() - 3000000,
-      createdAt: Date.now() - 7000000,
-      attribution: {
-        handledByUserId: 'owner-seed',
-        handledByEmail: 'natyabuyna089@gmail.com',
-        handledByName: 'นาตยา บุญณะ',
-        handledByRole: 'SHOP_OWNER',
-        paymentModeAtHandover: 'TRANSFER',
-        proofCapturedAt: Date.now() - 3000000
-      }
+      createdAt: Date.now() - 7000000
     },
     {
       orderId: 'FD-1003',
@@ -339,11 +329,10 @@ async function seed() {
       ],
       pickupSlot: '19:00 - 19:30',
       orderStatus: 'WAITING_PICKUP',
-      paymentMethod: 'PROMPTPAY_PREPAID',
-      paymentStatus: 'PAID',
+      paymentMethod: 'PAY_AT_CAR',
+      paymentStatus: 'UNPAID',
       totalEstimatedPrice: 250,
       totalFinalPrice: 250,
-      paidAt: Date.now() - 4000000,
       createdAt: Date.now() - 5000000
     }
   ];

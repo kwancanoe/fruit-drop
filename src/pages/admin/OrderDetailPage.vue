@@ -15,38 +15,7 @@
         @click="handleBack"
       />
       <div class="row items-center">
-        <q-badge
-          v-if="order?.orderStatus === 'COMPLETED'"
-          color="positive"
-          class="text-weight-bold q-px-sm q-py-xs"
-          rounded
-        >
-          ✓ ส่งมอบเรียบร้อย
-        </q-badge>
-        <q-badge
-          v-else-if="hasUnweighedFruit"
-          color="amber-9"
-          class="text-weight-bold q-px-sm q-py-xs"
-          rounded
-        >
-          ⚖️ รอชั่งน้ำหนัก
-        </q-badge>
-        <q-badge
-          v-else-if="order?.paymentStatus === 'PAID'"
-          color="info"
-          class="text-weight-bold q-px-sm q-py-xs"
-          rounded
-        >
-          ✓ โอนเงินแล้ว
-        </q-badge>
-        <q-badge
-          v-else
-          color="warning"
-          class="text-weight-bold text-white q-px-sm q-py-xs"
-          rounded
-        >
-          ⚠️ รอชำระเงิน
-        </q-badge>
+        <OrderStatusBadge v-if="order" :order="order" />
       </div>
     </div>
 
@@ -249,8 +218,8 @@
         </q-card-section>
       </q-card>
 
-      <!-- 4. Dynamic PromptPay Payment QR Section (User Explicit Requirement) -->
-      <q-card class="bg-white shadow-2 rounded-borders q-mb-md" data-audit-id="card-payment-qr">
+      <!-- 4. Dynamic PromptPay Payment QR Section (Hidden when already COMPLETED) -->
+      <q-card v-if="order.orderStatus !== 'COMPLETED'" class="bg-white shadow-2 rounded-borders q-mb-md" data-audit-id="card-payment-qr">
         <q-card-section class="q-pa-md">
           <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-xs row items-center justify-between">
             <div class="row items-center">
@@ -389,7 +358,7 @@
             <div class="col-12 col-sm-6">
               <q-btn
                 color="warning"
-                class="full-width q-py-md text-weight-bolder text-subtitle2 shadow-2"
+                class="full-width q-py-md text-weight-bolder text-subtitle2 shadow-2 btn-gradient-warning"
                 no-caps
                 rounded
                 icon="payments"
@@ -405,7 +374,7 @@
             <div class="col-12 col-sm-6">
               <q-btn
                 color="positive"
-                class="full-width q-py-md text-weight-bolder text-subtitle2 shadow-2"
+                class="full-width q-py-md text-weight-bolder text-subtitle2 shadow-2 btn-gradient-primary"
                 no-caps
                 rounded
                 icon="done_all"
@@ -459,6 +428,7 @@ import { useFruitStore } from '@/stores/fruitStore';
 import type { Order } from '@/types/fruit_app';
 import { generatePromptPayQRDataUrl } from '@/utils/promptpay';
 import { calculateItemSubtotal, calculateOrderFinalTotal } from '@/utils/pricing';
+import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -764,10 +734,16 @@ async function doRevert() {
   try {
     await fruitStore.updateOrderStatus(order.value.orderId, {
       orderStatus: 'WAITING_PICKUP',
-      completedAt: undefined
+      paymentStatus: 'UNPAID',
+      completedAt: undefined,
+      paidAt: undefined,
+      attribution: undefined
     });
     order.value.orderStatus = 'WAITING_PICKUP';
+    order.value.paymentStatus = 'UNPAID';
     order.value.completedAt = undefined;
+    order.value.paidAt = undefined;
+    order.value.attribution = undefined;
     $q.notify({ type: 'info', message: 'ยกเลิกสถานะส่งมอบเรียบร้อย', position: 'top', timeout: 1500 });
   } catch (err) {
     console.error('Revert error:', err);

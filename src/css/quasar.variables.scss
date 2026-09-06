@@ -44,3 +44,22 @@ $badge-soft-info-border    : rgba($info, 0.35);
 $badge-soft-grey-bg        : #F5F5F5;
 $badge-soft-grey-border    : rgba(0, 0, 0, 0.16);
 
+// 2026 Google I/O Material Design (M3 Expressive) Gradients & Surface Tokens
+$gradient-primary         : linear-gradient(135deg, #388E3C 0%, #1B5E20 100%);
+$gradient-warning         : linear-gradient(135deg, #FB8C00 0%, #E65100 100%);
+$gradient-negative        : linear-gradient(135deg, #E53935 0%, #B71C1C 100%);
+$gradient-surface-card    : linear-gradient(180deg, #FFFFFF 0%, #F9FAF8 100%);
+
+// M3 Tonal Badge Gradients
+$gradient-tonal-positive  : linear-gradient(135deg, #E8F5E9 0%, #DCEDC8 100%);
+$gradient-tonal-warning   : linear-gradient(135deg, #FFF8E1 0%, #FFE0B2 100%);
+$gradient-tonal-info      : linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%);
+$gradient-tonal-negative  : linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+$gradient-tonal-neutral   : linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+
+// M3 High-contrast Text Tones
+$color-positive-dark      : #1B5E20;
+$color-warning-dark       : #BF360C;
+$color-info-dark          : #1E293B;
+$color-negative-dark      : #B71C1C;
+
