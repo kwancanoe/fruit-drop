@@ -1,8 +1,9 @@
-// Utility to generate and export high-resolution order ticket images with embedded QR codes
-// Supports 1:1 pixel-perfect DOM capture via html-to-image, canvas fallback, and smart PC vs Mobile delivery
+// Utility to export order ticket images with embedded QR codes
+// Supports 1:1 pixel-perfect DOM capture via html-to-image and canvas fallback
 import { toBlob } from 'html-to-image';
 import type { Order } from '@/types/fruit_app';
 
+// Options passed to order ticket export engine
 export interface ExportTicketOptions {
   cardElement?: HTMLElement | null;
   order: Order;
@@ -10,47 +11,12 @@ export interface ExportTicketOptions {
   pickupLocation?: string;
 }
 
-// Helper: Detect if running on a real mobile touch device (iPhone, iPad, Android smartphone)
-export function isMobileDevice(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent || '';
-  const isTouch = navigator.maxTouchPoints > 1 && 'ontouchstart' in window;
-  // If Windows/Mac/Linux desktop without touch, it is NOT mobile
-  if (/Windows NT|Macintosh|Linux x86_64/i.test(ua) && !/Android|iPhone|iPad|iPod/i.test(ua)) {
-    return false;
-  }
-  return /Android|iPhone|iPad|iPod/i.test(ua) || isTouch;
-}
-
-// Deliver blob to user: Web Share API on mobile, direct file download on PC
-export async function deliverOrderTicketBlob(
+// Deliver blob to user: Direct file download on ALL platforms (PC, iOS, Android)
+export function deliverOrderTicketBlob(
   blob: Blob,
-  orderId: string,
-  pickupSlot: string
-): Promise<boolean> {
+  orderId: string
+): boolean {
   const fileName = `FruitDrop-Order-${orderId}.png`;
-  const isMobile = isMobileDevice();
-
-  // Mobile smartphone: Use native Web Share API to let user save directly to Photos/Gallery or share
-  if (isMobile && typeof navigator !== 'undefined' && navigator.canShare) {
-    const file = new File([blob], fileName, { type: 'image/png' });
-    if (navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({
-          title: `ใบสั่งจอง Fruit Drop #${orderId}`,
-          text: `ใบสั่งจองผลไม้ Fruit Drop รหัส #${orderId} (รอบเวลา ${pickupSlot} น.)`,
-          files: [file]
-        });
-        return true;
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === 'AbortError') {
-          return true; // User intentionally dismissed native share dialog
-        }
-      }
-    }
-  }
-
-  // PC / Desktop or non-share mobile: Direct download to browser Downloads folder
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -95,7 +61,7 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
   const width = 750;
   const itemsCount = order.items && order.items.length > 0 ? order.items.length : 1;
   const itemsBlockHeight = 50 + (itemsCount * 62) + 20;
-  const totalHeight = 1180 + itemsBlockHeight;
+  const totalHeight = 1100 + itemsBlockHeight;
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -188,7 +154,7 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
   ctx.fillStyle = '#DCEDC8';
   ctx.font = `18px ${fontRegular}`;
   ctx.textAlign = 'center';
-  ctx.fillText('สั่งจองผลไม้สด • บัตรคิวรับของท้ายรถ', width / 2, cardY + 92);
+  ctx.fillText('สั่งจองผลไม้ • บัตรคิวรับของ', width / 2, cardY + 92);
 
   // Success Pill Badge
   ctx.fillStyle = '#FFFFFF';
@@ -200,16 +166,16 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
 
   ctx.fillStyle = '#1B5E20';
   ctx.font = `bold 16px ${fontRegular}`;
-  ctx.fillText('✓ สั่งจองสำเร็จแล้ว', width / 2, badgeY + 22);
+  ctx.fillText('✓ สั่งจองสำเร็จ', width / 2, badgeY + 22);
   ctx.restore(); // End clipping
 
-  // 4. Order ID & QR Code Box
+  // 4. Order ID & QR Code Box (Tight & clean proportions)
   let currentY = cardY + headerHeight + 25;
   const innerMargin = 30;
   const blockW = cardWidth - (innerMargin * 2);
   const blockX = cardX + innerMargin;
 
-  const qrBoxHeight = 410;
+  const qrBoxHeight = 330;
   ctx.fillStyle = '#F8FAFC';
   ctx.strokeStyle = '#E2E8F0';
   ctx.lineWidth = 1;
@@ -218,16 +184,16 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
   ctx.fillStyle = '#64748B';
   ctx.font = `17px ${fontRegular}`;
   ctx.textAlign = 'center';
-  ctx.fillText('รหัสออเดอร์', width / 2, currentY + 35);
+  ctx.fillText('รหัสออเดอร์', width / 2, currentY + 30);
 
   ctx.fillStyle = '#2E7D32';
   ctx.font = `bold 46px ${fontRegular}`;
-  ctx.fillText(`#${order.orderId}`, width / 2, currentY + 84);
+  ctx.fillText(`#${order.orderId}`, width / 2, currentY + 74);
 
   if (qrDataUrl) {
     const qrSize = 220;
     const qrX = (width - qrSize) / 2;
-    const qrY = currentY + 104;
+    const qrY = currentY + 90;
 
     ctx.fillStyle = '#FFFFFF';
     ctx.strokeStyle = '#CBD5E1';
@@ -246,11 +212,6 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
     ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
   }
 
-  ctx.fillStyle = '#0F172A';
-  ctx.font = `bold 18px ${fontRegular}`;
-  ctx.textAlign = 'center';
-  ctx.fillText('📱 แสดง QR นี้ให้คนขายสแกนรับของที่รถ', width / 2, currentY + 372);
-
   currentY += qrBoxHeight + 20;
 
   // 5. Customer Info Box
@@ -263,7 +224,7 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
   ctx.textAlign = 'left';
   ctx.fillStyle = '#1E293B';
   ctx.font = `bold 19px ${fontRegular}`;
-  ctx.fillText('👤 ข้อมูลลูกค้าผู้สั่ง:', blockX + 22, currentY + 34);
+  ctx.fillText('ข้อมูลผู้สั่ง:', blockX + 22, currentY + 34);
 
   ctx.fillStyle = '#334155';
   ctx.font = `18px ${fontRegular}`;
@@ -281,7 +242,7 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
 
   ctx.fillStyle = '#1E293B';
   ctx.font = `bold 19px ${fontRegular}`;
-  ctx.fillText('🛒 รายการผลไม้ที่สั่งจอง:', blockX + 22, currentY + 34);
+  ctx.fillText('รายการผลไม้:', blockX + 22, currentY + 34);
 
   let itemY = currentY + 68;
   order.items.forEach((item, idx) => {
@@ -325,11 +286,11 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
 
   ctx.fillStyle = '#1B5E20';
   ctx.font = `bold 19px ${fontRegular}`;
-  ctx.fillText('⏰ เวลานัดรับของที่รถ:', blockX + 22, currentY + 34);
+  ctx.fillText('เวลานัดรับสินค้า:', blockX + 22, currentY + 34);
 
   ctx.fillStyle = '#2E7D32';
   ctx.font = `bold 21px ${fontRegular}`;
-  ctx.fillText(`รอบเวลา ${order.pickupSlot} น.`, blockX + 22, currentY + 68);
+  ctx.fillText(`รอบเวลา ${order.pickupSlot}`, blockX + 22, currentY + 68);
 
   ctx.fillStyle = '#388E3C';
   ctx.font = `17px ${fontRegular}`;
@@ -346,9 +307,9 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
 
   ctx.fillStyle = '#92400E';
   ctx.font = `17px ${fontRegular}`;
-  const payMethodText = order.paymentMethod === 'PAY_AT_CAR' ? 'จ่ายเงินตอนรับของที่รถ (เงินสด / สแกน QR)' : 'โอนเงินล่วงหน้า';
+  const payMethodText = order.paymentMethod === 'PAY_AT_CAR' ? 'จ่ายตอนรับสินค้า (เงินสด / สแกน QR)' : 'โอนล่วงหน้า';
   ctx.fillText(`วิธีชำระ: ${payMethodText}`, blockX + 22, currentY + 40);
-  ctx.fillText('ไม่ต้องโอนล่วงหน้า ตรวจรับผลไม้ก่อนแล้วค่อยจ่าย', blockX + 22, currentY + 70);
+  ctx.fillText('ตรวจรับผลไม้ก่อนชำระเงิน', blockX + 22, currentY + 70);
 
   const totalAmount = order.totalFinalPrice || order.totalEstimatedPrice || 0;
   ctx.textAlign = 'right';
@@ -366,43 +327,49 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
   ctx.textAlign = 'center';
   ctx.fillStyle = '#1B5E20';
   ctx.font = `bold 17px ${fontRegular}`;
-  ctx.fillText('★ บันทึกรูปนี้ไว้ในมือถือ เพื่อแสดงตอนรับผลไม้ที่รถ (กันลืม)', width / 2, currentY + 16);
+  ctx.fillText('แสดงภาพนี้เพื่อรับสินค้าท้ายรถ', width / 2, currentY + 16);
 
   ctx.fillStyle = '#94A3B8';
   ctx.font = `15px ${fontRegular}`;
-  ctx.fillText('Fruit Drop • ระบบจองผลไม้สดจากสวนถึงท้ายรถคุณ', width / 2, currentY + 44);
+  ctx.fillText('Fruit Drop • สั่งจองผลไม้สด', width / 2, currentY + 44);
 
   return canvas;
 }
 
-// Master Export Function: Tries 1:1 DOM capture first, falls back to canvas renderer if needed
+// Master Export Function: Uses offscreen DOM clone to calculate true tight card dimensions without action buttons
 export async function exportOrderTicket(options: ExportTicketOptions): Promise<boolean> {
-  const { cardElement, order, pickupSlot = order.pickupSlot } = {
-    ...options,
-    pickupSlot: options.order.pickupSlot
-  };
+  const { cardElement, order } = options;
 
-  // 1. Primary Method: Capture exact on-screen DOM card using html-to-image
+  // 1. Primary Method: Capture exact on-screen DOM card using html-to-image with offscreen clone
   if (cardElement) {
+    // Clone node offscreen and remove .hide-on-capture to calculate true tight height
+    const clone = cardElement.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('.hide-on-capture').forEach((el) => el.remove());
+    clone.style.position = 'fixed';
+    clone.style.left = '-9999px';
+    clone.style.top = '0';
+    clone.style.width = `${cardElement.offsetWidth}px`;
+    clone.style.margin = '0';
+    clone.style.boxSizing = 'border-box';
+    document.body.appendChild(clone);
+
     try {
-      const blob = await toBlob(cardElement, {
+      const blob = await toBlob(clone, {
         quality: 0.98,
         pixelRatio: 2, // 2x Retina crispness
         cacheBust: true,
         backgroundColor: '#FFFFFF',
-        filter: (node: Node) => {
-          if (node instanceof HTMLElement && node.classList.contains('hide-on-capture')) {
-            return false;
-          }
-          return true;
-        }
       });
 
       if (blob) {
-        return deliverOrderTicketBlob(blob, order.orderId, pickupSlot);
+        return deliverOrderTicketBlob(blob, order.orderId);
       }
     } catch (domCaptureErr) {
       console.warn('DOM to image capture failed, trying canvas fallback:', domCaptureErr);
+    } finally {
+      if (document.body.contains(clone)) {
+        document.body.removeChild(clone);
+      }
     }
   }
 
@@ -414,7 +381,7 @@ export async function exportOrderTicket(options: ExportTicketOptions): Promise<b
         resolve(false);
         return;
       }
-      deliverOrderTicketBlob(blob, order.orderId, pickupSlot).then(resolve);
+      resolve(deliverOrderTicketBlob(blob, order.orderId));
     }, 'image/png');
   });
 }
