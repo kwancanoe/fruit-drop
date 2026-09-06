@@ -336,25 +336,22 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
   return canvas;
 }
 
-// Master Export Function: Uses offscreen DOM clone to calculate true tight card dimensions without action buttons
+// Master Export Function: Captures exact on-screen DOM card with temporary button collapse for tight height
 export async function exportOrderTicket(options: ExportTicketOptions): Promise<boolean> {
   const { cardElement, order } = options;
 
-  // 1. Primary Method: Capture exact on-screen DOM card using html-to-image with offscreen clone
+  // 1. Primary Method: Capture exact on-screen DOM card using html-to-image
   if (cardElement) {
-    // Clone node offscreen and remove .hide-on-capture to calculate true tight height
-    const clone = cardElement.cloneNode(true) as HTMLElement;
-    clone.querySelectorAll('.hide-on-capture').forEach((el) => el.remove());
-    clone.style.position = 'fixed';
-    clone.style.left = '-9999px';
-    clone.style.top = '0';
-    clone.style.width = `${cardElement.offsetWidth}px`;
-    clone.style.margin = '0';
-    clone.style.boxSizing = 'border-box';
-    document.body.appendChild(clone);
+    // Temporarily collapse elements marked .hide-on-capture to get exact tight ticket dimensions
+    const hiddenElements = cardElement.querySelectorAll<HTMLElement>('.hide-on-capture');
+    hiddenElements.forEach((el) => {
+      el.style.display = 'none';
+    });
+    // Force layout reflow so clientHeight and positions are recalculated immediately
+    void cardElement.offsetHeight;
 
     try {
-      const blob = await toBlob(clone, {
+      const blob = await toBlob(cardElement, {
         quality: 0.98,
         pixelRatio: 2, // 2x Retina crispness
         cacheBust: true,
@@ -367,9 +364,11 @@ export async function exportOrderTicket(options: ExportTicketOptions): Promise<b
     } catch (domCaptureErr) {
       console.warn('DOM to image capture failed, trying canvas fallback:', domCaptureErr);
     } finally {
-      if (document.body.contains(clone)) {
-        document.body.removeChild(clone);
-      }
+      // Restore elements immediately after capture
+      hiddenElements.forEach((el) => {
+        el.style.display = '';
+      });
+      void cardElement.offsetHeight;
     }
   }
 
