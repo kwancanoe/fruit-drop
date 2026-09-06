@@ -15,7 +15,7 @@
           dense
           label="ชื่อเล่น / ชื่อผู้สั่ง *"
           placeholder="เช่น น้องอ้น Garmin, พี่กานต์ Watsons"
-          :rules="[val => !!val && val.trim().length > 0 || 'กรุณากรอกชื่อเล่น']"
+          :rules="[val => !!val && val.trim().length > 0 || 'ระบุชื่อหรือชื่อเล่น']"
           @update:model-value="onFieldChange"
         >
           <template #prepend>
@@ -47,7 +47,7 @@
             dense
             label="ชื่อร้าน / บูธ / แผนก *"
             placeholder="เช่น บูธ Garmin, ร้าน Watsons"
-            :rules="[val => !!val && val.trim().length > 0 || 'กรุณาระบุชื่อร้านหรือบูธ']"
+            :rules="[val => !!val && val.trim().length > 0 || 'ระบุชื่อร้านหรือบูธ']"
             @update:model-value="onFieldChange"
           >
             <template #prepend>
@@ -68,7 +68,7 @@
           placeholder="08X-XXX-XXXX"
           mask="###-###-####"
           unmasked-value
-          :rules="[val => !!val && val.length >= 9 || 'กรุณากรอกเบอร์โทรศัพท์ที่ติดต่อได้']"
+          :rules="[val => !!val && val.length >= 9 || 'ระบุเบอร์โทรศัพท์']"
           @update:model-value="onFieldChange"
         >
           <template #prepend>

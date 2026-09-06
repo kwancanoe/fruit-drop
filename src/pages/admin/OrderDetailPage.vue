@@ -59,7 +59,7 @@
         <q-card-section class="q-pa-md">
           <div class="text-subtitle2 text-weight-bold text-grey-8 q-mb-sm row items-center">
             <q-icon name="person" color="primary" class="q-mr-xs" size="20px" />
-            <span>ข้อมูลผู้รับผลไม้</span>
+            <span>ข้อมูลลูกค้า</span>
           </div>
 
           <div class="bg-grey-1 q-pa-md rounded-borders">
@@ -98,7 +98,7 @@
         <q-card-section class="q-pa-md">
           <div class="text-subtitle2 text-weight-bold text-grey-8 q-mb-sm row items-center">
             <q-icon name="shopping_basket" color="primary" class="q-mr-xs" size="20px" />
-            <span>รายการผลไม้ในถุง</span>
+            <span>รายการผลไม้</span>
           </div>
 
           <q-list separator class="rounded-borders">
@@ -138,7 +138,7 @@
                   <!-- Inline Scale Input Box: Interactive Selector with Direct Typing -->
                   <div class="bg-amber-1 q-pa-sm rounded-borders q-mt-sm border-amber" data-audit-id="durian-scale-box">
                     <div class="text-caption text-weight-bold text-amber-10 q-mb-xs">
-                      {{ item.actualWeighedKg ? 'แก้ไขน้ำหนักชั่งจริง:' : '⚖️ ชั่งน้ำหนักจริงบนตาชั่ง:' }}
+                      {{ item.actualWeighedKg ? 'แก้ไขน้ำหนักชั่งจริง:' : '⚖️ ชั่งน้ำหนักทุเรียน:' }}
                     </div>
                     <div class="row items-center no-wrap">
                       <q-select
@@ -224,7 +224,7 @@
           <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-xs row items-center justify-between">
             <div class="row items-center">
               <q-icon name="qr_code_scanner" color="primary" class="q-mr-xs" size="22px" />
-              <span>QR Code รับเงิน (ให้ลูกค้าสแกนจ่าย)</span>
+              <span>QR รับเงิน</span>
             </div>
             <div class="text-h6 text-weight-bolder text-primary">
               {{ currentFinalPrice }} บาท
@@ -235,10 +235,7 @@
           <div v-if="hasUnweighedFruit" class="bg-amber-1 q-pa-md rounded-borders border-amber text-center q-my-sm">
             <q-icon name="scale" color="amber-9" size="36px" class="q-mb-xs" />
             <div class="text-subtitle2 text-weight-bolder text-amber-10">
-              กรุณาชั่งน้ำหนักทุเรียนก่อนสร้าง QR รับเงิน
-            </div>
-            <div class="text-caption text-grey-8">
-              เมื่อกรอกและบันทึกน้ำหนักทุเรียนด้านบนแล้ว ระบบจะคำนวณยอดเงินที่ถูกต้อง และสร้าง QR พร้อมเพย์ให้ลูกค้าสแกนทันที
+              ชั่งน้ำหนักทุเรียนก่อนสร้าง QR รับเงิน
             </div>
           </div>
 
@@ -282,7 +279,7 @@
           <div class="text-subtitle2 text-weight-bold text-grey-8 q-mb-sm row items-center justify-between">
             <div class="row items-center">
               <q-icon name="photo_camera" color="primary" class="q-mr-xs" size="20px" />
-              <span>รูปหลักฐานสลิป / ส่งมอบ (ไม่บังคับ)</span>
+              <span>แนบรูปสลิป / ส่งมอบ (ถ้ามี)</span>
             </div>
             <q-badge v-if="order.proofUrl" color="positive" rounded>มีรูปหลักฐานแล้ว</q-badge>
           </div>
@@ -314,7 +311,7 @@
             />
           </div>
 
-          <div class="row justify-center items-center q-gutter-x-sm">
+          <div class="row justify-center items-center">
             <q-btn
               outline
               dense
@@ -322,7 +319,7 @@
               color="primary"
               icon="photo_camera"
               label="ถ่ายรูปด้วยกล้อง"
-              class="q-px-sm text-weight-bold"
+              class="q-mr-sm q-px-sm text-weight-bold"
               :loading="isUploadingProof"
               @click="triggerCamera"
             />
@@ -342,7 +339,7 @@
       </q-card>
 
       <!-- 6. Handover Action Commands (Strict Semantic Colors) -->
-      <div class="bg-white q-pa-md rounded-borders shadow-2 q-mb-xl" data-audit-id="card-dispatch-actions">
+      <q-card class="bg-white q-pa-md shadow-2 q-mb-xl" data-audit-id="card-dispatch-actions">
         <!-- A. When Order is Waiting Pickup -->
         <template v-if="order.orderStatus !== 'COMPLETED'">
           <div class="text-subtitle1 text-weight-bold text-grey-9 q-mb-sm">
@@ -353,9 +350,9 @@
             * ต้องชั่งน้ำหนักทุเรียนให้ครบก่อน จึงจะสามารถยืนยันส่งมอบได้
           </div>
 
-          <div class="row q-col-gutter-sm">
+          <div class="row">
             <!-- Command: Collect Cash & Deliver -->
-            <div class="col-12 col-sm-6">
+            <div class="col-12 col-sm-6 q-pa-xs">
               <q-btn
                 color="warning"
                 class="full-width q-py-md text-weight-bolder text-subtitle2 shadow-2 btn-gradient-warning"
@@ -371,7 +368,7 @@
             </div>
 
             <!-- Command: Confirm Transfer & Deliver -->
-            <div class="col-12 col-sm-6">
+            <div class="col-12 col-sm-6 q-pa-xs">
               <q-btn
                 color="positive"
                 class="full-width q-py-md text-weight-bolder text-subtitle2 shadow-2 btn-gradient-primary"
@@ -408,14 +405,14 @@
               no-caps
               color="grey-6"
               icon="undo"
-              label="ยกเลิกสถานะส่งมอบ (ส่งผิดคน/แก้ไข)"
+              label="ยกเลิกการส่งมอบ"
               class="text-weight-bold"
               :loading="isSubmittingAction"
               @click="handleRevertDelivery"
             />
           </div>
         </template>
-      </div>
+      </q-card>
     </div>
   </q-page>
 </template>

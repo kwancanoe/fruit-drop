@@ -5,7 +5,7 @@
       <!-- Section Title -->
       <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-xs row items-center">
         <q-icon name="schedule" color="primary" class="q-mr-xs" size="22px" />
-        <span>เวลานัดรับของ (โดยประมาณ)</span>
+        <span>เวลานัดรับของ</span>
       </div>
 
       <!-- Seller Standby Window Notification Card -->
@@ -16,7 +16,7 @@
             ช่วงเวลาพร้อมส่งของ: <strong class="text-positive">{{ standbyStartTime }} - {{ standbyEndTime }} น.</strong>
           </div>
           <div class="text-caption text-grey-6" style="font-size: 11px;">
-            กรุณาระบุเวลามารับของ
+            ระบุเวลามารับของ
           </div>
         </div>
       </div>
@@ -49,7 +49,7 @@
           v-model="inputTime"
           outlined
           dense
-          label="หรือระบุเวลานัดรับที่ท่านสะดวก *"
+          label="หรือระบุเวลานัดรับเอง *"
           placeholder="เช่น 19:30"
           mask="time"
           :error="!isWithinStandbyWindow"
@@ -92,7 +92,7 @@
             <q-icon name="warning" color="negative" size="20px" />
           </template>
           <div class="text-caption text-weight-bold">
-            กรุณาเลือกเวลารับในช่วง {{ standbyStartTime }} - {{ standbyEndTime }} น.
+            เลือกเวลารับในช่วง {{ standbyStartTime }} - {{ standbyEndTime }} น.
           </div>
         </q-banner>
       </transition>
@@ -219,7 +219,7 @@ const isWithinStandbyWindow = computed<boolean>(() => {
 });
 
 const errorMessage = computed<string>(() => {
-  if (!inputTime.value) return 'กรุณาระบุเวลานัดรับของ';
+  if (!inputTime.value) return 'ระบุเวลานัดรับของ';
   if (!isWithinStandbyWindow.value) {
     return `เวลานัดรับต้องอยู่ระหว่าง ${standbyStartTime.value} - ${standbyEndTime.value} น.`;
   }

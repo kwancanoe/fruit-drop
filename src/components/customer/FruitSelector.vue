@@ -3,7 +3,7 @@
   <div id="customer-fruit-selector" data-audit-id="customer-fruit-selector">
     <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-sm row items-center">
       <q-icon name="shopping_basket" color="primary" class="q-mr-xs" size="22px" />
-      <span>เลือกผลไม้สดที่ต้องการสั่งจอง</span>
+      <span>เลือกผลไม้</span>
     </div>
 
     <div v-for="product in products" :key="product.id" class="q-mb-md">
@@ -108,7 +108,7 @@
                 <q-item-section>
                   <q-item-label class="text-subtitle2">{{ tier.label }}</q-item-label>
                   <q-item-label caption class="text-grey-7">
-                    ประเมินราคา: {{ tier.estimatedPriceMin }} - {{ tier.estimatedPriceMax }} บาท
+                    ราคาประมาณ: {{ tier.estimatedPriceMin }} - {{ tier.estimatedPriceMax }} บาท
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -122,7 +122,7 @@
                 no-caps
                 color="negative"
                 icon="close"
-                label="ไม่รับรายการนี้"
+                label="ยกเลิกรายการนี้"
                 size="sm"
                 @click="setTierSelection(product.id, '')"
               />
@@ -132,7 +132,7 @@
             <div class="row items-center bg-amber-1 text-orange-10 q-pa-xs rounded-borders q-mt-xs">
               <q-icon name="lightbulb" size="16px" class="q-mr-xs" />
               <span class="text-caption">
-                ชั่งน้ำหนักจริงและคิดเงินตามตาชั่งตอนรับของที่ท้ายรถ
+                ชั่งน้ำหนักและคิดเงินจริงตอนรับของที่รถ
               </span>
             </div>
           </div>

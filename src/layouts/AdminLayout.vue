@@ -98,16 +98,16 @@
             บัญชี: <strong>{{ fruitStore.authUser.email }}</strong>
           </div>
           <div class="text-caption text-grey-7 q-mb-lg">
-            อีเมลนี้ไม่ได้รับสิทธิ์เข้าใช้งานโต๊ะแอดมิน กรุณาติดต่อผู้ดูแลระบบเพื่อขอเพิ่มสิทธิ์
+            อีเมลนี้ไม่ได้รับสิทธิ์เข้าใช้งาน โปรดติดต่อผู้ดูแลระบบเพื่อขอเพิ่มสิทธิ์
           </div>
 
-          <div class="row q-gutter-sm justify-center">
+          <div class="row justify-center">
             <q-btn
               outline
               color="negative"
-              class="q-px-md text-weight-bold"
+              class="q-mr-sm q-px-md text-weight-bold"
               icon="logout"
-              label="ออกจากระบบ (Logout)"
+              label="ออกจากระบบ"
               no-caps
               rounded
               @click="handleLogout"

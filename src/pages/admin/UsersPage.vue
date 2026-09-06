@@ -145,7 +145,7 @@
         <div
           v-for="user in userStore.users"
           :key="user.email"
-          class="bg-grey-1 q-pa-sm rounded-borders q-mb-sm border-light row items-center justify-between"
+          class="bg-grey-1 q-pa-sm surface-subcard q-mb-sm border-light row items-center justify-between"
           :data-audit-id="`user-row-${user.email}`"
         >
           <!-- User Details -->

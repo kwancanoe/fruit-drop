@@ -5,16 +5,16 @@
     <div v-if="rounds.length === 0" class="bg-white q-pa-xl rounded-borders text-center shadow-1">
       <q-icon name="event_busy" size="56px" color="grey-5" class="q-mb-sm" />
       <div class="text-subtitle1 text-weight-bold text-grey-9 q-mb-xs">
-        ขณะนี้ยังไม่มีรอบเปิดจองผลไม้
+        ยังไม่มีรอบเปิดจอง
       </div>
       <div class="text-caption text-grey-6 q-mb-lg">
-        กรุณารอรอบเปิดจองถัดไป หรือตรวจสอบสถานะออเดอร์เดิมของคุณ
+        รอรอบถัดไป หรือค้นหาออเดอร์ที่สั่งไว้
       </div>
       <q-btn
         outline
         color="primary"
         icon="search"
-        label="ตรวจสอบออเดอร์ของฉัน"
+        label="ค้นหาออเดอร์"
         no-caps
         rounded
         class="q-px-md"
@@ -25,7 +25,7 @@
     <!-- Case 2: One or More Open Rounds -->
     <div v-else>
       <div class="text-subtitle2 text-weight-bold text-grey-9 q-mb-sm">
-        รอบที่เปิดให้สั่งจองในขณะนี้ ({{ rounds.length }} รอบ):
+        รอบที่เปิดรับจอง ({{ rounds.length }}):
       </div>
 
       <q-card

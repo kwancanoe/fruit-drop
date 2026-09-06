@@ -8,7 +8,7 @@
           <q-icon name="local_mall" color="white" />
         </template>
         <div class="text-caption text-weight-medium">
-          คุณมีออเดอร์ค้างรับ: <strong>#{{ activeCustomerOrder.orderId }}</strong>
+          มีออเดอร์รอรับ: <strong>#{{ activeCustomerOrder.orderId }}</strong>
           (รอบ {{ activeCustomerOrder.pickupSlot }})
         </div>
         <template #action>
@@ -36,7 +36,7 @@
     <!-- Stage 2: Round Booking Screen (when a specific round is selected) -->
     <div v-else>
       <!-- Navigation Back Button & Current Round Indicator -->
-      <div class="row items-center justify-between q-mb-md bg-white q-pa-sm rounded-borders shadow-1">
+      <q-card class="row items-center justify-between q-mb-md bg-white q-pa-sm shadow-1">
         <q-btn
           flat
           dense
@@ -50,7 +50,7 @@
         <div class="text-caption text-grey-8 ellipsis" style="max-width: 200px;">
           <strong>{{ currentRound.title }}</strong>
         </div>
-      </div>
+      </q-card>
 
       <!-- 1. Batch Header & Announcement -->
       <BatchHeaderCard :round="currentRound" />
@@ -82,7 +82,7 @@
                 💵 ชำระเงินตอนรับของที่ท้ายรถ (เงินสด / สแกน QR)
               </div>
               <div class="text-caption text-grey-7">
-                ไม่ต้องโอนเงินล่วงหน้า ตรวจรับผลไม้แล้วค่อยจ่ายเงินสด หรือสแกน QR พร้อมเพย์กับคนขายที่รถ
+                ไม่ต้องโอนล่วงหน้า รับของแล้วค่อยจ่ายเงินสดหรือสแกน QR กับคนขาย
               </div>
             </div>
           </div>
@@ -90,7 +90,7 @@
       </q-card>
 
       <!-- 6. Prominent Order Action Section (Impossible to miss at end of form) -->
-      <div class="q-mt-lg q-mb-xl bg-white q-pa-md rounded-borders shadow-2">
+      <q-card class="q-mt-lg q-mb-xl bg-white q-pa-md shadow-2">
         <div class="row items-center justify-between q-mb-xs">
           <span class="text-subtitle1 text-weight-bold text-grey-9">ยอดรวมโดยประมาณ:</span>
           <span class="text-h5 text-weight-bolder text-primary">{{ totalEstimatedPrice }} บาท</span>
@@ -113,13 +113,13 @@
         </q-btn>
 
         <div v-if="orderedItems.length === 0" class="text-center text-caption text-negative q-mt-xs">
-          * กรุณาเลือกผลไม้อย่างน้อย 1 รายการ
+          * เลือกผลไม้อย่างน้อย 1 รายการ
         </div>
         <div v-else-if="!isContactValid" class="text-center text-caption text-negative q-mt-xs">
-          * กรุณากรอกชื่อและเบอร์โทรศัพท์ให้ครบถ้วน
+          * ระบุชื่อและเบอร์โทรศัพท์ให้ครบถ้วน
         </div>
         <div v-else-if="!isSlotValid" class="text-center text-caption text-negative q-mt-xs">
-          * เวลานัดรับอยู่นอกช่วงเวลา Standby ของคนขาย
+          * อยู่นอกเวลาส่งของคนขาย โปรดเลือกเวลาใหม่
         </div>
 
         <div class="q-mt-md text-center">
@@ -133,7 +133,7 @@
             @click="selectedRoundId = null"
           />
         </div>
-      </div>
+      </q-card>
 
       <!-- 7. Sticky Bottom Bar for quick action while scrolling -->
       <div
@@ -170,7 +170,7 @@
         <div class="q-mt-sm row justify-center">
           <q-btn
             color="primary"
-            label="ปิดหน้านี้ / สั่งรายการอื่นเพิ่มเติม"
+            label="สั่งเพิ่มอีกออเดอร์"
             no-caps
             rounded
             class="q-px-md"
@@ -291,19 +291,19 @@ const activeCustomerOrder = computed<Order | null>(() => {
 // Submit Order Handler
 async function handlePlaceOrder() {
   if (orderedItems.value.length === 0) {
-    $q.notify({ type: 'warning', message: 'กรุณาเลือกผลไม้อย่างน้อย 1 รายการ' });
+    $q.notify({ type: 'warning', message: 'เลือกผลไม้อย่างน้อย 1 รายการ' });
     return;
   }
 
   if (!isContactValid.value) {
-    $q.notify({ type: 'warning', message: 'กรุณากรอกข้อมูลชื่อผู้สั่ง ร้าน และเบอร์โทรศัพท์' });
+    $q.notify({ type: 'warning', message: 'ระบุข้อมูลชื่อผู้สั่ง ร้าน และเบอร์โทรศัพท์' });
     return;
   }
 
   if (!isSlotValid.value) {
     $q.notify({
       type: 'negative',
-      message: 'เวลานัดรับอยู่นอกช่วงเวลา Standby ของคนขาย กรุณาเลือกเวลาใหม่',
+      message: 'อยู่นอกเวลาส่งของคนขาย โปรดเลือกเวลาใหม่',
       position: 'top'
     });
     return;
@@ -354,7 +354,7 @@ async function handlePlaceOrder() {
     console.error('Error submitting order:', error);
     $q.notify({
       type: 'negative',
-      message: 'เกิดข้อผิดพลาดในการสั่งจอง กรุณาลองใหม่อีกครั้ง'
+      message: 'เกิดข้อผิดพลาดในการสั่งจอง โปรดลองใหม่อีกครั้ง'
     });
   }
 }

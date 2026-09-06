@@ -25,7 +25,7 @@
       <div class="q-mt-sm">
         <q-badge color="positive" class="text-subtitle2 q-px-md q-py-xs" rounded>
           <q-icon name="schedule" class="q-mr-xs" />
-          คนขาย Standby ส่งของ: {{ round?.standbyTime || (round?.pickupSlots && round?.pickupSlots[0]) || '19:00 - 23:00' }} น.
+          ช่วงเวลาส่งของที่รถ: {{ round?.standbyTime || (round?.pickupSlots && round?.pickupSlots[0]) || '19:00 - 23:00' }} น.
         </q-badge>
       </div>
     </q-card-section>

@@ -2,7 +2,7 @@
   <!-- Section: Admin Tailgate Dispatch Desk & Scale Engine -->
   <q-page id="admin-dispatch-page" data-audit-id="admin-dispatch-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 76px;">
     <!-- Live Statistics Strip -->
-    <div class="bg-white text-grey-9 q-pa-sm rounded-borders q-mb-md shadow-1">
+    <q-card class="bg-white text-grey-9 q-pa-sm q-mb-md shadow-1">
       <div class="row items-center justify-around text-center text-caption">
         <!-- Delivered Progress -->
         <div class="col-4 q-px-xs">
@@ -14,7 +14,7 @@
 
         <!-- Cash in hand -->
         <div class="col-4 q-px-xs">
-          <div class="text-grey-7">เงินสดในมือ</div>
+          <div class="text-grey-7">เงินสด</div>
           <div class="text-subtitle2 text-weight-bolder text-warning">
             {{ cashInHandTotal.toLocaleString() }} บาท
           </div>
@@ -22,16 +22,16 @@
 
         <!-- Bank transfer -->
         <div class="col-4 q-px-xs">
-          <div class="text-grey-7">ยอดโอนพร้อมเพย์</div>
+          <div class="text-grey-7">ยอดโอน</div>
           <div class="text-subtitle2 text-weight-bolder text-primary">
             {{ prepaidTotal.toLocaleString() }} บาท
           </div>
         </div>
       </div>
-    </div>
+    </q-card>
 
     <!-- Active Round Indicator -->
-    <div v-if="fruitStore.activeRound" class="bg-green-1 text-grey-9 q-pa-sm rounded-borders q-mb-md row items-center justify-between shadow-1">
+    <q-card v-if="fruitStore.activeRound" class="bg-green-1 text-grey-9 q-pa-sm q-mb-md row items-center justify-between shadow-1">
       <div class="row items-center">
         <q-icon name="event_available" color="positive" size="20px" class="q-mr-xs" />
         <span class="text-caption text-grey-9">
@@ -48,7 +48,7 @@
         size="sm"
         to="/admin/rounds"
       />
-    </div>
+    </q-card>
 
 
     <!-- Time-Slot Filter Tabs & Instant Search -->

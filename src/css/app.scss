@@ -6,6 +6,14 @@
 // -----------------------------------------------------------------------------
 // When badges or chips have light/pastel backgrounds, an outline is automatically
 // applied to provide crisp contrast and prevent blending into white cards/surfaces.
+// Normalize Quasar badges to M3 expressive capsule
+.q-badge {
+  border-radius: 9999px;
+  padding: 3px 8px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
 .q-badge,
 .q-chip {
   box-sizing: border-box;
@@ -175,8 +183,15 @@
 
 // Clean M3 Card surfaces with subtle border and airy gradient
 .m3-surface-card,
-.q-card.rounded-borders {
+.q-card:not(.q-card--square) {
   border-radius: 16px !important;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: $gradient-surface-card !important;
+  overflow: hidden;
+}
+
+// M3 Nested container helper
+.surface-subcard,
+.sub-row-item {
+  border-radius: 10px;
 }

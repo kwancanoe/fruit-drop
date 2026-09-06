@@ -18,10 +18,7 @@
         </q-btn>
         <div>
           <div class="text-h6 text-weight-bolder leading-tight text-grey-9">
-            วิเคราะห์ผลประกอบการ & กำไร-ขาดทุน
-          </div>
-          <div class="text-caption text-grey-7">
-            Deep Profit & Loss Performance Analysis รายการสินค้าและภาพรวม
+            วิเคราะห์ผลประกอบการ
           </div>
         </div>
       </div>
@@ -152,7 +149,7 @@
       <div class="row items-center justify-between q-mb-sm">
         <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
           <q-icon name="pie_chart" size="20px" class="q-mr-xs" />
-          กำไร-ขาดทุน แยกตามชนิดผลไม้
+          กำไรตามชนิดผลไม้
         </div>
         <div class="text-caption text-grey-7">
           รวม {{ fruitStats.length }} ชนิด
@@ -160,7 +157,7 @@
       </div>
 
       <div v-if="fruitStats.length === 0" class="text-center q-pa-lg text-grey-6">
-        ไม่มีรายการขายผลไม้ในเงื่อนไขการกรองนี้
+        ไม่มีรายการ
       </div>
 
       <div v-else class="column">
@@ -181,7 +178,7 @@
                   {{ stat.name }}
                 </div>
                 <div class="text-caption text-grey-7" style="font-size: 11px;">
-                  ยอดจำหน่าย: <strong>{{ stat.totalWeightKg.toFixed(1) }} กก.</strong>
+                  ขายได้: <strong>{{ stat.totalWeightKg.toFixed(1) }} กก.</strong>
                   <span v-if="stat.durianPieces > 0"> ({{ stat.durianPieces }} ลูก)</span>
                 </div>
               </div>
@@ -227,7 +224,7 @@
       <div class="row items-center justify-between q-mb-sm">
         <div class="text-subtitle1 text-weight-bolder text-positive row items-center">
           <q-icon name="receipt_long" size="20px" class="q-mr-xs" />
-          กำไร-ขาดทุน แยกตามรายออเดอร์
+          สรุปรายออเดอร์
         </div>
         <div class="text-caption text-grey-7">
           แสดง {{ filteredOrders.length }} รายการ
@@ -235,7 +232,7 @@
       </div>
 
       <div v-if="filteredOrders.length === 0" class="text-center q-pa-lg text-grey-6">
-        ไม่พบออเดอร์ในเงื่อนไขการกรองนี้
+        ไม่พบออเดอร์
       </div>
 
       <div v-else class="column">
@@ -346,7 +343,7 @@ function handleBack() {
 
 // Round options
 const roundOptions = computed(() => {
-  const opts = [{ label: 'ทุกรอบการจอง (All Rounds)', value: 'ALL' }];
+  const opts = [{ label: 'ทุกรอบการจอง', value: 'ALL' }];
   for (const r of fruitStore.allRounds) {
     opts.push({ label: `${r.title} (${r.pickupDate})`, value: r.roundId });
   }
@@ -355,17 +352,17 @@ const roundOptions = computed(() => {
 
 // Status options
 const statusOptions = [
-  { label: 'ทุกสถานะ (All)', value: 'ALL' },
-  { label: 'ส่งมอบแล้ว (Completed)', value: 'COMPLETED' },
-  { label: 'รอรับของ (Waiting Pickup)', value: 'WAITING_PICKUP' },
-  { label: 'ยกเลิก (Cancelled)', value: 'CANCELLED' }
+  { label: 'ทุกสถานะ', value: 'ALL' },
+  { label: 'ส่งมอบแล้ว', value: 'COMPLETED' },
+  { label: 'รอรับของ', value: 'WAITING_PICKUP' },
+  { label: 'ยกเลิก', value: 'CANCELLED' }
 ];
 
 // Payment options
 const paymentOptions = [
-  { label: 'ทุกวิธีชำระ (All)', value: 'ALL' },
-  { label: 'จ่ายเงินสดท้ายรถ (Cash)', value: 'PAY_AT_CAR' },
-  { label: 'โอนล่วงหน้าพร้อมเพย์ (Transfer)', value: 'PROMPTPAY_PREPAID' }
+  { label: 'ทุกวิธีชำระ', value: 'ALL' },
+  { label: 'จ่ายเงินสดท้ายรถ', value: 'PAY_AT_CAR' },
+  { label: 'โอนล่วงหน้าพร้อมเพย์', value: 'PROMPTPAY_PREPAID' }
 ];
 
 // Product Cost Lookup Map (productId -> costPerKg)

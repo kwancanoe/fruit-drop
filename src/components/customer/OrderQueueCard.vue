@@ -10,7 +10,7 @@
         สั่งจองผลไม้สำเร็จแล้ว!
       </div>
       <div class="text-caption text-green-1">
-        กรุณาบันทึกภาพหน้าจอนี้ไว้สำหรับแสดงตอนรับของที่รถ
+        แคปหน้าจอไว้แสดงตอนรับของที่รถ
       </div>
     </div>
 
@@ -36,9 +36,6 @@
           </div>
           <div class="text-caption text-weight-bold text-grey-9 q-mt-xs">
             📱 แสดง QR Code นี้ให้คนขายสแกนรับผลไม้
-          </div>
-          <div class="text-caption text-grey-7" style="font-size: 11px;">
-            ป้องกันการรับผิดคน และได้รับผลไม้ตรงตามที่สั่ง 100%
           </div>
         </div>
 

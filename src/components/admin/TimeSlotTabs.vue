@@ -7,6 +7,7 @@
         :model-value="searchQuery"
         outlined
         dense
+        rounded
         clearable
         bg-color="white"
         placeholder="ค้นหาชื่อเล่น, ชื่อร้าน, ชั้น, หรือเบอร์โทร..."

@@ -15,7 +15,7 @@
         @click="handleBack"
       />
       <div class="text-subtitle2 text-weight-bolder text-primary">
-        สแกน QR ออเดอร์ลูกค้า
+        สแกน QR Code ลูกค้า
       </div>
     </div>
 
@@ -34,7 +34,7 @@
           <q-spinner color="positive" size="56px" />
           <div class="text-subtitle1 text-weight-bold q-mt-md">กำลังเปิดกล้องถ่ายภาพ...</div>
           <div class="text-caption text-grey-4 text-center q-mt-xs">
-            กรุณาอนุญาตให้ระบบเข้าถึงกล้องบนมือถือของคุณ
+            โปรดอนุญาตให้ใช้งานกล้อง
           </div>
         </div>
 
@@ -111,7 +111,7 @@
     <!-- Instructions & Tip -->
     <div class="bg-green-1 q-pa-sm rounded-borders q-mb-md row items-center text-primary text-caption">
       <q-icon name="qr_code_scanner" size="20px" class="q-mr-xs" />
-      <span>นำกล้องไปส่องที่ QR Code บนมือถือของลูกค้า ระบบจะเปิดออเดอร์ให้ทันที</span>
+      <span>นำอุปกรณ์ไปส่องที่ QR Code ของลูกค้า</span>
     </div>
 
     <!-- Manual Order Code Fallback (Imperative for 100% Reliability) -->
@@ -120,16 +120,12 @@
         <div class="text-subtitle2 text-weight-bold text-grey-8 q-mb-xs">
           หรือกรอกรหัสออเดอร์ด้วยตัวเอง
         </div>
-        <div class="text-caption text-grey-6 q-mb-sm">
-          หากกล้องไม่สามารถสแกนได้ ให้พิมพ์รหัสออเดอร์ (เช่น FD-1004 หรือ 1004)
-        </div>
-
         <div class="row items-center no-wrap">
           <q-input
             v-model="manualCodeInput"
             outlined
             dense
-            placeholder="เช่น FD-1004 หรือ 1004"
+            placeholder="เช่น FD-1004"
             class="col"
             input-class="text-weight-bold text-primary"
             @keyup.enter="handleManualSubmit"
@@ -321,7 +317,7 @@ async function toggleTorch() {
 function handleManualSubmit() {
   const code = manualCodeInput.value.trim();
   if (!code) {
-    $q.notify({ type: 'warning', message: 'กรุณากรอกรหัสออเดอร์', position: 'top' });
+    $q.notify({ type: 'warning', message: 'ระบุรหัสออเดอร์', position: 'top' });
     return;
   }
 

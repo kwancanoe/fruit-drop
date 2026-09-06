@@ -50,7 +50,7 @@
             dense
             label="ชื่องาน / รอบการส่ง *"
             placeholder="เช่น รอบส่งท้ายรถ วันอังคาร 8 ก.ย."
-            :rules="[val => !!val && val.trim().length > 0 || 'กรุณาระบุชื่อรอบ']"
+            :rules="[val => !!val && val.trim().length > 0 || 'ระบุชื่อรอบ']"
             data-audit-id="input-round-title"
           />
         </div>
@@ -64,7 +64,7 @@
             readonly
             label="วันที่นัดรับของ *"
             placeholder="แตะเพื่อเลือกวันที่จากปฏิทิน"
-            :rules="[val => !!val && val.trim().length > 0 || 'กรุณาเลือกวันที่']"
+            :rules="[val => !!val && val.trim().length > 0 || 'เลือกวันที่']"
             data-audit-id="input-round-date"
             class="cursor-pointer"
           >
@@ -113,7 +113,7 @@
             dense
             label="จุดนัดรับของ *"
             placeholder="เช่น ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B"
-            :rules="[val => !!val && val.trim().length > 0 || 'กรุณาระบุจุดนัดรับ']"
+            :rules="[val => !!val && val.trim().length > 0 || 'ระบุจุดนัดรับ']"
             data-audit-id="input-round-location"
           >
             <template #prepend>
@@ -125,19 +125,19 @@
         <!-- Standby Window (Single Period when seller waits at tailgate) -->
         <div class="q-mb-sm">
           <div class="text-caption text-grey-8 text-weight-bold q-mb-xs">
-            ช่วงเวลาที่คนขาย Standby รอส่งของที่รถ (ช่วงเดียว) *
+            ช่วงเวลาส่งของที่รถ *
           </div>
           <div class="text-caption text-grey-6 q-mb-sm" style="font-size: 11px;">
-            กำหนดช่วงเวลาที่คนขายจะไปรอส่งของที่รถ (เช่น 19:00 - 23:00) เพื่อให้ลูกค้าระบุเวลามารับของในช่วงนี้
+            กำหนดช่วงเวลาส่งของที่รถ (เช่น 19:00 - 23:00) เพื่อให้ลูกค้าระบุเวลามารับของ
           </div>
 
-          <div class="row q-col-gutter-sm items-center q-mb-xs">
-            <div class="col-6">
+          <div class="row items-center q-mb-xs">
+            <div class="col-6 q-pr-xs">
               <q-input
                 v-model="form.standbyStartTime"
                 outlined
                 dense
-                label="เวลาเริ่ม Standby *"
+                label="เวลาเริ่มส่งของ *"
                 mask="time"
                 placeholder="19:00"
                 data-audit-id="input-standby-start"
@@ -156,12 +156,12 @@
               </q-input>
             </div>
 
-            <div class="col-6">
+            <div class="col-6 q-pl-xs">
               <q-input
                 v-model="form.standbyEndTime"
                 outlined
                 dense
-                label="เวลาสิ้นสุด Standby *"
+                label="เวลาสิ้นสุดส่งของ *"
                 mask="time"
                 placeholder="23:00"
                 data-audit-id="input-standby-end"
@@ -184,7 +184,7 @@
           <!-- Standby Window Preview Banner -->
           <div class="bg-green-1 q-pa-sm rounded-borders row items-center text-primary text-caption text-weight-bold">
             <q-icon name="schedule" size="18px" class="q-mr-xs" />
-            <span>คนขายจะ Standby: {{ computedStandbyTime }} น.</span>
+            <span>เวลารับของ: {{ computedStandbyTime }} น.</span>
           </div>
         </div>
 

@@ -18,7 +18,7 @@
         </q-btn>
         <div>
           <div class="text-h6 text-weight-bolder leading-tight text-grey-9">
-            จัดการรอบการจองผลไม้
+            จัดการรอบส่ง
           </div>
           <div class="text-caption text-grey-7">
             เปิดรอบใหม่ แก้ไขข้อมูล และควบคุมการเปิด/ปิดรับจอง
@@ -76,7 +76,7 @@
           <q-icon name="event" size="14px" class="q-mr-xs text-primary" />
           <span class="text-weight-medium q-mr-md">{{ round.pickupDate }}</span>
           <q-icon name="schedule" size="14px" class="q-mr-xs text-primary" />
-          <span class="text-weight-medium q-mr-md">Standby: {{ round.standbyTime || (round.pickupSlots && round.pickupSlots[0]) || '19:00 - 23:00' }} น.</span>
+          <span class="text-weight-medium q-mr-md">เวลารับของ: {{ round.standbyTime || (round.pickupSlots && round.pickupSlots[0]) || '19:00 - 23:00' }} น.</span>
           <q-icon name="place" size="14px" class="q-mr-xs text-primary" />
           <span class="ellipsis">{{ round.pickupLocation }}</span>
         </div>
