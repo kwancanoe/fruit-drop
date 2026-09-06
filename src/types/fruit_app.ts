@@ -83,15 +83,35 @@ export interface PreorderRound {
   updatedAt?: number | undefined;
 }
 
+// 0. Master Fruit Catalog Document (Centralized fruit types master table)
+export interface MasterFruit {
+  id: string;                      // Unique fruit key e.g. 'ngo', 'thurian', 'avocado'
+  fruitKey: string;                // Slug identifier
+  name: string;                    // "เงาะโรงเรียน", "ทุเรียนหมอนทอง"
+  productType: ProductType;        // 'FIXED_WEIGHT' | 'VARIABLE_WHOLE_FRUIT'
+  defaultPricePerKg: number;       // Suggested selling price
+  defaultCostPerKg: number;        // Suggested cost price
+  defaultTotalQuotaKg: number;     // Suggested quota
+  imageUrl: string;                // Mascot image or uploaded URL
+  avatarType?: 'PREDEFINED' | 'UPLOADED' | undefined;
+  bundles?: ProductBundle[] | undefined;
+  sizeTiers?: FruitSizeTier[] | undefined;
+  isActive: boolean;               // Soft-delete flag (true = available for rounds)
+  sortOrder: number;               // Sorting order
+  createdAt: number;
+  updatedAt?: number | undefined;
+}
+
 // Data payload for Admin creating/editing a round with selected fruits
 export interface RoundCreationFruitConfig {
-  fruitKey: 'ngo' | 'thurian' | 'mangkut' | 'longkong' | 'langsat' | 'som' | 'mamuang';
+  fruitKey: string;
   name: string;
   productType: ProductType;
   pricePerKg: number;
   costPerKg: number;          // Cost of goods per kg (for profit-loss analysis)
   totalQuotaKg: number;
   isEnabled: boolean;
+  imageUrl?: string | undefined;
 }
 
 export interface RoundCreationPayload {
@@ -133,7 +153,7 @@ export interface ProductItem {
   id: string;
   roundId: string;
   name: string;                 // "เงาะโรงเรียน", "ทุเรียนหมอนทอง"
-  mascotKey: 'ngo' | 'thurian' | 'mangkut' | 'longkong' | 'langsat' | 'som' | 'mamuang';
+  mascotKey: string;
   imageUrl: string;             // Mascot transparent PNG or product image
   productType: ProductType;
   pricePerKg: number;

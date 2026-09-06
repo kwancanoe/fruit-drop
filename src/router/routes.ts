@@ -23,6 +23,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'orders/:orderId', name: 'admin-order-detail', component: () => import('@/pages/admin/OrderDetailPage.vue') },
       { path: 'scan', name: 'admin-scan', component: () => import('@/pages/admin/QrScannerPage.vue') },
       { path: 'analytics', name: 'admin-analytics', component: () => import('@/pages/admin/AnalyticsPage.vue') },
+      { path: 'fruits', name: 'admin-fruits', component: () => import('@/pages/admin/FruitsPage.vue') },
       { path: 'users', name: 'admin-users', component: () => import('@/pages/admin/UsersPage.vue') }
     ]
   },

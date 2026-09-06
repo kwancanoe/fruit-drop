@@ -43,14 +43,15 @@ const props = withDefaults(
   defineProps<{
     name: string;
     size?: string;
+    imageUrl?: string;
   }>(),
   {
     size: '54px'
   }
 );
 
-// Resolve mascot transparent PNG image based on fruit name
-const mascotUrl = computed(() => getFruitMascotUrl(props.name));
+// Resolve mascot transparent PNG image based on fruit name or custom image
+const mascotUrl = computed(() => getFruitMascotUrl(props.name, props.imageUrl));
 </script>
 
 <style scoped lang="scss">

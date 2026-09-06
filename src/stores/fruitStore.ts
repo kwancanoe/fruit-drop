@@ -49,6 +49,7 @@ import {
 import { ref as sRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, auth, storage, googleProvider } from '@/boot/firebase';
 import type {
+  MasterFruit,
   PreorderRound,
   ProductItem,
   Order,
@@ -64,6 +65,7 @@ import { ADMIN_WHITELIST_EMAILS } from '@/types/fruit_app';
 import { useUserStore } from '@/stores/userStore';
 import { collectDeviceFingerprint } from '@/utils/deviceTelemetry';
 import { calculateOrderFinalTotal } from '@/utils/pricing';
+import { compressImage } from '@/utils/imageCompressor';
 
 export const useFruitStore = defineStore('fruit', () => {
   // State
@@ -71,6 +73,7 @@ export const useFruitStore = defineStore('fruit', () => {
   const allRounds = ref<PreorderRound[]>([]);
   const activeRound = ref<PreorderRound | null>(null);
   const products = ref<ProductItem[]>([]);
+  const masterFruits = ref<MasterFruit[]>([]);
   const orders = ref<Order[]>([]);
   const isLoading = ref<boolean>(false);
   const authUser = ref<User | null>(null);
@@ -79,7 +82,13 @@ export const useFruitStore = defineStore('fruit', () => {
   let unsubscribeOpenRounds: Unsubscribe | null = null;
   let unsubscribeAllRounds: Unsubscribe | null = null;
   let unsubscribeProducts: Unsubscribe | null = null;
+  let unsubscribeMasterFruits: Unsubscribe | null = null;
   let unsubscribeOrders: Unsubscribe | null = null;
+
+  // Computed - Active master fruits for round creation
+  const activeMasterFruits = computed<MasterFruit[]>(() =>
+    masterFruits.value.filter(f => f.isActive)
+  );
 
   // Computed - Allow access if in whitelist or active in users collection
   const isAdmin = computed<boolean>(() => {
@@ -396,7 +405,8 @@ export const useFruitStore = defineStore('fruit', () => {
       // 2. Save configured products for this round
       for (const fruit of enabledFruits) {
         const prodId = `PROD-${roundId}-${fruit.fruitKey.toUpperCase()}`;
-        const bundles = fruit.fruitKey === 'ngo' ? [
+        const masterFruit = masterFruits.value.find(m => m.fruitKey === fruit.fruitKey);
+        const bundles = masterFruit?.bundles || (fruit.fruitKey === 'ngo' ? [
           { qtyKg: 3, price: 100, label: 'ชุด 3 กก. (100 บาท)' },
           { qtyKg: 6, price: 200, label: 'ชุด 6 กก. (200 บาท)' },
           { qtyKg: 9, price: 300, label: 'ชุด 9 กก. (300 บาท)' }
@@ -405,9 +415,9 @@ export const useFruitStore = defineStore('fruit', () => {
           { qtyKg: 5, price: 240, label: 'ชุด 5 กก. (240 บาท)' }
         ] : fruit.fruitKey === 'longkong' ? [
           { qtyKg: 3, price: 130, label: 'ชุด 3 กก. (130 บาท)' }
-        ] : undefined;
+        ] : undefined);
 
-        const sizeTiers = fruit.fruitKey === 'thurian' ? [
+        const sizeTiers = masterFruit?.sizeTiers || (fruit.fruitKey === 'thurian' ? [
           {
             tierId: 'TIER-SMALL',
             label: 'ลูกเล็ก (1.8 - 2.0 กก.)',
@@ -435,14 +445,14 @@ export const useFruitStore = defineStore('fruit', () => {
             estimatedPriceMax: Math.round(4.0 * fruit.pricePerKg),
             reserveWeightKg: 3.5
           }
-        ] : undefined;
+        ] : undefined);
 
         const prodItem: ProductItem = {
           id: prodId,
           roundId,
           name: fruit.name,
           mascotKey: fruit.fruitKey,
-          imageUrl: `/mascots/mascot_${fruit.fruitKey}.png`,
+          imageUrl: fruit.imageUrl || masterFruit?.imageUrl || `/mascots/mascot_${fruit.fruitKey}.png`,
           productType: fruit.productType,
           pricePerKg: fruit.pricePerKg,
           costPerKg: fruit.costPerKg || 0,
@@ -506,7 +516,8 @@ export const useFruitStore = defineStore('fruit', () => {
         const existing = existingMap.get(fruit.fruitKey);
 
         if (fruit.isEnabled) {
-          const bundles = fruit.fruitKey === 'ngo' ? [
+          const masterFruit = masterFruits.value.find(m => m.fruitKey === fruit.fruitKey);
+          const bundles = masterFruit?.bundles || (fruit.fruitKey === 'ngo' ? [
             { qtyKg: 3, price: 100, label: 'ชุด 3 กก. (100 บาท)' },
             { qtyKg: 6, price: 200, label: 'ชุด 6 กก. (200 บาท)' },
             { qtyKg: 9, price: 300, label: 'ชุด 9 กก. (300 บาท)' }
@@ -515,9 +526,9 @@ export const useFruitStore = defineStore('fruit', () => {
             { qtyKg: 5, price: 240, label: 'ชุด 5 กก. (240 บาท)' }
           ] : fruit.fruitKey === 'longkong' ? [
             { qtyKg: 3, price: 130, label: 'ชุด 3 กก. (130 บาท)' }
-          ] : undefined;
+          ] : undefined);
 
-          const sizeTiers = fruit.fruitKey === 'thurian' ? [
+          const sizeTiers = masterFruit?.sizeTiers || (fruit.fruitKey === 'thurian' ? [
             {
               tierId: 'TIER-SMALL',
               label: 'ลูกเล็ก (1.8 - 2.0 กก.)',
@@ -545,14 +556,14 @@ export const useFruitStore = defineStore('fruit', () => {
               estimatedPriceMax: Math.round(4.0 * fruit.pricePerKg),
               reserveWeightKg: 3.5
             }
-          ] : undefined;
+          ] : undefined);
 
           const prodItem: ProductItem = {
             id: prodId,
             roundId,
             name: fruit.name,
             mascotKey: fruit.fruitKey,
-            imageUrl: `/mascots/mascot_${fruit.fruitKey}.png`,
+            imageUrl: fruit.imageUrl || masterFruit?.imageUrl || existing?.imageUrl || `/mascots/mascot_${fruit.fruitKey}.png`,
             productType: fruit.productType,
             pricePerKg: fruit.pricePerKg,
             costPerKg: fruit.costPerKg || 0,
@@ -655,11 +666,90 @@ export const useFruitStore = defineStore('fruit', () => {
     }
   }
 
+  // Master Fruits Subscription (Ordered by sortOrder, auto-seeds default 7 if empty)
+  function subscribeToMasterFruits() {
+    if (unsubscribeMasterFruits) unsubscribeMasterFruits();
+
+    const fruitsRef = collection(db, 'master_fruits');
+    unsubscribeMasterFruits = onSnapshot(fruitsRef, async (snapshot) => {
+      if (snapshot.empty) {
+        // Auto-seed default 7 master fruits to Firestore
+        console.log('Seeding initial master fruits to Firestore...');
+        for (const item of DEFAULT_MASTER_FRUITS) {
+          await setDoc(doc(db, 'master_fruits', item.id), sanitizeFirestoreData(item));
+        }
+        return;
+      }
+
+      const fetched = snapshot.docs.map(docSnap => ({
+        ...docSnap.data() as MasterFruit,
+        id: docSnap.id
+      }));
+
+      fetched.sort((a, b) => (Number(a.sortOrder) || 0) - (Number(b.sortOrder) || 0));
+      masterFruits.value = fetched;
+    }, (error) => {
+      console.warn('Snapshot master fruits error:', error);
+    });
+  }
+
+  // Save / Update Master Fruit
+  async function saveMasterFruit(fruitData: Partial<MasterFruit> & { name: string; fruitKey: string }): Promise<void> {
+    const id = fruitData.id || fruitData.fruitKey.trim().toLowerCase();
+
+    const payload: MasterFruit = {
+      id,
+      fruitKey: id,
+      name: fruitData.name.trim(),
+      productType: fruitData.productType || 'FIXED_WEIGHT',
+      defaultPricePerKg: Number(fruitData.defaultPricePerKg) || 0,
+      defaultCostPerKg: Number(fruitData.defaultCostPerKg) || 0,
+      defaultTotalQuotaKg: Number(fruitData.defaultTotalQuotaKg) || 100,
+      imageUrl: fruitData.imageUrl || `/mascots/mascot_${id}.png`,
+      avatarType: fruitData.avatarType || 'PREDEFINED',
+      ...(fruitData.bundles ? { bundles: fruitData.bundles } : {}),
+      ...(fruitData.sizeTiers ? { sizeTiers: fruitData.sizeTiers } : {}),
+      isActive: fruitData.isActive !== undefined ? fruitData.isActive : true,
+      sortOrder: fruitData.sortOrder !== undefined ? fruitData.sortOrder : (masterFruits.value.length + 1),
+      createdAt: fruitData.createdAt || Date.now(),
+      updatedAt: Date.now()
+    };
+
+    await setDoc(doc(db, 'master_fruits', id), sanitizeFirestoreData(payload));
+  }
+
+  // Toggle Master Fruit Active / Inactive (Soft delete)
+  async function toggleMasterFruitActive(id: string, isActive: boolean): Promise<void> {
+    await updateDoc(doc(db, 'master_fruits', id), {
+      isActive,
+      updatedAt: Date.now()
+    });
+  }
+
+  // Delete Master Fruit (Soft delete by default to protect historical order integrity)
+  async function deleteMasterFruit(id: string): Promise<void> {
+    await updateDoc(doc(db, 'master_fruits', id), {
+      isActive: false,
+      updatedAt: Date.now()
+    });
+  }
+
+  // Upload fruit mascot / custom avatar image to Firebase Storage with compression
+  async function uploadFruitImage(file: File | Blob, fruitKey: string): Promise<string> {
+    const compressed = await compressImage(file, 600, 600, 0.85);
+    const filename = `fruits/mascot_${fruitKey}_${Date.now()}.jpg`;
+    const fileRef = sRef(storage, filename);
+    await uploadBytes(fileRef, compressed.blob);
+    return await getDownloadURL(fileRef);
+  }
+
   return {
     openRounds,
     allRounds,
     activeRound,
     products,
+    masterFruits,
+    activeMasterFruits,
     orders,
     isLoading,
     authUser,
@@ -672,6 +762,7 @@ export const useFruitStore = defineStore('fruit', () => {
     subscribeToAllRounds,
     subscribeToActiveRound,
     subscribeToProducts,
+    subscribeToMasterFruits,
     subscribeToOrders,
     selectActiveRound,
     createRound,
@@ -680,6 +771,10 @@ export const useFruitStore = defineStore('fruit', () => {
     getProductsByRoundId,
     getOrderByOrderId,
     toggleRoundStatus,
+    saveMasterFruit,
+    toggleMasterFruitActive,
+    deleteMasterFruit,
+    uploadFruitImage,
     submitOrder,
     updateWeighedFruit,
     updateOrderStatus,
@@ -687,6 +782,149 @@ export const useFruitStore = defineStore('fruit', () => {
     seedMasterData
   };
 });
+
+// Default 7 Master Fruits Template for initial database seed
+export const DEFAULT_MASTER_FRUITS: MasterFruit[] = [
+  {
+    id: 'ngo',
+    fruitKey: 'ngo',
+    name: 'เงาะโรงเรียน',
+    productType: 'FIXED_WEIGHT',
+    defaultPricePerKg: 35,
+    defaultCostPerKg: 20,
+    defaultTotalQuotaKg: 200,
+    imageUrl: '/mascots/mascot_ngo.png',
+    avatarType: 'PREDEFINED',
+    bundles: [
+      { qtyKg: 3, price: 100, label: 'ชุด 3 กก. (100 บาท)' },
+      { qtyKg: 6, price: 200, label: 'ชุด 6 กก. (200 บาท)' },
+      { qtyKg: 9, price: 300, label: 'ชุด 9 กก. (300 บาท)' }
+    ],
+    isActive: true,
+    sortOrder: 1,
+    createdAt: 1725580800000
+  },
+  {
+    id: 'thurian',
+    fruitKey: 'thurian',
+    name: 'ทุเรียนหมอนทอง',
+    productType: 'VARIABLE_WHOLE_FRUIT',
+    defaultPricePerKg: 160,
+    defaultCostPerKg: 110,
+    defaultTotalQuotaKg: 150,
+    imageUrl: '/mascots/mascot_thurian.png',
+    avatarType: 'PREDEFINED',
+    sizeTiers: [
+      {
+        tierId: 'TIER-SMALL',
+        label: 'ลูกเล็ก (1.8 - 2.0 กก.)',
+        minKg: 1.8,
+        maxKg: 2.0,
+        estimatedPriceMin: 288,
+        estimatedPriceMax: 320,
+        reserveWeightKg: 1.9
+      },
+      {
+        tierId: 'TIER-MEDIUM',
+        label: 'ลูกกลาง (2.1 - 3.0 กก.)',
+        minKg: 2.1,
+        maxKg: 3.0,
+        estimatedPriceMin: 336,
+        estimatedPriceMax: 480,
+        reserveWeightKg: 2.5
+      },
+      {
+        tierId: 'TIER-LARGE',
+        label: 'ลูกใหญ่ (3.1 - 4.0 กก.)',
+        minKg: 3.1,
+        maxKg: 4.0,
+        estimatedPriceMin: 496,
+        estimatedPriceMax: 640,
+        reserveWeightKg: 3.5
+      }
+    ],
+    isActive: true,
+    sortOrder: 2,
+    createdAt: 1725580800000
+  },
+  {
+    id: 'mangkut',
+    fruitKey: 'mangkut',
+    name: 'มังคุด',
+    productType: 'FIXED_WEIGHT',
+    defaultPricePerKg: 50,
+    defaultCostPerKg: 30,
+    defaultTotalQuotaKg: 100,
+    imageUrl: '/mascots/mascot_mangkut.png',
+    avatarType: 'PREDEFINED',
+    bundles: [
+      { qtyKg: 3, price: 150, label: 'ชุด 3 กก. (150 บาท)' },
+      { qtyKg: 5, price: 240, label: 'ชุด 5 กก. (240 บาท)' }
+    ],
+    isActive: true,
+    sortOrder: 3,
+    createdAt: 1725580800000
+  },
+  {
+    id: 'longkong',
+    fruitKey: 'longkong',
+    name: 'ลองกอง',
+    productType: 'FIXED_WEIGHT',
+    defaultPricePerKg: 45,
+    defaultCostPerKg: 25,
+    defaultTotalQuotaKg: 80,
+    imageUrl: '/mascots/mascot_longkong.png',
+    avatarType: 'PREDEFINED',
+    bundles: [
+      { qtyKg: 3, price: 130, label: 'ชุด 3 กก. (130 บาท)' }
+    ],
+    isActive: true,
+    sortOrder: 4,
+    createdAt: 1725580800000
+  },
+  {
+    id: 'langsat',
+    fruitKey: 'langsat',
+    name: 'ลางสาด',
+    productType: 'FIXED_WEIGHT',
+    defaultPricePerKg: 40,
+    defaultCostPerKg: 20,
+    defaultTotalQuotaKg: 60,
+    imageUrl: '/mascots/mascot_langsat.png',
+    avatarType: 'PREDEFINED',
+    isActive: true,
+    sortOrder: 5,
+    createdAt: 1725580800000
+  },
+  {
+    id: 'som',
+    fruitKey: 'som',
+    name: 'ส้มสายน้ำผึ้ง',
+    productType: 'FIXED_WEIGHT',
+    defaultPricePerKg: 60,
+    defaultCostPerKg: 35,
+    defaultTotalQuotaKg: 80,
+    imageUrl: '/mascots/mascot_som.png',
+    avatarType: 'PREDEFINED',
+    isActive: true,
+    sortOrder: 6,
+    createdAt: 1725580800000
+  },
+  {
+    id: 'mamuang',
+    fruitKey: 'mamuang',
+    name: 'มะม่วงน้ำดอกไม้',
+    productType: 'FIXED_WEIGHT',
+    defaultPricePerKg: 50,
+    defaultCostPerKg: 30,
+    defaultTotalQuotaKg: 80,
+    imageUrl: '/mascots/mascot_mamuang.png',
+    avatarType: 'PREDEFINED',
+    isActive: true,
+    sortOrder: 7,
+    createdAt: 1725580800000
+  }
+];
 
 // Default product catalog templates with transparent PNG mascots
 function getDefaultProducts(roundId: string): ProductItem[] {

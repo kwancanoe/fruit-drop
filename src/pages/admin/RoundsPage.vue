@@ -26,16 +26,30 @@
         </div>
       </div>
 
-      <!-- Action Button: Open New Round -->
-      <q-btn
-        color="positive"
-        icon="add"
-        label="เปิดรอบใหม่"
-        no-caps
-        class="text-weight-bold shadow-1 q-px-sm"
-        data-audit-id="btn-create-new-round"
-        to="/admin/rounds/new"
-      />
+      <!-- Action Buttons: Manage Fruit Catalog & Open New Round -->
+      <div class="row items-center wrap" style="gap: 8px;">
+        <q-btn
+          outline
+          color="primary"
+          icon="eco"
+          label="แคตตาล็อกผลไม้"
+          no-caps
+          rounded
+          class="text-weight-bold q-px-sm"
+          data-audit-id="btn-manage-fruits"
+          to="/admin/fruits"
+        />
+        <q-btn
+          color="positive"
+          icon="add"
+          label="เปิดรอบใหม่"
+          no-caps
+          rounded
+          class="text-weight-bold shadow-1 q-px-sm"
+          data-audit-id="btn-create-new-round"
+          to="/admin/rounds/new"
+        />
+      </div>
     </div>
 
     <!-- Empty State -->

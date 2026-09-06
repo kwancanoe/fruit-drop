@@ -31,6 +31,21 @@
           </q-badge>
         </div>
 
+        <!-- Fruit Catalog Nav Button -->
+        <q-btn
+          flat
+          dense
+          round
+          icon="eco"
+          color="positive"
+          size="sm"
+          class="q-mr-xs"
+          to="/admin/fruits"
+          data-audit-id="btn-nav-to-fruits"
+        >
+          <q-tooltip>แคตตาล็อกผลไม้</q-tooltip>
+        </q-btn>
+
         <!-- Logout Action Button -->
         <q-btn
           flat

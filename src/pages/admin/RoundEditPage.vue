@@ -282,6 +282,18 @@
             <q-icon name="eco" size="20px" class="q-mr-xs" />
             3. ผลไม้ ราคาขาย ต้นทุน และโควต้า
           </div>
+          <q-btn
+            flat
+            dense
+            rounded
+            no-caps
+            color="positive"
+            icon="add_circle"
+            label="เพิ่มชนิดผลไม้"
+            class="text-weight-bold text-caption"
+            data-audit-id="btn-quick-add-fruit"
+            @click="showFruitDialog = true"
+          />
         </div>
         <div class="q-px-md text-caption text-grey-7 q-mb-sm">
           กำหนดราคาขายและต้นทุนต่อ กก. เพื่อให้ระบบคำนวณกำไร-ขาดทุนแบบ Deep Analysis อัตโนมัติ
@@ -308,7 +320,7 @@
                   :data-audit-id="`checkbox-enable-${fruit.fruitKey}`"
                 />
                 <q-avatar size="36px" class="q-mr-sm bg-grey-1 shadow-1">
-                  <q-img :src="`/mascots/mascot_${fruit.fruitKey}.png`" fit="contain" />
+                  <q-img :src="getFruitMascotUrl(fruit.name, fruit.imageUrl)" fit="contain" />
                 </q-avatar>
                 <div>
                   <div class="text-subtitle2 text-weight-bold leading-tight" :class="{ 'text-grey-5': !fruit.isEnabled }">
@@ -407,22 +419,32 @@
         />
       </div>
     </q-form>
+
+    <!-- Quick Add Master Fruit Dialog -->
+    <FruitEditDialog
+      v-model="showFruitDialog"
+      @saved="onQuickFruitSaved"
+    />
   </q-page>
 </template>
 
 <script setup lang="ts">
 // Full-page Round Edit / Create Form in clean Light Theme with interactive Thai Date Picker & Time Slot Selector
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import { useFruitStore } from '@/stores/fruitStore';
-import type { RoundCreationFruitConfig } from '@/types/fruit_app';
+import { useFruitStore, DEFAULT_MASTER_FRUITS } from '@/stores/fruitStore';
+import type { RoundCreationFruitConfig, MasterFruit } from '@/types/fruit_app';
 import { generateTimeSlots } from '@/utils/timeSlots';
+import { getFruitMascotUrl } from '@/utils/fruitMascots';
+import FruitEditDialog from '@/components/admin/FruitEditDialog.vue';
 
 const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
 const fruitStore = useFruitStore();
+
+const showFruitDialog = ref<boolean>(false);
 
 const roundId = computed<string>(() => (route.params.roundId as string) || '');
 const isEditMode = computed<boolean>(() => !!roundId.value && roundId.value !== 'new');
@@ -558,6 +580,60 @@ const isFormValid = computed<boolean>(() => {
   return hasTitle && hasDate && hasLocation && hasStandbyStart && hasStandbyEnd && hasAtLeastOneFruit;
 });
 
+// Quick-add Fruit Callback
+function onQuickFruitSaved(newFruit: MasterFruit) {
+  const existingIndex = form.value.fruits.findIndex(f => f.fruitKey === newFruit.fruitKey);
+  const existing = existingIndex >= 0 ? form.value.fruits[existingIndex] : undefined;
+
+  if (existing && existingIndex >= 0) {
+    form.value.fruits[existingIndex] = {
+      fruitKey: newFruit.fruitKey,
+      name: newFruit.name,
+      productType: newFruit.productType,
+      pricePerKg: existing.pricePerKg || newFruit.defaultPricePerKg,
+      costPerKg: existing.costPerKg || newFruit.defaultCostPerKg,
+      totalQuotaKg: existing.totalQuotaKg || newFruit.defaultTotalQuotaKg,
+      imageUrl: newFruit.imageUrl,
+      isEnabled: true
+    };
+  } else {
+    form.value.fruits.push({
+      fruitKey: newFruit.fruitKey,
+      name: newFruit.name,
+      productType: newFruit.productType,
+      pricePerKg: newFruit.defaultPricePerKg,
+      costPerKg: newFruit.defaultCostPerKg,
+      totalQuotaKg: newFruit.defaultTotalQuotaKg,
+      imageUrl: newFruit.imageUrl,
+      isEnabled: true
+    });
+  }
+  showFruitDialog.value = false;
+}
+
+// Sync master fruits into round creation form if in creation mode
+watch(
+  () => fruitStore.masterFruits,
+  (masters) => {
+    if (!isEditMode.value && masters && masters.length > 0) {
+      const hasUserEnabledAny = form.value.fruits.some(f => f.isEnabled);
+      if (!hasUserEnabledAny) {
+        form.value.fruits = masters.filter(m => m.isActive).map(mf => ({
+          fruitKey: mf.fruitKey,
+          name: mf.name,
+          productType: mf.productType,
+          pricePerKg: mf.defaultPricePerKg,
+          costPerKg: mf.defaultCostPerKg,
+          totalQuotaKg: mf.defaultTotalQuotaKg,
+          imageUrl: mf.imageUrl,
+          isEnabled: false
+        }));
+      }
+    }
+  },
+  { immediate: true }
+);
+
 // Back handler
 function handleBack() {
   if (window.history.length > 1) {
@@ -614,32 +690,67 @@ async function loadRoundData(id: string) {
     const prodMap = new Map(prods.map(p => [p.mascotKey, p]));
     const summaryList = roundData.fruitSummary || [];
 
-    const defaultFruits = getDefaultFruitConfigs();
-    form.value.fruits = defaultFruits.map(df => {
-      const match = prodMap.get(df.fruitKey);
+    // Base fruit list from all master fruits (or default template)
+    const baseFruits = fruitStore.masterFruits.length > 0
+      ? fruitStore.masterFruits
+      : DEFAULT_MASTER_FRUITS;
+
+    const mergedKeys = new Set<string>();
+    const resultFruits: RoundCreationFruitConfig[] = [];
+
+    // 1. Add from master fruits
+    for (const mf of baseFruits) {
+      mergedKeys.add(mf.fruitKey);
+      const match = prodMap.get(mf.fruitKey);
       if (match) {
-        return {
-          fruitKey: df.fruitKey,
-          name: match.name || df.name,
-          productType: match.productType || df.productType,
-          pricePerKg: match.pricePerKg || df.pricePerKg,
-          costPerKg: match.costPerKg !== undefined ? match.costPerKg : df.costPerKg,
-          totalQuotaKg: match.totalQuotaKg || df.totalQuotaKg,
+        resultFruits.push({
+          fruitKey: mf.fruitKey,
+          name: match.name || mf.name,
+          productType: match.productType || mf.productType,
+          pricePerKg: match.pricePerKg || mf.defaultPricePerKg,
+          costPerKg: match.costPerKg !== undefined ? match.costPerKg : mf.defaultCostPerKg,
+          totalQuotaKg: match.totalQuotaKg || mf.defaultTotalQuotaKg,
+          imageUrl: match.imageUrl || mf.imageUrl,
           isEnabled: true
-        };
+        });
+      } else {
+        const inSummary = summaryList.some(name => {
+          const n = name.trim().toLowerCase();
+          return n.includes(mf.name.toLowerCase()) || n.includes(mf.fruitKey);
+        });
+        if (mf.isActive || inSummary) {
+          resultFruits.push({
+            fruitKey: mf.fruitKey,
+            name: mf.name,
+            productType: mf.productType,
+            pricePerKg: mf.defaultPricePerKg,
+            costPerKg: mf.defaultCostPerKg,
+            totalQuotaKg: mf.defaultTotalQuotaKg,
+            imageUrl: mf.imageUrl,
+            isEnabled: inSummary
+          });
+        }
       }
+    }
 
-      // Check if fruit was listed in roundData.fruitSummary
-      const inSummary = summaryList.some(name => {
-        const n = name.trim().toLowerCase();
-        return n.includes(df.name.toLowerCase()) || n.includes(df.fruitKey);
-      });
+    // 2. Add any existing products from this round that might not be in master fruits
+    for (const p of prods) {
+      if (!mergedKeys.has(p.mascotKey)) {
+        mergedKeys.add(p.mascotKey);
+        resultFruits.push({
+          fruitKey: p.mascotKey,
+          name: p.name,
+          productType: p.productType,
+          pricePerKg: p.pricePerKg,
+          costPerKg: p.costPerKg || 0,
+          totalQuotaKg: p.totalQuotaKg,
+          imageUrl: p.imageUrl,
+          isEnabled: true
+        });
+      }
+    }
 
-      return {
-        ...df,
-        isEnabled: inSummary
-      };
-    });
+    form.value.fruits = resultFruits;
   } catch (err) {
     console.error('Error loading round for editing:', err);
     $q.notify({ type: 'negative', message: 'เกิดข้อผิดพลาดในการโหลดข้อมูล' });
@@ -709,6 +820,7 @@ async function handleSubmit() {
 }
 
 onMounted(() => {
+  fruitStore.subscribeToMasterFruits();
   if (isEditMode.value) {
     void loadRoundData(roundId.value);
   }
