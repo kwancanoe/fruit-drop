@@ -68,21 +68,29 @@
           </span>
         </div>
 
-        <!-- Details: Date, Standby & Location -->
-        <div class="text-caption text-grey-7 row items-center q-mb-xs">
-          <q-icon name="event" size="14px" class="q-mr-xs text-primary" />
-          <span class="text-weight-medium q-mr-md">{{ round.pickupDate }}</span>
-          <q-icon name="schedule" size="14px" class="q-mr-xs text-primary" />
-          <span class="text-weight-medium q-mr-md">เวลารับของ: {{ round.standbyTime || (round.pickupSlots && round.pickupSlots[0]) || '19:00 - 23:00' }} น.</span>
-          <q-icon name="place" size="14px" class="q-mr-xs text-primary" />
-          <span class="ellipsis">{{ round.pickupLocation }}</span>
-        </div>
+        <!-- Details: Date, Standby, Location & Payment -->
+        <div class="text-caption text-grey-7 q-mb-sm">
+          <div class="row items-center no-wrap q-mb-xs">
+            <q-icon name="event" size="15px" class="q-mr-xs text-primary flex-shrink-0" />
+            <span class="text-weight-medium ellipsis">{{ round.pickupDate }}</span>
+          </div>
 
-        <!-- Bank & PromptPay Credentials -->
-        <div class="text-caption text-grey-7 row items-center q-mb-sm">
-          <q-icon name="payments" size="14px" class="q-mr-xs text-positive" />
-          <span class="q-mr-sm">พร้อมเพย์: <strong>{{ round.promptPayNumber }}</strong> ({{ round.promptPayName }})</span>
-          <span v-if="round.bankAccountNumber">| KBANK: <strong>{{ round.bankAccountNumber }}</strong></span>
+          <div class="row items-center no-wrap q-mb-xs">
+            <q-icon name="schedule" size="15px" class="q-mr-xs text-primary flex-shrink-0" />
+            <span class="text-weight-medium ellipsis">เวลารับของ: {{ round.standbyTime || (round.pickupSlots && round.pickupSlots[0]) || '19:00 - 23:00' }} น.</span>
+          </div>
+
+          <div class="row items-center no-wrap q-mb-xs">
+            <q-icon name="place" size="15px" class="q-mr-xs text-primary flex-shrink-0" />
+            <span class="ellipsis">{{ round.pickupLocation }}</span>
+          </div>
+
+          <div class="row items-center no-wrap">
+            <q-icon name="payments" size="15px" class="q-mr-xs text-positive flex-shrink-0" />
+            <span class="ellipsis">
+              พร้อมเพย์: <strong>{{ round.promptPayNumber }}</strong> ({{ round.promptPayName }})<span v-if="round.bankAccountNumber"> • KBANK: <strong>{{ round.bankAccountNumber }}</strong></span>
+            </span>
+          </div>
         </div>
 
         <!-- Fruit Summary Chips -->
