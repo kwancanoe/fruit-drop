@@ -1,11 +1,65 @@
-// Utility to generate high-resolution order ticket images with embedded QR codes
-// Enables customers without login to save complete order passes to their mobile photo gallery
+// Utility to generate and export high-resolution order ticket images with embedded QR codes
+// Supports 1:1 pixel-perfect DOM capture via html-to-image, canvas fallback, and smart PC vs Mobile delivery
+import { toBlob } from 'html-to-image';
 import type { Order } from '@/types/fruit_app';
 
-interface GenerateTicketOptions {
+export interface ExportTicketOptions {
+  cardElement?: HTMLElement | null;
   order: Order;
   qrDataUrl: string;
   pickupLocation?: string;
+}
+
+// Helper: Detect if running on a real mobile touch device (iPhone, iPad, Android smartphone)
+export function isMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isTouch = navigator.maxTouchPoints > 1 && 'ontouchstart' in window;
+  // If Windows/Mac/Linux desktop without touch, it is NOT mobile
+  if (/Windows NT|Macintosh|Linux x86_64/i.test(ua) && !/Android|iPhone|iPad|iPod/i.test(ua)) {
+    return false;
+  }
+  return /Android|iPhone|iPad|iPod/i.test(ua) || isTouch;
+}
+
+// Deliver blob to user: Web Share API on mobile, direct file download on PC
+export async function deliverOrderTicketBlob(
+  blob: Blob,
+  orderId: string,
+  pickupSlot: string
+): Promise<boolean> {
+  const fileName = `FruitDrop-Order-${orderId}.png`;
+  const isMobile = isMobileDevice();
+
+  // Mobile smartphone: Use native Web Share API to let user save directly to Photos/Gallery or share
+  if (isMobile && typeof navigator !== 'undefined' && navigator.canShare) {
+    const file = new File([blob], fileName, { type: 'image/png' });
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          title: `ใบสั่งจอง Fruit Drop #${orderId}`,
+          text: `ใบสั่งจองผลไม้ Fruit Drop รหัส #${orderId} (รอบเวลา ${pickupSlot} น.)`,
+          files: [file]
+        });
+        return true;
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return true; // User intentionally dismissed native share dialog
+        }
+      }
+    }
+  }
+
+  // PC / Desktop or non-share mobile: Direct download to browser Downloads folder
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  return true;
 }
 
 // Helper: Rounded rectangle on 2D canvas
@@ -34,11 +88,10 @@ function drawRoundedRect(
   if (stroke) ctx.stroke();
 }
 
-// Generate the complete high-resolution Order Ticket onto an offscreen Canvas
-export async function generateOrderTicketCanvas(options: GenerateTicketOptions): Promise<HTMLCanvasElement> {
+// Canvas Fallback Renderer (includes authentic Fruit Drop mascot logo)
+export async function generateOrderTicketCanvas(options: ExportTicketOptions): Promise<HTMLCanvasElement> {
   const { order, qrDataUrl, pickupLocation = 'ท้ายรถลานจอดรถห้าง' } = options;
 
-  // Retina canvas width & dynamic height
   const width = 750;
   const itemsCount = order.items && order.items.length > 0 ? order.items.length : 1;
   const itemsBlockHeight = 50 + (itemsCount * 62) + 20;
@@ -49,18 +102,15 @@ export async function generateOrderTicketCanvas(options: GenerateTicketOptions):
   canvas.height = totalHeight;
 
   const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    throw new Error('Canvas 2D context not available');
-  }
+  if (!ctx) throw new Error('Canvas 2D context not available');
 
-  // High-DPI font stack
   const fontRegular = '-apple-system, BlinkMacSystemFont, "Sarabun", "Noto Sans Thai", "Thonburi", Roboto, sans-serif';
 
-  // 1. Canvas Outer Background
+  // 1. Outer Background
   ctx.fillStyle = '#F1F5F9';
   ctx.fillRect(0, 0, width, totalHeight);
 
-  // 2. Main Card Surface (white with rounded corners & shadow)
+  // 2. Main Card Surface
   const cardX = 35;
   const cardY = 35;
   const cardWidth = width - 70;
@@ -75,12 +125,11 @@ export async function generateOrderTicketCanvas(options: GenerateTicketOptions):
   drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, cardRadius, true, false);
   ctx.restore();
 
-  // Card outline
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)';
   ctx.lineWidth = 1.5;
   drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, cardRadius, false, true);
 
-  // Clip within card for top banner rounded corners
+  // Clip within card for top banner
   ctx.save();
   drawRoundedRect(ctx, cardX, cardY, cardWidth, cardHeight, cardRadius, false, false);
   ctx.clip();
@@ -93,29 +142,66 @@ export async function generateOrderTicketCanvas(options: GenerateTicketOptions):
   ctx.fillStyle = headerGrad;
   ctx.fillRect(cardX, cardY, cardWidth, headerHeight);
 
-  // Brand Name
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = `bold 32px ${fontRegular}`;
-  ctx.textAlign = 'center';
-  ctx.fillText('🍃 FRUIT DROP', width / 2, cardY + 54);
+  // Load and draw authentic Fruit Drop Mascot Logo
+  const logoImg = new Image();
+  logoImg.src = '/mascots/logo_fruit_drop.png';
+  try {
+    await new Promise<void>((resolve) => {
+      if (logoImg.complete && logoImg.naturalWidth > 0) resolve();
+      else {
+        logoImg.onload = () => resolve();
+        logoImg.onerror = () => resolve();
+      }
+    });
+
+    if (logoImg.naturalWidth > 0) {
+      const logoRadius = 24;
+      const logoCenterY = cardY + 45;
+      const logoCenterX = width / 2 - 100;
+      ctx.save();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(logoCenterX, logoCenterY, logoRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.clip();
+      ctx.drawImage(logoImg, logoCenterX - logoRadius + 2, logoCenterY - logoRadius + 2, (logoRadius - 2) * 2, (logoRadius - 2) * 2);
+      ctx.restore();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = `bold 30px ${fontRegular}`;
+      ctx.textAlign = 'left';
+      ctx.fillText('Fruit Drop', logoCenterX + 36, logoCenterY + 10);
+    } else {
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = `bold 30px ${fontRegular}`;
+      ctx.textAlign = 'center';
+      ctx.fillText('Fruit Drop', width / 2, cardY + 54);
+    }
+  } catch {
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `bold 30px ${fontRegular}`;
+    ctx.textAlign = 'center';
+    ctx.fillText('Fruit Drop', width / 2, cardY + 54);
+  }
 
   // Subtitle
   ctx.fillStyle = '#DCEDC8';
-  ctx.font = `20px ${fontRegular}`;
-  ctx.fillText('ใบสั่งจองผลไม้ • บัตรคิวรับของท้ายรถ', width / 2, cardY + 88);
+  ctx.font = `18px ${fontRegular}`;
+  ctx.textAlign = 'center';
+  ctx.fillText('สั่งจองผลไม้สด • บัตรคิวรับของท้ายรถ', width / 2, cardY + 92);
 
   // Success Pill Badge
   ctx.fillStyle = '#FFFFFF';
   const badgeW = 200;
-  const badgeH = 34;
+  const badgeH = 32;
   const badgeX = (width - badgeW) / 2;
-  const badgeY = cardY + 104;
-  drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 17, true, false);
+  const badgeY = cardY + 106;
+  drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 16, true, false);
 
   ctx.fillStyle = '#1B5E20';
-  ctx.font = `bold 17px ${fontRegular}`;
-  ctx.fillText('✓ สั่งจองสำเร็จแล้ว', width / 2, badgeY + 23);
-  ctx.restore(); // Restore clipping
+  ctx.font = `bold 16px ${fontRegular}`;
+  ctx.fillText('✓ สั่งจองสำเร็จแล้ว', width / 2, badgeY + 22);
+  ctx.restore(); // End clipping
 
   // 4. Order ID & QR Code Box
   let currentY = cardY + headerHeight + 25;
@@ -129,44 +215,37 @@ export async function generateOrderTicketCanvas(options: GenerateTicketOptions):
   ctx.lineWidth = 1;
   drawRoundedRect(ctx, blockX, currentY, blockW, qrBoxHeight, 18, true, true);
 
-  // "รหัสออเดอร์" label
   ctx.fillStyle = '#64748B';
   ctx.font = `17px ${fontRegular}`;
   ctx.textAlign = 'center';
   ctx.fillText('รหัสออเดอร์', width / 2, currentY + 35);
 
-  // Order ID
   ctx.fillStyle = '#2E7D32';
   ctx.font = `bold 46px ${fontRegular}`;
   ctx.fillText(`#${order.orderId}`, width / 2, currentY + 84);
 
-  // QR Code Image
   if (qrDataUrl) {
     const qrSize = 220;
     const qrX = (width - qrSize) / 2;
     const qrY = currentY + 104;
 
-    // QR white background with border
     ctx.fillStyle = '#FFFFFF';
     ctx.strokeStyle = '#CBD5E1';
     ctx.lineWidth = 1;
     drawRoundedRect(ctx, qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12, true, true);
 
     const qrImg = new Image();
-    qrImg.crossOrigin = 'anonymous';
     qrImg.src = qrDataUrl;
-    await new Promise<void>((resolve, reject) => {
-      if (qrImg.complete) {
-        resolve();
-      } else {
+    await new Promise<void>((resolve) => {
+      if (qrImg.complete) resolve();
+      else {
         qrImg.onload = () => resolve();
-        qrImg.onerror = reject;
+        qrImg.onerror = () => resolve();
       }
     });
     ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
   }
 
-  // QR bottom caption
   ctx.fillStyle = '#0F172A';
   ctx.font = `bold 18px ${fontRegular}`;
   ctx.textAlign = 'center';
@@ -271,7 +350,6 @@ export async function generateOrderTicketCanvas(options: GenerateTicketOptions):
   ctx.fillText(`วิธีชำระ: ${payMethodText}`, blockX + 22, currentY + 40);
   ctx.fillText('ไม่ต้องโอนล่วงหน้า ตรวจรับผลไม้ก่อนแล้วค่อยจ่าย', blockX + 22, currentY + 70);
 
-  // Right Total Amount
   const totalAmount = order.totalFinalPrice || order.totalEstimatedPrice || 0;
   ctx.textAlign = 'right';
   ctx.fillStyle = '#78350F';
@@ -297,49 +375,46 @@ export async function generateOrderTicketCanvas(options: GenerateTicketOptions):
   return canvas;
 }
 
-// Download or Share the generated Order Ticket Image
-export async function saveOrderTicketImage(options: GenerateTicketOptions): Promise<boolean> {
-  const canvas = await generateOrderTicketCanvas(options);
+// Master Export Function: Tries 1:1 DOM capture first, falls back to canvas renderer if needed
+export async function exportOrderTicket(options: ExportTicketOptions): Promise<boolean> {
+  const { cardElement, order, pickupSlot = order.pickupSlot } = {
+    ...options,
+    pickupSlot: options.order.pickupSlot
+  };
 
+  // 1. Primary Method: Capture exact on-screen DOM card using html-to-image
+  if (cardElement) {
+    try {
+      const blob = await toBlob(cardElement, {
+        quality: 0.98,
+        pixelRatio: 2, // 2x Retina crispness
+        cacheBust: true,
+        backgroundColor: '#FFFFFF',
+        filter: (node: Node) => {
+          if (node instanceof HTMLElement && node.classList.contains('hide-on-capture')) {
+            return false;
+          }
+          return true;
+        }
+      });
+
+      if (blob) {
+        return deliverOrderTicketBlob(blob, order.orderId, pickupSlot);
+      }
+    } catch (domCaptureErr) {
+      console.warn('DOM to image capture failed, trying canvas fallback:', domCaptureErr);
+    }
+  }
+
+  // 2. Fallback Method: Render high-resolution canvas with authentic mascot logo
+  const canvas = await generateOrderTicketCanvas(options);
   return new Promise((resolve) => {
-    canvas.toBlob(async (blob) => {
+    canvas.toBlob((blob) => {
       if (!blob) {
         resolve(false);
         return;
       }
-
-      const fileName = `FruitDrop-Order-${options.order.orderId}.png`;
-      const file = new File([blob], fileName, { type: 'image/png' });
-
-      // Mobile Browser Web Share API (Save image directly to photo gallery or share)
-      if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            title: `ใบสั่งจอง Fruit Drop #${options.order.orderId}`,
-            text: `ใบสั่งจองผลไม้ Fruit Drop รหัส #${options.order.orderId} (รอบเวลา ${options.order.pickupSlot} น.)`,
-            files: [file]
-          });
-          resolve(true);
-          return;
-        } catch (err: unknown) {
-          // If user aborted / closed the native share sheet, don't trigger download
-          if (err instanceof Error && err.name === 'AbortError') {
-            resolve(true);
-            return;
-          }
-        }
-      }
-
-      // Fallback: Trigger standard browser file download
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-      resolve(true);
+      deliverOrderTicketBlob(blob, order.orderId, pickupSlot).then(resolve);
     }, 'image/png');
   });
 }
