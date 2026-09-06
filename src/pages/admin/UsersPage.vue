@@ -44,7 +44,7 @@
               type="email"
               label="Gmail ของผู้ใช้ *"
               placeholder="example@gmail.com"
-              :rules="[val => !!val && val.includes('@') || 'กรุณากรอก Gmail ให้ถูกต้อง']"
+              :rules="[val => !!val && val.includes('@') || 'ระบุ Gmail ให้ถูกต้อง']"
               data-audit-id="input-new-user-email"
             >
               <template #prepend>
@@ -60,7 +60,7 @@
               dense
               label="ชื่อ-นามสกุล หรือชื่อเล่น *"
               placeholder="เช่น น้องบอย Garmin"
-              :rules="[val => !!val && val.trim().length > 0 || 'กรุณากรอกชื่อ']"
+              :rules="[val => !!val && val.trim().length > 0 || 'ระบุชื่อ']"
               data-audit-id="input-new-user-name"
             >
               <template #prepend>
@@ -81,7 +81,7 @@
               placeholder="08X-XXX-XXXX"
               mask="###-###-####"
               unmasked-value
-              :rules="[val => !!val && val.length >= 9 || 'กรุณากรอกเบอร์โทรศัพท์']"
+              :rules="[val => !!val && val.length >= 9 || 'ระบุเบอร์โทรศัพท์']"
               data-audit-id="input-new-user-phone"
             >
               <template #prepend>
@@ -269,7 +269,7 @@ function canDelete(targetUser: AppUser): boolean {
 // Add User
 async function handleSaveNewUser() {
   if (!newUserForm.value.email || !newUserForm.value.displayName || !newUserForm.value.phone) {
-    $q.notify({ type: 'warning', message: 'กรุณากรอกข้อมูลให้ครบทุกช่อง' });
+    $q.notify({ type: 'warning', message: 'ระบุข้อมูลให้ครบทุกช่อง' });
     return;
   }
 
@@ -328,9 +328,3 @@ function confirmDeleteUser(user: AppUser) {
   });
 }
 </script>
-
-<style scoped>
-.border-light {
-  border: 1px solid #e0e0e0;
-}
-</style>

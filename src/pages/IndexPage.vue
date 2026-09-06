@@ -36,7 +36,7 @@
     <!-- Stage 2: Round Booking Screen (when a specific round is selected) -->
     <div v-else>
       <!-- Navigation Back Button & Current Round Indicator -->
-      <q-card class="row items-center justify-between q-mb-md bg-white q-pa-sm shadow-1">
+      <q-card id="round-booking-header-card" data-audit-id="round-booking-header-card" class="row items-center justify-between q-mb-md bg-white q-pa-sm shadow-1">
         <q-btn
           flat
           dense
@@ -90,7 +90,7 @@
       </q-card>
 
       <!-- 6. Prominent Order Action Section (Impossible to miss at end of form) -->
-      <q-card class="q-mt-lg q-mb-xl bg-white q-pa-md shadow-2">
+      <q-card id="order-action-card" data-audit-id="order-action-card" class="q-mt-lg q-mb-xl bg-white q-pa-md shadow-2">
         <div class="row items-center justify-between q-mb-xs">
           <span class="text-subtitle1 text-weight-bold text-grey-9">ยอดรวมโดยประมาณ:</span>
           <span class="text-h5 text-weight-bolder text-primary">{{ totalEstimatedPrice }} บาท</span>

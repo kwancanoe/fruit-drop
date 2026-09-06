@@ -29,7 +29,7 @@
     <div v-else-if="!order" class="bg-white q-pa-xl rounded-borders text-center shadow-1">
       <q-icon name="error_outline" size="56px" color="negative" class="q-mb-sm" />
       <div class="text-h6 text-weight-bold text-grey-9">ไม่พบออเดอร์ #{{ orderId }}</div>
-      <div class="text-caption text-grey-6 q-mb-md">กรุณาตรวจสอบรหัสออเดอร์ หรือสแกน QR Code ใหม่อีกครั้ง</div>
+      <div class="text-caption text-grey-6 q-mb-md">ตรวจสอบรหัสออเดอร์ หรือสแกน QR Code ใหม่อีกครั้ง</div>
       <q-btn color="primary" label="กลับไปหน้าจ่ายของ" no-caps to="/admin" />
     </div>
 
@@ -584,7 +584,7 @@ async function handleSaveWeight(idx: number) {
   const raw = durianInputs.value[idx];
   const weight = parseFloat(String(raw || '0'));
   if (!weight || isNaN(weight) || weight <= 0) {
-    $q.notify({ type: 'warning', message: 'กรุณาระบุน้ำหนักที่มากกว่า 0 กก.', position: 'top' });
+    $q.notify({ type: 'warning', message: 'ระบุน้ำหนักที่มากกว่า 0 กก.', position: 'top' });
     return;
   }
 

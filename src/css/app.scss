@@ -186,7 +186,7 @@
 .q-card:not(.q-card--square) {
   border-radius: 16px !important;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  background: $gradient-surface-card !important;
+  background: $gradient-surface-card;
   overflow: hidden;
 }
 
@@ -195,3 +195,24 @@
 .sub-row-item {
   border-radius: 10px;
 }
+
+// Global Border Utilities (Enforcing Quasar purity & identical styling)
+.border-light {
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+.border-top-light {
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+.border-positive {
+  border: 1px solid rgba($primary, 0.35) !important;
+}
+.border-amber {
+  border: 1px solid rgba($warning, 0.4) !important;
+}
+.border-positive-subtle {
+  border: 1px solid rgba(46, 125, 50, 0.25) !important;
+}
+.border-negative-subtle {
+  border: 1px solid rgba(198, 40, 40, 0.25) !important;
+}
+

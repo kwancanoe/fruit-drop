@@ -37,7 +37,7 @@
         </q-input>
 
         <div v-if="searchResult === null && hasSearched" class="text-caption text-negative q-mt-sm text-center">
-          ไม่พบรายการออเดอร์ที่ตรงกับข้อมูลนี้ กรุณาตรวจสอบเบอร์โทรศัพท์อีกครั้ง
+          ไม่พบรายการออเดอร์ที่ตรงกับข้อมูลนี้ ตรวจสอบเบอร์โทรศัพท์อีกครั้ง
         </div>
       </q-card-section>
     </q-card>

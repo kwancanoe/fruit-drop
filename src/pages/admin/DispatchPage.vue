@@ -2,7 +2,7 @@
   <!-- Section: Admin Tailgate Dispatch Desk & Scale Engine -->
   <q-page id="admin-dispatch-page" data-audit-id="admin-dispatch-page" class="q-pa-md bg-grey-1 text-grey-9" style="max-width: 680px; margin: 0 auto; padding-bottom: 76px;">
     <!-- Live Statistics Strip -->
-    <q-card class="bg-white text-grey-9 q-pa-sm q-mb-md shadow-1">
+    <q-card id="dispatch-summary-kpi-card" data-audit-id="dispatch-summary-kpi-card" class="bg-white text-grey-9 q-pa-sm q-mb-md shadow-1">
       <div class="row items-center justify-around text-center text-caption">
         <!-- Delivered Progress -->
         <div class="col-4 q-px-xs">
@@ -31,7 +31,7 @@
     </q-card>
 
     <!-- Active Round Indicator -->
-    <q-card v-if="fruitStore.activeRound" class="bg-green-1 text-grey-9 q-pa-sm q-mb-md row items-center justify-between shadow-1">
+    <q-card v-if="fruitStore.activeRound" id="dispatch-active-round-banner" data-audit-id="dispatch-active-round-banner" class="bg-green-1 text-grey-9 q-pa-sm q-mb-md row items-center justify-between shadow-1">
       <div class="row items-center">
         <q-icon name="event_available" color="positive" size="20px" class="q-mr-xs" />
         <span class="text-caption text-grey-9">

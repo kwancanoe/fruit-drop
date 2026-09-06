@@ -267,12 +267,3 @@ onMounted(() => {
   emitValues();
 });
 </script>
-
-<style scoped>
-.border-positive-subtle {
-  border: 1px solid rgba(46, 125, 50, 0.25);
-}
-.border-negative-subtle {
-  border: 1px solid rgba(198, 40, 40, 0.25);
-}
-</style>
