@@ -220,6 +220,8 @@ export interface Order {
 
   paidAt?: number | undefined;
   completedAt?: number | undefined;
+  cancelledAt?: number | undefined; // Timestamp when order was marked as cancelled
+  cancelReason?: string | undefined; // Reason for cancellation (no-show, customer cancel, etc.)
   createdAt: number;
   notes?: string | undefined;
 

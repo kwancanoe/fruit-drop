@@ -81,6 +81,9 @@ export function getOrderStatusConfig(order: Order): StatusVisualConfig {
     const mode = order.attribution?.paymentModeAtHandover;
     if (mode === 'CASH') return ORDER_STATUS_CONFIGS.COMPLETED_CASH!;
     if (mode === 'TRANSFER') return ORDER_STATUS_CONFIGS.COMPLETED_TRANSFER!;
+    // Fallback for historical completed orders without attribution record
+    if (order.paymentMethod === 'PAY_AT_CAR') return ORDER_STATUS_CONFIGS.COMPLETED_CASH!;
+    if (order.paymentMethod === 'PROMPTPAY_PREPAID') return ORDER_STATUS_CONFIGS.COMPLETED_TRANSFER!;
     return ORDER_STATUS_CONFIGS.COMPLETED!;
   }
 

@@ -215,8 +215,8 @@
           </q-list>
         </div>
 
-        <!-- 4. Dynamic PromptPay Payment QR Section (Hidden when already COMPLETED) -->
-        <template v-if="order.orderStatus !== 'COMPLETED'">
+        <!-- 4. Dynamic PromptPay Payment QR Section (Only shown when WAITING_PICKUP) -->
+        <template v-if="order.orderStatus === 'WAITING_PICKUP'">
           <q-separator />
           <div class="q-pa-md" data-audit-id="section-payment-qr">
             <div class="text-subtitle1 text-weight-bolder text-grey-9 q-mb-xs row items-center justify-between">
@@ -341,7 +341,7 @@
         <!-- 6. Handover Action Commands (Strict Semantic Colors) -->
         <div class="q-pa-md" data-audit-id="section-dispatch-actions">
           <!-- A. When Order is Waiting Pickup -->
-          <template v-if="order.orderStatus !== 'COMPLETED'">
+          <template v-if="order.orderStatus === 'WAITING_PICKUP'">
             <div class="text-subtitle1 text-weight-bold text-grey-9 q-mb-sm">
               บันทึกการส่งมอบผลไม้:
             </div>
@@ -383,10 +383,26 @@
                 </q-btn>
               </div>
             </div>
+
+            <!-- Secondary Danger Command: Cancel Order (No-show / Customer Cancellation) -->
+            <div class="row justify-center q-mt-md">
+              <q-btn
+                flat
+                dense
+                no-caps
+                color="negative"
+                icon="cancel"
+                label="ยกเลิกออเดอร์นี้ (ลูกค้าไม่มารับ / ลูกค้ายกเลิก)"
+                class="text-weight-bold"
+                data-audit-id="btn-open-cancel-dialog"
+                :disable="isSubmittingAction"
+                @click="openCancelDialog"
+              />
+            </div>
           </template>
 
           <!-- B. When Order is Already Delivered (Completed) -->
-          <template v-else>
+          <template v-else-if="order.orderStatus === 'COMPLETED'">
             <div class="bg-green-1 q-pa-md rounded-borders text-center q-mb-md">
               <q-icon name="check_circle" color="positive" size="44px" class="q-mb-xs" />
               <div class="text-subtitle1 text-weight-bolder text-positive">
@@ -412,9 +428,114 @@
               />
             </div>
           </template>
+
+          <!-- C. When Order is Cancelled -->
+          <template v-else-if="order.orderStatus === 'CANCELLED'">
+            <div class="bg-red-1 q-pa-md rounded-borders text-center q-mb-md border-negative" data-audit-id="banner-order-cancelled">
+              <q-icon name="cancel" color="negative" size="44px" class="q-mb-xs" />
+              <div class="text-subtitle1 text-weight-bolder text-negative">
+                ออเดอร์นี้ถูกยกเลิกแล้ว
+              </div>
+              <div v-if="order.cancelReason" class="text-caption text-grey-8 q-mt-xs">
+                สาเหตุ: <strong>{{ order.cancelReason }}</strong>
+              </div>
+              <div v-if="order.cancelledAt" class="text-caption text-grey-7 q-mt-xs">
+                ยกเลิกเมื่อ: {{ formatTimestamp(order.cancelledAt) }}
+              </div>
+            </div>
+
+            <div class="row justify-center">
+              <q-btn
+                flat
+                dense
+                no-caps
+                color="grey-8"
+                icon="restore"
+                label="คืนสถานะออเดอร์ (กลับเป็นรอมารับของ)"
+                class="text-weight-bold"
+                data-audit-id="btn-revert-cancellation"
+                :loading="isSubmittingAction"
+                @click="handleRevertCancellation"
+              />
+            </div>
+          </template>
         </div>
       </q-card>
     </div>
+
+    <!-- Dialog: Order Cancellation Confirmation Modal (M3 16px Card & Red Semantic Command) -->
+    <q-dialog v-model="showCancelDialog" persistent transition-show="jump-up" transition-hide="jump-down">
+      <q-card id="dialog-order-cancellation" data-audit-id="dialog-order-cancellation" class="bg-white overflow-hidden" style="width: 95vw; max-width: 460px; border-radius: 16px;">
+        <div class="q-pa-md bg-negative text-white row items-center justify-between">
+          <div class="text-subtitle1 text-weight-bolder row items-center">
+            <q-icon name="cancel" size="22px" class="q-mr-xs" />
+            <span>ยืนยันยกเลิกออเดอร์ #{{ order?.orderId }}</span>
+          </div>
+          <q-btn flat round dense icon="close" color="white" v-close-popup />
+        </div>
+
+        <q-card-section class="q-pa-md">
+          <div class="text-body2 text-grey-9 q-mb-sm">
+            คุณต้องการยกเลิกคำสั่งซื้อของ <strong>{{ order?.customer?.name }}</strong> ({{ order?.customer?.shop }}) หรือไม่?
+          </div>
+
+          <div class="bg-amber-1 q-pa-sm rounded-borders text-caption text-amber-10 q-mb-md">
+            ⚠️ การยกเลิกจะเปลี่ยนสถานะเป็น "ยกเลิกแล้ว" และไม่นับรวมในยอดขาย/เงินสดที่รถ
+          </div>
+
+          <div class="text-caption text-weight-bold text-grey-8 q-mb-xs">
+            เลือกเหตุผลการยกเลิก:
+          </div>
+          <div class="row q-mb-sm">
+            <q-chip
+              v-for="r in cancelReasonPresets"
+              :key="r"
+              clickable
+              :color="selectedCancelReason === r ? 'negative' : 'grey-2'"
+              :text-color="selectedCancelReason === r ? 'white' : 'grey-9'"
+              class="text-weight-bold q-mr-xs q-mb-xs"
+              @click="selectedCancelReason = r"
+            >
+              {{ r }}
+            </q-chip>
+          </div>
+
+          <q-input
+            v-if="selectedCancelReason === 'ระบุเหตุผลอื่น...'"
+            v-model="customCancelReason"
+            outlined
+            dense
+            placeholder="พิมพ์เหตุผลการยกเลิก..."
+            class="q-mt-xs"
+            autofocus
+            data-audit-id="input-custom-cancel-reason"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md bg-grey-1">
+          <q-btn
+            flat
+            no-caps
+            label="ย้อนกลับ"
+            color="grey-8"
+            class="text-weight-bold"
+            v-close-popup
+          />
+          <q-btn
+            rounded
+            unelevated
+            no-caps
+            color="negative"
+            icon="cancel"
+            label="ยืนยันยกเลิกออเดอร์"
+            class="text-weight-bolder q-px-lg shadow-2"
+            data-audit-id="btn-confirm-cancel-order"
+            :loading="isSubmittingAction"
+            @click="handleExecuteCancelOrder"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -659,17 +780,26 @@ async function handleCollectCashAndDeliver() {
   if (!order.value) return;
   isSubmittingAction.value = true;
   try {
+    const timestamp = Date.now();
     await fruitStore.updateOrderStatus(order.value.orderId, {
       orderStatus: 'COMPLETED',
       paymentStatus: 'PAID',
       paymentMethod: 'PAY_AT_CAR',
-      completedAt: Date.now(),
-      paidAt: Date.now()
+      totalFinalPrice: currentFinalPrice.value,
+      completedAt: timestamp,
+      paidAt: timestamp
     });
 
     order.value.orderStatus = 'COMPLETED';
     order.value.paymentStatus = 'PAID';
-    order.value.completedAt = Date.now();
+    order.value.paymentMethod = 'PAY_AT_CAR';
+    order.value.totalFinalPrice = currentFinalPrice.value;
+    order.value.completedAt = timestamp;
+    order.value.paidAt = timestamp;
+    const target = fruitStore.orders.find(o => o.orderId === order.value?.orderId);
+    if (target?.attribution) {
+      order.value.attribution = target.attribution;
+    }
 
     $q.notify({
       type: 'positive',
@@ -689,16 +819,26 @@ async function handleConfirmTransferAndDeliver() {
   if (!order.value) return;
   isSubmittingAction.value = true;
   try {
+    const timestamp = Date.now();
     await fruitStore.updateOrderStatus(order.value.orderId, {
       orderStatus: 'COMPLETED',
       paymentStatus: 'PAID',
-      completedAt: Date.now(),
-      paidAt: Date.now()
+      paymentMethod: 'PROMPTPAY_PREPAID',
+      totalFinalPrice: currentFinalPrice.value,
+      completedAt: timestamp,
+      paidAt: timestamp
     });
 
     order.value.orderStatus = 'COMPLETED';
     order.value.paymentStatus = 'PAID';
-    order.value.completedAt = Date.now();
+    order.value.paymentMethod = 'PROMPTPAY_PREPAID';
+    order.value.totalFinalPrice = currentFinalPrice.value;
+    order.value.completedAt = timestamp;
+    order.value.paidAt = timestamp;
+    const target = fruitStore.orders.find(o => o.orderId === order.value?.orderId);
+    if (target?.attribution) {
+      order.value.attribution = target.attribution;
+    }
 
     $q.notify({
       type: 'positive',
@@ -709,6 +849,73 @@ async function handleConfirmTransferAndDeliver() {
   } catch (err) {
     console.error('Confirm transfer error:', err);
     $q.notify({ type: 'negative', message: 'เกิดข้อผิดพลาดในการบันทึก', position: 'top' });
+  } finally {
+    isSubmittingAction.value = false;
+  }
+}
+
+// Cancellation state & handlers
+const showCancelDialog = ref<boolean>(false);
+const cancelReasonPresets = [
+  'ลูกค้าไม่มารับตามนัด (No-show)',
+  'ลูกค้ายกเลิกคำสั่งซื้อ',
+  'สั่งผิด / สั่งซ้ำ',
+  'ระบุเหตุผลอื่น...'
+];
+const selectedCancelReason = ref<string>('ลูกค้าไม่มารับตามนัด (No-show)');
+const customCancelReason = ref<string>('');
+
+function openCancelDialog() {
+  selectedCancelReason.value = 'ลูกค้าไม่มารับตามนัด (No-show)';
+  customCancelReason.value = '';
+  showCancelDialog.value = true;
+}
+
+async function handleExecuteCancelOrder() {
+  if (!order.value) return;
+  const reason = selectedCancelReason.value === 'ระบุเหตุผลอื่น...'
+    ? customCancelReason.value.trim() || 'ลูกค้ายกเลิกคำสั่งซื้อ'
+    : selectedCancelReason.value;
+
+  isSubmittingAction.value = true;
+  try {
+    await fruitStore.cancelOrder(order.value.orderId, reason);
+    order.value.orderStatus = 'CANCELLED';
+    order.value.cancelledAt = Date.now();
+    order.value.cancelReason = reason;
+    showCancelDialog.value = false;
+    $q.notify({
+      type: 'warning',
+      message: `ยกเลิกออเดอร์ #${order.value.orderId} เรียบร้อยแล้ว`,
+      position: 'top',
+      timeout: 2000
+    });
+  } catch (err) {
+    console.error('Cancel order error:', err);
+    $q.notify({ type: 'negative', message: 'เกิดข้อผิดพลาดในการยกเลิกออเดอร์', position: 'top' });
+  } finally {
+    isSubmittingAction.value = false;
+  }
+}
+
+async function handleRevertCancellation() {
+  if (!order.value) return;
+  isSubmittingAction.value = true;
+  try {
+    await fruitStore.revertOrderCancellation(order.value.orderId);
+    order.value.orderStatus = 'WAITING_PICKUP';
+    order.value.cancelledAt = undefined;
+    order.value.cancelReason = undefined;
+    $q.notify({
+      type: 'positive',
+      message: `คืนสถานะออเดอร์ #${order.value.orderId} เป็นรอมารับของแล้ว`,
+      position: 'top',
+      timeout: 1500
+    });
+    void refreshPromptPayQR();
+  } catch (err) {
+    console.error('Revert cancellation error:', err);
+    $q.notify({ type: 'negative', message: 'เกิดข้อผิดพลาดในการคืนสถานะ', position: 'top' });
   } finally {
     isSubmittingAction.value = false;
   }

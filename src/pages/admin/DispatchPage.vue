@@ -244,17 +244,26 @@ const completedOrdersCount = computed<number>(() => {
   return fruitStore.orders.filter(o => o.orderStatus === 'COMPLETED').length;
 });
 
-// Cash collected in hand
+// Cash collected in hand (strictly orders completed with physical cash)
 const cashInHandTotal = computed<number>(() => {
   return fruitStore.orders
-    .filter(o => o.paymentMethod === 'PAY_AT_CAR' && o.orderStatus === 'COMPLETED')
+    .filter(o =>
+      o.orderStatus === 'COMPLETED' &&
+      (o.attribution?.paymentModeAtHandover === 'CASH' ||
+       (!o.attribution?.paymentModeAtHandover && o.paymentMethod === 'PAY_AT_CAR'))
+    )
     .reduce((sum, o) => sum + (o.totalFinalPrice || o.totalEstimatedPrice), 0);
 });
 
-// Bank transfer prepaid total
+// Bank transfer total (prepaid or transferred at car, excluding cancelled)
 const prepaidTotal = computed<number>(() => {
   return fruitStore.orders
-    .filter(o => o.paymentMethod === 'PROMPTPAY_PREPAID' && o.paymentStatus === 'PAID')
+    .filter(o =>
+      o.orderStatus !== 'CANCELLED' &&
+      o.paymentStatus === 'PAID' &&
+      (o.attribution?.paymentModeAtHandover === 'TRANSFER' ||
+       (!o.attribution?.paymentModeAtHandover && o.paymentMethod === 'PROMPTPAY_PREPAID'))
+    )
     .reduce((sum, o) => sum + (o.totalFinalPrice || o.totalEstimatedPrice), 0);
 });
 

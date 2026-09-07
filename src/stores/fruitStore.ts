@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 import {
   collection,
   doc,
+  getDoc,
   setDoc,
   updateDoc,
   deleteDoc,
@@ -346,20 +347,36 @@ export const useFruitStore = defineStore('fruit', () => {
 
   // Admin: Update Order Status (Mark delivered, cash collected, etc.)
   async function updateOrderStatus(orderId: string, updates: Partial<Order>) {
-    const targetOrder = orders.value.find(o => o.orderId === orderId);
-    if (!targetOrder) return;
+    const cleanId = orderId.trim().toUpperCase();
+    let targetOrder = orders.value.find(o => o.orderId.toUpperCase() === cleanId);
+    let orderDocId = targetOrder?.id;
+
+    // Fallback: If not present in memory array, fetch document from Firestore
+    if (!targetOrder) {
+      const ordersRef = collection(db, 'orders');
+      const q = query(ordersRef, where('orderId', '==', cleanId));
+      const snap = await getDocs(q);
+      if (!snap.empty && snap.docs[0]) {
+        targetOrder = { ...snap.docs[0].data() as Order, id: snap.docs[0].id };
+        orderDocId = snap.docs[0].id;
+      } else {
+        console.warn(`[fruitStore] updateOrderStatus: Order not found: ${orderId}`);
+        return;
+      }
+    }
 
     // If order is transitioning to COMPLETED, record attribution audit trail
     if (updates.orderStatus === 'COMPLETED' && !updates.attribution) {
       const userStore = useUserStore();
       const fingerprint = await collectDeviceFingerprint();
+      const effectivePaymentMethod = updates.paymentMethod ?? targetOrder.paymentMethod;
       const attribution: OrderAttribution = {
         handledByUserId: authUser.value?.uid || userStore.currentAppUser?.uid || '',
         handledByEmail: authUser.value?.email || userStore.currentAppUser?.email || '',
         handledByName: userStore.currentAppUser?.displayName || authUser.value?.displayName || 'ผู้ช่วยขาย',
         handledByRole: userStore.currentUserRole || 'SELLER',
         deviceFingerprint: fingerprint,
-        paymentModeAtHandover: updates.paymentMethod === 'PAY_AT_CAR' || targetOrder.paymentMethod === 'PAY_AT_CAR' ? 'CASH' : 'TRANSFER',
+        paymentModeAtHandover: effectivePaymentMethod === 'PAY_AT_CAR' ? 'CASH' : 'TRANSFER',
         proofCapturedAt: Date.now()
       };
       updates.attribution = attribution;
@@ -374,7 +391,7 @@ export const useFruitStore = defineStore('fruit', () => {
       }
     }
 
-    if (targetOrder.id) {
+    if (orderDocId) {
       const firestoreUpdates: Record<string, any> = {
         updatedAt: serverTimestamp()
       };
@@ -385,8 +402,75 @@ export const useFruitStore = defineStore('fruit', () => {
           firestoreUpdates[key] = sanitizeFirestoreData(val);
         }
       }
-      await updateDoc(doc(db, 'orders', targetOrder.id), firestoreUpdates);
+      await updateDoc(doc(db, 'orders', orderDocId), firestoreUpdates);
     }
+  }
+
+  // Admin / Seller: Cancel an Order with reason audit trail
+  async function cancelOrder(orderId: string, reason?: string): Promise<void> {
+    const cleanId = orderId.trim().toUpperCase();
+    let targetOrder = orders.value.find(o => o.orderId.toUpperCase() === cleanId);
+    let docId = targetOrder?.id;
+
+    if (!docId) {
+      const ordersRef = collection(db, 'orders');
+      const q = query(ordersRef, where('orderId', '==', cleanId));
+      const snap = await getDocs(q);
+      if (!snap.empty && snap.docs[0]) {
+        docId = snap.docs[0].id;
+        targetOrder = { ...snap.docs[0].data() as Order, id: docId };
+      }
+    }
+
+    if (!docId) throw new Error(`Order #${orderId} not found`);
+
+    const cancelTimestamp = Date.now();
+    const finalReason = reason?.trim() || 'ลูกค้าไม่มารับตามนัด (No-show)';
+
+    if (targetOrder) {
+      targetOrder.orderStatus = 'CANCELLED';
+      targetOrder.cancelledAt = cancelTimestamp;
+      targetOrder.cancelReason = finalReason;
+    }
+
+    await updateDoc(doc(db, 'orders', docId), {
+      orderStatus: 'CANCELLED',
+      cancelledAt: cancelTimestamp,
+      cancelReason: finalReason,
+      updatedAt: serverTimestamp()
+    });
+  }
+
+  // Admin / Seller: Revert a Cancelled Order back to WAITING_PICKUP
+  async function revertOrderCancellation(orderId: string): Promise<void> {
+    const cleanId = orderId.trim().toUpperCase();
+    let targetOrder = orders.value.find(o => o.orderId.toUpperCase() === cleanId);
+    let docId = targetOrder?.id;
+
+    if (!docId) {
+      const ordersRef = collection(db, 'orders');
+      const q = query(ordersRef, where('orderId', '==', cleanId));
+      const snap = await getDocs(q);
+      if (!snap.empty && snap.docs[0]) {
+        docId = snap.docs[0].id;
+        targetOrder = { ...snap.docs[0].data() as Order, id: docId };
+      }
+    }
+
+    if (!docId) throw new Error(`Order #${orderId} not found`);
+
+    if (targetOrder) {
+      targetOrder.orderStatus = 'WAITING_PICKUP';
+      delete targetOrder.cancelledAt;
+      delete targetOrder.cancelReason;
+    }
+
+    await updateDoc(doc(db, 'orders', docId), {
+      orderStatus: 'WAITING_PICKUP',
+      cancelledAt: deleteField(),
+      cancelReason: deleteField(),
+      updatedAt: serverTimestamp()
+    });
   }
 
   // Create and publish a new Preorder Round with selected fruits
@@ -631,18 +715,87 @@ export const useFruitStore = defineStore('fruit', () => {
     return snap.docs.map(d => ({ ...d.data() as ProductItem, id: d.id }));
   }
 
+  // Helper: Extract search candidates for Order ID and Telephone number
+  function extractSearchCandidates(searchQuery: string): {
+    orderIdCandidates: string[];
+    phoneCandidates: string[];
+    cleanDigits: string;
+    rawText: string;
+  } {
+    const raw = searchQuery.trim();
+    if (!raw) return { orderIdCandidates: [], phoneCandidates: [], cleanDigits: '', rawText: '' };
+
+    const stripped = raw.replace(/^[#№]\s*/, '').trim();
+    const cleanUpper = stripped.toUpperCase().replace(/\s+/g, '');
+    const cleanDigits = raw.replace(/\D/g, '');
+
+    const orderIdSet = new Set<string>();
+    const phoneSet = new Set<string>();
+
+    if (cleanUpper) orderIdSet.add(cleanUpper);
+
+    const fdMatch = cleanUpper.match(/^FD[\s-_]?(\d{4})$/i);
+    if (fdMatch && fdMatch[1]) {
+      orderIdSet.add(`FD-${fdMatch[1]}`);
+      orderIdSet.add(fdMatch[1]);
+    } else if (/^\d{4}$/.test(stripped)) {
+      orderIdSet.add(`FD-${stripped}`);
+      orderIdSet.add(stripped);
+    }
+
+    let phoneDigits = cleanDigits;
+    if (phoneDigits.startsWith('66') && phoneDigits.length >= 11) {
+      phoneDigits = '0' + phoneDigits.slice(2);
+    }
+
+    if (phoneDigits.length >= 9 && phoneDigits.length <= 11) {
+      phoneSet.add(phoneDigits);
+      phoneSet.add(raw);
+      if (phoneDigits.length === 10) {
+        phoneSet.add(phoneDigits.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3'));
+        phoneSet.add(phoneDigits.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3'));
+      } else if (phoneDigits.length === 9) {
+        phoneSet.add(phoneDigits.replace(/(\d{2})(\d{3})(\d{4})/, '$1-$2-$3'));
+        phoneSet.add(phoneDigits.replace(/(\d{2})(\d{3})(\d{4})/, '$1 $2 $3'));
+      }
+    }
+
+    return {
+      orderIdCandidates: Array.from(orderIdSet),
+      phoneCandidates: Array.from(phoneSet),
+      cleanDigits,
+      rawText: raw
+    };
+  }
+
   // Fetch single order by human-readable orderId across memory & Firestore
   async function getOrderByOrderId(orderId: string): Promise<Order | null> {
-    const cleanId = orderId.trim().toUpperCase();
-    const inMemory = orders.value.find(o => o.orderId.toUpperCase() === cleanId);
+    const raw = orderId.trim();
+    if (!raw) return null;
+    const { orderIdCandidates } = extractSearchCandidates(raw);
+
+    const inMemory = orders.value.find(o => {
+      const oIdUpper = (o.orderId || '').toUpperCase().trim();
+      return orderIdCandidates.some(c => c.toUpperCase() === oIdUpper);
+    });
     if (inMemory) return inMemory;
 
-    const ordersRef = collection(db, 'orders');
-    const q = query(ordersRef, where('orderId', '==', cleanId));
-    const snap = await getDocs(q);
-    const firstDoc = snap.docs[0];
-    if (firstDoc && firstDoc.exists()) {
-      return { ...firstDoc.data() as Order, id: firstDoc.id };
+    if (orderIdCandidates.length > 0) {
+      const ordersRef = collection(db, 'orders');
+      const q = query(ordersRef, where('orderId', 'in', orderIdCandidates.slice(0, 10)));
+      const snap = await getDocs(q);
+      if (!snap.empty && snap.docs[0]) {
+        return { ...snap.docs[0].data() as Order, id: snap.docs[0].id };
+      }
+    }
+
+    try {
+      const docSnap = await getDoc(doc(db, 'orders', raw));
+      if (docSnap.exists()) {
+        return { ...docSnap.data() as Order, id: docSnap.id };
+      }
+    } catch {
+      // Safely ignore doc lookup errors
     }
     return null;
   }
@@ -651,51 +804,43 @@ export const useFruitStore = defineStore('fruit', () => {
   async function searchOrderAcrossRounds(searchQuery: string): Promise<Order | null> {
     const raw = searchQuery.trim();
     if (!raw) return null;
-    const cleanDigits = raw.replace(/\D/g, '');
-    const cleanUpper = raw.toUpperCase().replace(/\s/g, '');
+    const { orderIdCandidates, phoneCandidates, cleanDigits } = extractSearchCandidates(raw);
 
     // 1. Search in local active memory first
     const inMemory = orders.value.find(o => {
-      const orderPhone = (o.customer?.phone || '').replace(/\D/g, '');
-      const orderIdClean = (o.orderId || '').toUpperCase().replace(/\s/g, '');
-      return (
-        orderIdClean === cleanUpper ||
-        (cleanDigits.length >= 4 && orderPhone.includes(cleanDigits)) ||
-        (o.customer?.name && o.customer.name.toLowerCase().includes(raw.toLowerCase()))
+      const orderPhoneDigits = (o.customer?.phone || '').replace(/\D/g, '');
+      const orderIdClean = (o.orderId || '').toUpperCase().trim();
+      const matchId = orderIdCandidates.some(c => c.toUpperCase() === orderIdClean);
+      const matchPhone = cleanDigits.length >= 4 && (
+        orderPhoneDigits === cleanDigits ||
+        (cleanDigits.length >= 9 && orderPhoneDigits.includes(cleanDigits)) ||
+        phoneCandidates.some(p => (o.customer?.phone || '') === p)
       );
+      const matchName = o.customer?.name && o.customer.name.toLowerCase().includes(raw.toLowerCase());
+      return matchId || matchPhone || matchName;
     });
     if (inMemory) return inMemory;
 
-    // 2. Query Firestore by Order ID (exact match)
     const ordersRef = collection(db, 'orders');
-    const orderIdQuery = query(ordersRef, where('orderId', '==', cleanUpper));
-    const orderIdSnap = await getDocs(orderIdQuery);
-    if (!orderIdSnap.empty && orderIdSnap.docs[0]) {
-      return { ...orderIdSnap.docs[0].data() as Order, id: orderIdSnap.docs[0].id };
-    }
 
-    // 3. Query Firestore by customer phone
-    if (cleanDigits.length >= 9) {
-      const phoneQuery = query(ordersRef, where('customer.phone', '==', raw));
-      const phoneSnap = await getDocs(phoneQuery);
-      if (!phoneSnap.empty && phoneSnap.docs[0]) {
-        return { ...phoneSnap.docs[0].data() as Order, id: phoneSnap.docs[0].id };
+    // 2. Query Firestore by Order ID candidates (indexed)
+    if (orderIdCandidates.length > 0) {
+      const orderIdQuery = query(ordersRef, where('orderId', 'in', orderIdCandidates.slice(0, 10)));
+      const orderIdSnap = await getDocs(orderIdQuery);
+      if (!orderIdSnap.empty && orderIdSnap.docs[0]) {
+        return { ...orderIdSnap.docs[0].data() as Order, id: orderIdSnap.docs[0].id };
       }
     }
 
-    // 4. Fallback search among recent orders
-    const recentQuery = query(ordersRef, orderBy('createdAt', 'desc'), limit(50));
-    const recentSnap = await getDocs(recentQuery);
-    for (const d of recentSnap.docs) {
-      const data = d.data() as Order;
-      const orderPhone = (data.customer?.phone || '').replace(/\D/g, '');
-      const orderIdClean = (data.orderId || '').toUpperCase().replace(/\s/g, '');
-      if (
-        orderIdClean === cleanUpper ||
-        (cleanDigits.length >= 4 && orderPhone.includes(cleanDigits)) ||
-        (data.customer?.name && data.customer.name.toLowerCase().includes(raw.toLowerCase()))
-      ) {
-        return { ...data, id: d.id };
+    // 3. Query Firestore by customer phone candidates (indexed)
+    if (phoneCandidates.length > 0) {
+      const phoneQuery = query(ordersRef, where('customer.phone', 'in', phoneCandidates.slice(0, 10)));
+      const phoneSnap = await getDocs(phoneQuery);
+      if (!phoneSnap.empty) {
+        const sorted = phoneSnap.docs
+          .map(d => ({ ...d.data() as Order, id: d.id }))
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        return sorted[0] || null;
       }
     }
 
@@ -852,6 +997,9 @@ export const useFruitStore = defineStore('fruit', () => {
     submitOrder,
     updateWeighedFruit,
     updateOrderStatus,
+    cancelOrder,
+    revertOrderCancellation,
+    extractSearchCandidates,
     uploadPaymentProof,
     seedMasterData
   };

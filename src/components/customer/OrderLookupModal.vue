@@ -6,7 +6,7 @@
     transition-hide="jump-down"
     @update:model-value="val => $emit('update:isOpen', val)"
   >
-    <q-card id="order-lookup-modal" data-audit-id="order-lookup-modal" class="rounded-borders bg-white" style="width: 95vw; max-width: 440px;">
+    <q-card id="order-lookup-modal" data-audit-id="order-lookup-modal" class="bg-white overflow-hidden" style="width: 95vw; max-width: 440px; border-radius: 16px;">
       <q-card-section class="bg-primary text-white row items-center justify-between q-pa-md">
         <div class="row items-center">
           <q-icon name="search" size="24px" class="q-mr-sm" />
@@ -17,7 +17,7 @@
 
       <q-card-section class="q-pa-md">
         <div class="text-caption text-grey-8 q-mb-md">
-          กรอกเบอร์โทรศัพท์ที่ใช้สั่งซื้อ หรือรหัสออเดอร์ (เช่น FD-1082) เพื่อดูรายละเอียดคำสั่งซื้อ
+          กรอกเบอร์โทรศัพท์ หรือรหัสออเดอร์ เช่น <strong>#FD-1082</strong> หรือเพียงเลข 4 หลัก <strong>1082</strong> เพื่อดูรายละเอียดคำสั่งซื้อ
         </div>
 
         <q-input
@@ -33,7 +33,7 @@
             <q-icon name="phone" color="primary" />
           </template>
           <template #append>
-            <q-btn flat dense color="primary" label="ค้นหา" :loading="isSearching" @click="handleSearch" />
+            <q-btn rounded unelevated dense color="primary" label="ค้นหา" class="q-px-md text-weight-bold" :loading="isSearching" @click="handleSearch" />
           </template>
         </q-input>
 

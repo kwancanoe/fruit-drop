@@ -159,6 +159,7 @@
           data-audit-id="tab-admin-rounds"
         />
         <q-route-tab
+          v-if="userStore.isSystemAdmin || userStore.isShopOwner"
           to="/admin/analytics"
           icon="query_stats"
           label="กำไร-ขาดทุน"

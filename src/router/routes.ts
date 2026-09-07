@@ -15,6 +15,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     component: () => import('@/layouts/AdminLayout.vue'),
+    meta: { requiresAuth: true },
     children: [
       { path: '', name: 'admin-dispatch', component: () => import('@/pages/admin/DispatchPage.vue') },
       { path: 'rounds', name: 'admin-rounds', component: () => import('@/pages/admin/RoundsPage.vue') },
@@ -22,9 +23,24 @@ const routes: RouteRecordRaw[] = [
       { path: 'rounds/:roundId/edit', name: 'admin-round-edit', component: () => import('@/pages/admin/RoundEditPage.vue') },
       { path: 'orders/:orderId', name: 'admin-order-detail', component: () => import('@/pages/admin/OrderDetailPage.vue') },
       { path: 'scan', name: 'admin-scan', component: () => import('@/pages/admin/QrScannerPage.vue') },
-      { path: 'analytics', name: 'admin-analytics', component: () => import('@/pages/admin/AnalyticsPage.vue') },
-      { path: 'fruits', name: 'admin-fruits', component: () => import('@/pages/admin/FruitsPage.vue') },
-      { path: 'users', name: 'admin-users', component: () => import('@/pages/admin/UsersPage.vue') }
+      {
+        path: 'analytics',
+        name: 'admin-analytics',
+        component: () => import('@/pages/admin/AnalyticsPage.vue'),
+        meta: { disallowedRoles: ['SELLER'] }
+      },
+      {
+        path: 'fruits',
+        name: 'admin-fruits',
+        component: () => import('@/pages/admin/FruitsPage.vue'),
+        meta: { disallowedRoles: ['SELLER'] }
+      },
+      {
+        path: 'users',
+        name: 'admin-users',
+        component: () => import('@/pages/admin/UsersPage.vue'),
+        meta: { disallowedRoles: ['SELLER'] }
+      }
     ]
   },
 
