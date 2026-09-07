@@ -118,3 +118,27 @@ export const ROUND_STATUS_CONFIGS = {
 export function getRoundStatusConfig(isOpen: boolean): StatusVisualConfig {
   return isOpen ? ROUND_STATUS_CONFIGS.OPEN : ROUND_STATUS_CONFIGS.CLOSED;
 }
+
+/**
+ * Validates whether an order state transition is permitted by the state machine.
+ * Valid:
+ * - WAITING_PICKUP -> COMPLETED
+ * - WAITING_PICKUP -> CANCELLED
+ * - CANCELLED -> WAITING_PICKUP (Revert)
+ * Invalid:
+ * - COMPLETED -> CANCELLED (Completed orders cannot be cancelled)
+ * - COMPLETED -> WAITING_PICKUP (Completed orders cannot be reverted to pending)
+ * - Any unknown status string
+ */
+export function isValidOrderTransition(currentStatus: string, targetStatus: string): boolean {
+  const validTransitions: Record<string, string[]> = {
+    WAITING_PICKUP: ['COMPLETED', 'CANCELLED'],
+    CANCELLED: ['WAITING_PICKUP'],
+    COMPLETED: []
+  };
+
+  const allowed = validTransitions[currentStatus];
+  if (!allowed) return false;
+  return allowed.includes(targetStatus);
+}
+

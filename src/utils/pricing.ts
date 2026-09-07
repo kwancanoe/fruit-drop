@@ -1,5 +1,5 @@
 // Module: Centralized pricing calculation engine with bundle discounts and variable weight support
-import type { OrderItem, ProductItem } from '@/types/fruit_app';
+import type { OrderItem, ProductItem, Order } from '@/types/fruit_app';
 
 /**
  * Calculates the exact subtotal price for an individual order item.
@@ -65,3 +65,62 @@ export function calculateOrderFinalTotal(items: OrderItem[], products?: ProductI
   }
   return grandTotal;
 }
+
+/**
+ * Calculates the net weight of a fruit item after deducting container/packaging tare weight.
+ * Guards against negative net weight, NaN, or tare exceeding gross.
+ * Rounds to 3 decimal places (gram precision).
+ */
+export function calculateNetWeight(grossKg: number, tareKg: number = 0): number {
+  const g = typeof grossKg === 'number' ? grossKg : Number(grossKg);
+  const t = typeof tareKg === 'number' ? tareKg : Number(tareKg);
+  if (isNaN(g) || isNaN(t) || g <= 0 || t < 0 || g <= t) {
+    return 0;
+  }
+  return Math.round((g - t) * 1000) / 1000;
+}
+
+/**
+ * Calculates the final price for a weighed durian item based on net weight and pricePerKg.
+ */
+export function calculateWeighedFruitPrice(netKg: number, pricePerKg: number): number {
+  const k = typeof netKg === 'number' ? netKg : Number(netKg);
+  const p = typeof pricePerKg === 'number' ? pricePerKg : Number(pricePerKg);
+  if (isNaN(k) || k <= 0 || isNaN(p) || p <= 0) {
+    return 0;
+  }
+  return Math.round(k * p);
+}
+
+/**
+ * Calculates the total cash collected in hand from completed cash orders.
+ * Strictly checks attribution.paymentModeAtHandover === 'CASH' or legacy PAY_AT_CAR fallback.
+ */
+export function calculateCashInHandTotal(
+  orders: Array<Pick<Order, 'orderStatus' | 'paymentMethod' | 'attribution' | 'totalFinalPrice' | 'totalEstimatedPrice'>>
+): number {
+  return orders
+    .filter(o =>
+      o.orderStatus === 'COMPLETED' &&
+      (o.attribution?.paymentModeAtHandover === 'CASH' ||
+       (!o.attribution?.paymentModeAtHandover && o.paymentMethod === 'PAY_AT_CAR'))
+    )
+    .reduce((sum, o) => sum + (o.totalFinalPrice ?? o.totalEstimatedPrice ?? 0), 0);
+}
+
+/**
+ * Calculates the total bank transfer amount (PromptPay prepaid or at-car transfer) for non-cancelled paid orders.
+ */
+export function calculatePrepaidTransferTotal(
+  orders: Array<Pick<Order, 'orderStatus' | 'paymentMethod' | 'paymentStatus' | 'attribution' | 'totalFinalPrice' | 'totalEstimatedPrice'>>
+): number {
+  return orders
+    .filter(o =>
+      o.orderStatus !== 'CANCELLED' &&
+      o.paymentStatus === 'PAID' &&
+      (o.attribution?.paymentModeAtHandover === 'TRANSFER' ||
+       (!o.attribution?.paymentModeAtHandover && o.paymentMethod === 'PROMPTPAY_PREPAID'))
+    )
+    .reduce((sum, o) => sum + (o.totalFinalPrice ?? o.totalEstimatedPrice ?? 0), 0);
+}
+

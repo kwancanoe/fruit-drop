@@ -35,8 +35,8 @@
 |---|---|---|---|---|
 | M1 | Core State Machine, Security & Attribution | Features 1, 2, 3, 4, 5 | none | DONE |
 | M2 | Mock Purge, Data Contracts & Mathematical Precision | Features 6, 7, 8, 9, 10, 11 | M1 | DONE |
-| M3 | Performance, Lifecycle Cleanup & Quasar/M3 Compliance | Features 12, 13, 14, 15, 16 | M2 | PLANNED |
-| M4 | Comprehensive Automated Testing (Unit & CDP) & Final Gate | Features 17, 18, 19 | M3 | PLANNED |
+| M3 | Performance, Lifecycle Cleanup & Quasar/M3 Compliance | Features 12, 13, 14, 15, 16 | M2 | DONE |
+| M4 | Comprehensive Automated Testing (Unit & CDP) & Final Gate | Features 17, 18, 19 | M3 | DONE |
 
 ## Interface Contracts
 

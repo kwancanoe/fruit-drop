@@ -68,6 +68,7 @@ import { useUserStore } from '@/stores/userStore';
 import { collectDeviceFingerprint } from '@/utils/deviceTelemetry';
 import { calculateOrderFinalTotal } from '@/utils/pricing';
 import { compressImage } from '@/utils/imageCompressor';
+import { extractSearchCandidates, matchOrderSearch } from '@/utils/orderSearch';
 
 export const useFruitStore = defineStore('fruit', () => {
   // State
@@ -733,56 +734,8 @@ export const useFruitStore = defineStore('fruit', () => {
   }
 
   // Helper: Extract search candidates for Order ID and Telephone number
-  function extractSearchCandidates(searchQuery: string): {
-    orderIdCandidates: string[];
-    phoneCandidates: string[];
-    cleanDigits: string;
-    rawText: string;
-  } {
-    const raw = searchQuery.trim();
-    if (!raw) return { orderIdCandidates: [], phoneCandidates: [], cleanDigits: '', rawText: '' };
-
-    const stripped = raw.replace(/^[#№]\s*/, '').trim();
-    const cleanUpper = stripped.toUpperCase().replace(/\s+/g, '');
-    const cleanDigits = raw.replace(/\D/g, '');
-
-    const orderIdSet = new Set<string>();
-    const phoneSet = new Set<string>();
-
-    if (cleanUpper) orderIdSet.add(cleanUpper);
-
-    const fdMatch = cleanUpper.match(/^FD[\s-_]?(\d{4})$/i);
-    if (fdMatch && fdMatch[1]) {
-      orderIdSet.add(`FD-${fdMatch[1]}`);
-      orderIdSet.add(fdMatch[1]);
-    } else if (/^\d{4}$/.test(stripped)) {
-      orderIdSet.add(`FD-${stripped}`);
-      orderIdSet.add(stripped);
-    }
-
-    let phoneDigits = cleanDigits;
-    if (phoneDigits.startsWith('66') && phoneDigits.length >= 11) {
-      phoneDigits = '0' + phoneDigits.slice(2);
-    }
-
-    if (phoneDigits.length >= 9 && phoneDigits.length <= 11) {
-      phoneSet.add(phoneDigits);
-      phoneSet.add(raw);
-      if (phoneDigits.length === 10) {
-        phoneSet.add(phoneDigits.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3'));
-        phoneSet.add(phoneDigits.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3'));
-      } else if (phoneDigits.length === 9) {
-        phoneSet.add(phoneDigits.replace(/(\d{2})(\d{3})(\d{4})/, '$1-$2-$3'));
-        phoneSet.add(phoneDigits.replace(/(\d{2})(\d{3})(\d{4})/, '$1 $2 $3'));
-      }
-    }
-
-    return {
-      orderIdCandidates: Array.from(orderIdSet),
-      phoneCandidates: Array.from(phoneSet),
-      cleanDigits,
-      rawText: raw
-    };
+  function getSearchCandidates(searchQuery: string) {
+    return extractSearchCandidates(searchQuery);
   }
 
   // Fetch single order by human-readable orderId across memory & Firestore
@@ -821,21 +774,10 @@ export const useFruitStore = defineStore('fruit', () => {
   async function searchOrderAcrossRounds(searchQuery: string): Promise<Order | null> {
     const raw = searchQuery.trim();
     if (!raw) return null;
-    const { orderIdCandidates, phoneCandidates, cleanDigits } = extractSearchCandidates(raw);
+    const { orderIdCandidates, phoneCandidates } = extractSearchCandidates(raw);
 
-    // 1. Search in local active memory first
-    const inMemory = orders.value.find(o => {
-      const orderPhoneDigits = (o.customer?.phone || '').replace(/\D/g, '');
-      const orderIdClean = (o.orderId || '').toUpperCase().trim();
-      const matchId = orderIdCandidates.some(c => c.toUpperCase() === orderIdClean);
-      const matchPhone = cleanDigits.length >= 4 && (
-        orderPhoneDigits === cleanDigits ||
-        (cleanDigits.length >= 9 && orderPhoneDigits.includes(cleanDigits)) ||
-        phoneCandidates.some(p => (o.customer?.phone || '') === p)
-      );
-      const matchName = o.customer?.name && o.customer.name.toLowerCase().includes(raw.toLowerCase());
-      return matchId || matchPhone || matchName;
-    });
+    // 1. Search in local active memory first using centralized match logic
+    const inMemory = orders.value.find(o => matchOrderSearch(o, raw));
     if (inMemory) return inMemory;
 
     const ordersRef = collection(db, 'orders');
