@@ -69,39 +69,26 @@
             class="cursor-pointer"
           >
             <template #prepend>
-              <q-icon name="event" color="positive" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                  <q-date
-                    v-model="calendarDate"
-                    mask="YYYY/MM/DD"
-                    color="positive"
-                    today-btn
-                    @update:model-value="onCalendarDatePicked"
-                  >
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="ตกลง" color="positive" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
+              <q-icon name="event" color="positive" class="cursor-pointer" />
             </template>
             <template #append>
-              <q-btn flat dense round icon="calendar_month" color="positive">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                  <q-date
-                    v-model="calendarDate"
-                    mask="YYYY/MM/DD"
-                    color="positive"
-                    today-btn
-                    @update:model-value="onCalendarDatePicked"
-                  >
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="ตกลง" color="positive" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-btn>
+              <q-icon name="calendar_month" color="positive" class="cursor-pointer" />
             </template>
+
+            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+              <q-date
+                v-model="calendarDate"
+                mask="YYYY-MM-DD"
+                minimal
+                color="positive"
+                today-btn
+                @update:model-value="onCalendarDatePicked"
+              >
+                <div class="row items-center justify-end q-pa-xs">
+                  <q-btn v-close-popup label="ตกลง" color="positive" flat />
+                </div>
+              </q-date>
+            </q-popup-proxy>
           </q-input>
         </div>
 
@@ -179,12 +166,6 @@
                 </template>
               </q-input>
             </div>
-          </div>
-
-          <!-- Standby Window Preview Banner -->
-          <div class="bg-green-1 q-pa-sm rounded-borders row items-center text-primary text-caption text-weight-bold">
-            <q-icon name="schedule" size="18px" class="q-mr-xs" />
-            <span>เวลารับของ: {{ computedStandbyTime }} น.</span>
           </div>
         </div>
 
@@ -452,7 +433,8 @@ const showFruitDialog = ref<boolean>(false);
 const roundId = computed<string>(() => (route.params.roundId as string) || '');
 const isEditMode = computed<boolean>(() => !!roundId.value && roundId.value !== 'new');
 const isLoadingData = ref<boolean>(false);
-const calendarDate = ref<string>('');
+const todayIso = toIsoDateString(new Date()) || '2026-09-08';
+const calendarDate = ref<string>(todayIso);
 
 function onCalendarDatePicked(val: string) {
   if (!val) return;
@@ -533,8 +515,8 @@ function getDefaultFruitConfigs(): RoundCreationFruitConfig[] {
 
 const form = ref({
   title: 'รอบส่งผลไม้ วันอังคาร 8 ก.ย.',
-  pickupDate: '2026-09-08',
-  pickupDateIso: '2026-09-08',
+  pickupDate: todayIso,
+  pickupDateIso: todayIso,
   pickupLocation: 'ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B',
   standbyStartTime: '19:00',
   standbyEndTime: '23:00',
@@ -639,8 +621,8 @@ async function loadRoundData(id: string) {
     }
 
     form.value.title = roundData.title;
-    const isoDate = roundData.pickupDateIso || toIsoDateString(roundData.pickupDate) || '2026-09-08';
-    calendarDate.value = isoDate.replace(/-/g, '/');
+    const isoDate = roundData.pickupDateIso || toIsoDateString(roundData.pickupDate) || todayIso;
+    calendarDate.value = isoDate;
     form.value.pickupDateIso = isoDate;
     form.value.pickupDate = isoDate;
     form.value.pickupLocation = roundData.pickupLocation;
