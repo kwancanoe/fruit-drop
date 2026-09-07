@@ -1,5 +1,18 @@
-﻿{
+{
   "projects": {
     "default": "fruit-drop-aon"
-  }
+  },
+  "targets": {
+    "fruit-drop-aon": {
+      "hosting": {
+        "fruitdrop": [
+          "fruitdrop"
+        ],
+        "fruit-drop-aon": [
+          "fruit-drop-aon"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
