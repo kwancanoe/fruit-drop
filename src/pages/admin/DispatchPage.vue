@@ -32,55 +32,37 @@
 
     <!-- Section: Round Selector & Tailgate Session -->
     <q-card id="dispatch-round-selector-card" data-audit-id="dispatch-round-selector-card" class="bg-white text-grey-9 q-pa-sm q-mb-md shadow-1">
-      <div class="row items-center no-wrap">
-        <div class="col">
-          <q-select
-            v-if="roundOptions.length > 0"
-            id="select-active-round"
-            data-audit-id="select-active-round"
-            dense
-            outlined
-            emit-value
-            map-options
-            options-dense
-            v-model="selectedRoundId"
-            :options="roundOptions"
-            label="รอบส่งที่กำลังจ่ายของ"
-            color="positive"
-            class="text-weight-bold"
-            @update:model-value="handleRoundChange"
-          >
-            <template #prepend>
-              <q-icon name="event_available" color="positive" size="20px" />
-            </template>
-            <template #option="scope">
-              <q-item v-bind="scope.itemProps" dense class="q-py-xs">
-                <q-item-section>
-                  <q-item-label class="text-weight-bold text-subtitle2">{{ scope.opt.title }}</q-item-label>
-                  <q-item-label caption class="text-grey-7">{{ scope.opt.date }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </template>
-          </q-select>
+      <q-select
+        v-if="roundOptions.length > 0"
+        id="select-active-round"
+        data-audit-id="select-active-round"
+        dense
+        outlined
+        emit-value
+        map-options
+        options-dense
+        v-model="selectedRoundId"
+        :options="roundOptions"
+        label="รอบส่งที่กำลังจ่ายของ"
+        color="positive"
+        class="text-weight-bold"
+        @update:model-value="handleRoundChange"
+      >
+        <template #prepend>
+          <q-icon name="event_available" color="positive" size="20px" />
+        </template>
+        <template #option="scope">
+          <q-item v-bind="scope.itemProps" dense class="q-py-xs">
+            <q-item-section>
+              <q-item-label class="text-weight-bold text-subtitle2">{{ scope.opt.title }}</q-item-label>
+              <q-item-label caption class="text-grey-7">{{ scope.opt.date }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-select>
 
-          <div v-else class="text-caption text-grey-7 q-pa-xs">
-            ไม่มีรอบที่เปิดรับจองในขณะนี้
-          </div>
-        </div>
-
-        <q-btn
-          id="btn-manage-rounds-shortcut"
-          data-audit-id="btn-manage-rounds-shortcut"
-          flat
-          round
-          dense
-          icon="tune"
-          color="grey-8"
-          class="q-ml-sm"
-          to="/admin/rounds"
-        >
-          <q-tooltip>จัดการรอบส่งทั้งหมด</q-tooltip>
-        </q-btn>
+      <div v-else class="text-caption text-grey-7 q-pa-xs">
+        ไม่มีรอบที่เปิดรับจองในขณะนี้
       </div>
     </q-card>
 
