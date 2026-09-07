@@ -56,14 +56,13 @@
     <!-- Customer Order Lookup Modal Component -->
     <OrderLookupModal
       v-model:is-open="isLookupOpen"
-      :orders="fruitStore.orders"
       @found="onOrderFound"
     />
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { useFruitStore } from '@/stores/fruitStore';
 import type { Order } from '@/types/fruit_app';
@@ -86,6 +85,9 @@ function onOrderFound(order: Order) {
 onMounted(() => {
   fruitStore.initAuth();
   fruitStore.subscribeToActiveRound();
-  fruitStore.subscribeToOrders(fruitStore.activeRoundId);
+});
+
+onBeforeUnmount(() => {
+  fruitStore.unsubscribeOpenRounds();
 });
 </script>

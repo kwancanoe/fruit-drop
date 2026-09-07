@@ -105,6 +105,7 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Order } from '@/types/fruit_app';
+import { orderHasUnweighedFruit } from '@/constants/status';
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
 
 const props = defineProps<{
@@ -119,8 +120,6 @@ function navigateToDetail() {
 
 // Check if any whole fruit item has not been weighed yet
 const hasUnweighedFruit = computed<boolean>(() => {
-  return props.order.items.some(
-    i => i.productType === 'VARIABLE_WHOLE_FRUIT' && (!i.actualWeighedKg || i.actualWeighedKg <= 0)
-  );
+  return orderHasUnweighedFruit(props.order);
 });
 </script>

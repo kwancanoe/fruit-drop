@@ -19,64 +19,78 @@ export async function compressImage(
   quality = 0.75
 ): Promise<CompressedImageResult> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+    const hasCreateObjectURL = typeof window !== 'undefined' && typeof window.URL?.createObjectURL === 'function';
+    const objectUrl = hasCreateObjectURL ? URL.createObjectURL(file) : '';
+    const img = new Image();
 
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        let width = img.width;
-        let height = img.height;
+    function cleanup() {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    }
 
-        // Maintain aspect ratio
-        if (width > height) {
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
+    img.onload = () => {
+      cleanup();
+      let width = img.width;
+      let height = img.height;
+
+      // Maintain aspect ratio with bounding box scaling
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        canvas.width = 0;
+        canvas.height = 0;
+        reject(new Error('Failed to get canvas 2d context'));
+        return;
+      }
+
+      // Draw and compress
+      ctx.drawImage(img, 0, 0, width, height);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+      canvas.toBlob(
+        (blob) => {
+          canvas.width = 0;
+          canvas.height = 0;
+          if (blob) {
+            resolve({
+              blob,
+              dataUrl,
+              sizeBytes: blob.size
+            });
+          } else {
+            reject(new Error('Canvas toBlob failed'));
           }
-        } else {
-          if (height > maxHeight) {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Failed to get canvas 2d context'));
-          return;
-        }
-
-        // Draw and compress
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve({
-                blob,
-                dataUrl,
-                sizeBytes: blob.size
-              });
-            } else {
-              reject(new Error('Canvas toBlob failed'));
-            }
-          },
-          'image/jpeg',
-          quality
-        );
-      };
-
-      img.onerror = () => reject(new Error('Image failed to load'));
-      img.src = e.target?.result as string;
+        },
+        'image/jpeg',
+        quality
+      );
     };
 
-    reader.onerror = () => reject(new Error('FileReader failed'));
-    reader.readAsDataURL(file);
+    img.onerror = () => {
+      cleanup();
+      reject(new Error('Image failed to load'));
+    };
+
+    if (hasCreateObjectURL) {
+      img.src = objectUrl;
+    } else {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('FileReader failed'));
+      reader.readAsDataURL(file);
+    }
   });
 }

@@ -80,12 +80,62 @@ export const useFruitStore = defineStore('fruit', () => {
   const isLoading = ref<boolean>(false);
   const authUser = ref<User | null>(null);
 
-  // Firestore listeners
-  let unsubscribeOpenRounds: Unsubscribe | null = null;
-  let unsubscribeAllRounds: Unsubscribe | null = null;
-  let unsubscribeProducts: Unsubscribe | null = null;
-  let unsubscribeMasterFruits: Unsubscribe | null = null;
-  let unsubscribeOrders: Unsubscribe | null = null;
+  // Firestore listener unsubscription handles
+  let openRoundsUnsub: Unsubscribe | null = null;
+  let allRoundsUnsub: Unsubscribe | null = null;
+  let productsUnsub: Unsubscribe | null = null;
+  let masterFruitsUnsub: Unsubscribe | null = null;
+  let ordersUnsub: Unsubscribe | null = null;
+
+  // Unsubscribe individual listeners
+  function unsubscribeOpenRounds() {
+    if (openRoundsUnsub) {
+      openRoundsUnsub();
+      openRoundsUnsub = null;
+    }
+  }
+
+  function unsubscribeAllRounds() {
+    if (allRoundsUnsub) {
+      allRoundsUnsub();
+      allRoundsUnsub = null;
+    }
+  }
+
+  function unsubscribeProducts() {
+    if (productsUnsub) {
+      productsUnsub();
+      productsUnsub = null;
+    }
+  }
+
+  function unsubscribeMasterFruits() {
+    if (masterFruitsUnsub) {
+      masterFruitsUnsub();
+      masterFruitsUnsub = null;
+    }
+  }
+
+  function unsubscribeOrders() {
+    if (ordersUnsub) {
+      ordersUnsub();
+      ordersUnsub = null;
+    }
+  }
+
+  // Comprehensive store cleanup: invokes every active unsubscription handle and resets to null
+  function unsubscribeAll() {
+    unsubscribeOpenRounds();
+    unsubscribeAllRounds();
+    unsubscribeProducts();
+    unsubscribeMasterFruits();
+    unsubscribeOrders();
+  }
+
+  function cleanupStore() {
+    unsubscribeAll();
+  }
+
 
   // Computed - Active master fruits for round creation
   const activeMasterFruits = computed<MasterFruit[]>(() =>
@@ -125,19 +175,22 @@ export const useFruitStore = defineStore('fruit', () => {
 
   // Admin Sign-Out
   async function logoutAdmin() {
+    cleanupStore();
+    const userStore = useUserStore();
+    userStore.cleanupStore();
     await signOut(auth);
     authUser.value = null;
   }
 
   // Subscribe to Open Rounds (for Customer flow)
   function subscribeToOpenRounds() {
-    if (unsubscribeOpenRounds) unsubscribeOpenRounds();
+    unsubscribeOpenRounds();
 
     const roundsRef = collection(db, 'rounds');
     // Note: Query isOpen without orderBy to avoid requiring a composite index in Firestore; sort in client memory
     const q = query(roundsRef, where('isOpen', '==', true));
 
-    unsubscribeOpenRounds = onSnapshot(q, (snapshot) => {
+    openRoundsUnsub = onSnapshot(q, (snapshot) => {
       const fetched = snapshot.docs.map(docSnap => ({
         ...docSnap.data() as PreorderRound,
         id: docSnap.id
@@ -168,12 +221,12 @@ export const useFruitStore = defineStore('fruit', () => {
 
   // Subscribe to All Rounds (for Admin Round Management)
   function subscribeToAllRounds() {
-    if (unsubscribeAllRounds) unsubscribeAllRounds();
+    unsubscribeAllRounds();
 
     const roundsRef = collection(db, 'rounds');
     const q = query(roundsRef, orderBy('createdAt', 'desc'));
 
-    unsubscribeAllRounds = onSnapshot(q, (snapshot) => {
+    allRoundsUnsub = onSnapshot(q, (snapshot) => {
       allRounds.value = snapshot.docs.map(docSnap => ({
         ...docSnap.data() as PreorderRound,
         id: docSnap.id
@@ -228,12 +281,12 @@ export const useFruitStore = defineStore('fruit', () => {
       products.value = [];
       return;
     }
-    if (unsubscribeProducts) unsubscribeProducts();
+    unsubscribeProducts();
 
     const productsRef = collection(db, 'products');
     const q = query(productsRef, where('roundId', '==', roundId));
 
-    unsubscribeProducts = onSnapshot(q, (snapshot) => {
+    productsUnsub = onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
         products.value = snapshot.docs.map(d => ({ ...d.data() as ProductItem, id: d.id }));
       } else {
@@ -247,13 +300,13 @@ export const useFruitStore = defineStore('fruit', () => {
 
   // Subscribe to Orders (Admin & Live Dashboard)
   function subscribeToOrders(roundId: string) {
-    if (unsubscribeOrders) unsubscribeOrders();
+    unsubscribeOrders();
 
     const ordersRef = collection(db, 'orders');
     // Note: Query roundId without orderBy to avoid requiring a composite index in Firestore; sort in client memory
     const q = query(ordersRef, where('roundId', '==', roundId));
 
-    unsubscribeOrders = onSnapshot(q, (snapshot) => {
+    ordersUnsub = onSnapshot(q, (snapshot) => {
       const fetched = snapshot.docs.map(d => ({ ...d.data() as Order, id: d.id }));
       fetched.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
       orders.value = fetched;
@@ -344,11 +397,23 @@ export const useFruitStore = defineStore('fruit', () => {
     }
   }
 
-  // Upload payment or cash handover photo proof to Firebase Storage
-  async function uploadPaymentProof(orderId: string, imageBlob: Blob): Promise<string> {
+  // Upload payment or cash handover photo proof to Firebase Storage with automatic compression guard
+  async function uploadPaymentProof(orderId: string, imageBlob: Blob | File): Promise<string> {
+    // Ensure image is compressed to max 1200x1200px JPEG quality 0.75 (< 300KB) to respect storage.rules (< 5MB)
+    let uploadTarget: Blob = imageBlob;
+    try {
+      if (imageBlob.size > 300 * 1024 || (typeof File !== 'undefined' && imageBlob instanceof File)) {
+        const compressed = await compressImage(imageBlob, 1200, 1200, 0.75);
+        uploadTarget = compressed.blob;
+      }
+    } catch (compressionErr) {
+      console.warn('Image compression fallback to raw blob in fruitStore:', compressionErr);
+      uploadTarget = imageBlob;
+    }
+
     const filename = `payment_proofs/${orderId}_${Date.now()}.jpg`;
     const fileRef = sRef(storage, filename);
-    await uploadBytes(fileRef, imageBlob, { contentType: 'image/jpeg' });
+    await uploadBytes(fileRef, uploadTarget, { contentType: 'image/jpeg' });
     const downloadUrl = await getDownloadURL(fileRef);
     return downloadUrl;
   }
@@ -855,10 +920,10 @@ export const useFruitStore = defineStore('fruit', () => {
 
   // Master Fruits Subscription (Ordered by sortOrder)
   function subscribeToMasterFruits() {
-    if (unsubscribeMasterFruits) unsubscribeMasterFruits();
+    unsubscribeMasterFruits();
 
     const fruitsRef = collection(db, 'master_fruits');
-    unsubscribeMasterFruits = onSnapshot(fruitsRef, (snapshot) => {
+    masterFruitsUnsub = onSnapshot(fruitsRef, (snapshot) => {
       if (snapshot.empty) {
         masterFruits.value = [];
         return;
@@ -948,6 +1013,13 @@ export const useFruitStore = defineStore('fruit', () => {
     subscribeToProducts,
     subscribeToMasterFruits,
     subscribeToOrders,
+    unsubscribeOpenRounds,
+    unsubscribeAllRounds,
+    unsubscribeProducts,
+    unsubscribeMasterFruits,
+    unsubscribeOrders,
+    unsubscribeAll,
+    cleanupStore,
     selectActiveRound,
     createRound,
     updateRound,

@@ -18,9 +18,9 @@ defineProps<{
 .m3-fruit-chip {
   display: inline-flex;
   align-items: center;
-  background: linear-gradient(135deg, #F1F8E9 0%, #DCEDC8 100%);
-  color: #1B5E20;
-  border: 1px solid rgba(46, 125, 50, 0.32);
+  background: $gradient-tonal-positive;
+  color: $color-positive-dark;
+  border: 1px solid rgba($primary, 0.32);
   border-radius: 9999px;
   padding: 4px 10px;
   font-size: 12px;

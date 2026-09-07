@@ -540,13 +540,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import type { Order } from '@/types/fruit_app';
 import { generatePromptPayQRDataUrl } from '@/utils/promptpay';
 import { calculateItemSubtotal, calculateOrderFinalTotal } from '@/utils/pricing';
+import { orderHasUnweighedFruit } from '@/constants/status';
+import { compressImage } from '@/utils/imageCompressor';
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
 
 const route = useRoute();
@@ -661,10 +663,7 @@ watch(() => route.params.orderId, () => {
 
 // Check if there are any unweighed durians
 const hasUnweighedFruit = computed<boolean>(() => {
-  if (!order.value || !order.value.items) return false;
-  return order.value.items.some(
-    i => i.productType === 'VARIABLE_WHOLE_FRUIT' && (!i.actualWeighedKg || i.actualWeighedKg <= 0)
-  );
+  return order.value ? orderHasUnweighedFruit(order.value) : false;
 });
 
 // Final net price calculation using centralized pricing engine
@@ -759,19 +758,39 @@ async function handleFileSelected(event: Event) {
   if (!file || !order.value) return;
 
   isUploadingProof.value = true;
-  localPreviewUrl.value = URL.createObjectURL(file);
   try {
-    const downloadUrl = await fruitStore.uploadPaymentProof(order.value.orderId, file);
+    // Revoke previous blob preview if any
+    if (localPreviewUrl.value && localPreviewUrl.value.startsWith('blob:')) {
+      URL.revokeObjectURL(localPreviewUrl.value);
+    }
+
+    // 1. Client-side compress camera photo / slip (max 1200x1200px, JPEG 0.75)
+    const originalSizeKb = (file.size / 1024).toFixed(0);
+    const compressed = await compressImage(file, 1200, 1200, 0.75);
+    localPreviewUrl.value = compressed.dataUrl;
+    const compressedSizeKb = (compressed.sizeBytes / 1024).toFixed(0);
+
+    // 2. Upload compressed blob to Firebase Storage
+    const downloadUrl = await fruitStore.uploadPaymentProof(order.value.orderId, compressed.blob);
+
+    // 3. Persist proofUrl into Firestore order document
     await fruitStore.updateOrderStatus(order.value.orderId, {
       proofUrl: downloadUrl
     });
     order.value.proofUrl = downloadUrl;
-    $q.notify({ type: 'positive', message: 'แนบรูปหลักฐานสำเร็จแล้ว', position: 'top', timeout: 1500 });
+
+    $q.notify({
+      type: 'positive',
+      message: `แนบรูปหลักฐานสำเร็จ (${compressedSizeKb} KB จาก ${originalSizeKb} KB)`,
+      position: 'top',
+      timeout: 2000
+    });
   } catch (err) {
     console.error('Upload proof error:', err);
     $q.notify({ type: 'negative', message: 'อัปโหลดรูปหลักฐานไม่สำเร็จ', position: 'top' });
   } finally {
     isUploadingProof.value = false;
+    target.value = ''; // Reset input to allow re-taking or selecting same file
   }
 }
 
@@ -974,4 +993,10 @@ function formatTimestamp(ts: number): string {
   const d = new Date(ts);
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')} น.`;
 }
+
+onBeforeUnmount(() => {
+  if (localPreviewUrl.value && localPreviewUrl.value.startsWith('blob:')) {
+    URL.revokeObjectURL(localPreviewUrl.value);
+  }
+});
 </script>

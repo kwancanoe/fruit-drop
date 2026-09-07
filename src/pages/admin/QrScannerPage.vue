@@ -65,15 +65,12 @@
           style="z-index: 5;"
         >
           <!-- Viewfinder Frame -->
-          <div
-            style="width: 240px; height: 240px; border: 3px solid #2e7d32; border-radius: 16px; box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.4);"
-            class="relative-position"
-          >
+          <div class="scanner-viewfinder relative-position">
             <!-- Corner Accents -->
-            <div class="absolute-top-left" style="width: 20px; height: 20px; border-top: 5px solid #00e676; border-left: 5px solid #00e676; border-top-left-radius: 14px;"></div>
-            <div class="absolute-top-right" style="width: 20px; height: 20px; border-top: 5px solid #00e676; border-right: 5px solid #00e676; border-top-right-radius: 14px;"></div>
-            <div class="absolute-bottom-left" style="width: 20px; height: 20px; border-bottom: 5px solid #00e676; border-left: 5px solid #00e676; border-bottom-left-radius: 14px;"></div>
-            <div class="absolute-bottom-right" style="width: 20px; height: 20px; border-bottom: 5px solid #00e676; border-right: 5px solid #00e676; border-bottom-right-radius: 14px;"></div>
+            <div class="scanner-corner corner-top-left absolute-top-left"></div>
+            <div class="scanner-corner corner-top-right absolute-top-right"></div>
+            <div class="scanner-corner corner-bottom-left absolute-bottom-left"></div>
+            <div class="scanner-corner corner-bottom-right absolute-bottom-right"></div>
           </div>
         </div>
       </q-card-section>
@@ -365,3 +362,39 @@ onBeforeUnmount(() => {
   void stopScanner();
 });
 </script>
+
+<style scoped lang="scss">
+.scanner-viewfinder {
+  width: 240px;
+  height: 240px;
+  border: 3px solid $positive;
+  border-radius: 16px;
+  box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.4);
+}
+
+.scanner-corner {
+  width: 20px;
+  height: 20px;
+
+  &.corner-top-left {
+    border-top: 5px solid $positive;
+    border-left: 5px solid $positive;
+    border-top-left-radius: 14px;
+  }
+  &.corner-top-right {
+    border-top: 5px solid $positive;
+    border-right: 5px solid $positive;
+    border-top-right-radius: 14px;
+  }
+  &.corner-bottom-left {
+    border-bottom: 5px solid $positive;
+    border-left: 5px solid $positive;
+    border-bottom-left-radius: 14px;
+  }
+  &.corner-bottom-right {
+    border-bottom: 5px solid $positive;
+    border-right: 5px solid $positive;
+    border-bottom-right-radius: 14px;
+  }
+}
+</style>

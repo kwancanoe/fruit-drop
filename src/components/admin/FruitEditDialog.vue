@@ -481,7 +481,7 @@ async function handleSave() {
 }
 
 .border-positive-active {
-  border: 2px solid #2E7D32 !important;
+  border: 2px solid $positive !important;
   transform: scale(1.1);
 }
 

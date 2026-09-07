@@ -313,14 +313,9 @@
                 วิธีชำระ:
                 <strong class="text-grey-9">{{ order.paymentMethod === 'PAY_AT_CAR' ? '💵 เงินสดท้ายรถ' : '📱 โอนพร้อมเพย์' }}</strong>
               </div>
-              <div>
-                สถานะ:
-                <q-badge
-                  :color="order.orderStatus === 'COMPLETED' ? 'positive' : order.orderStatus === 'WAITING_PICKUP' ? 'warning' : 'negative'"
-                  rounded
-                >
-                  {{ order.orderStatus === 'COMPLETED' ? 'ส่งมอบแล้ว' : order.orderStatus === 'WAITING_PICKUP' ? 'รอรับของ' : 'ยกเลิก' }}
-                </q-badge>
+              <div class="row items-center no-wrap">
+                <span class="q-mr-xs">สถานะ:</span>
+                <OrderStatusBadge :order="order" dense />
               </div>
             </div>
           </div>
@@ -337,6 +332,7 @@ import { useRouter } from 'vue-router';
 import { useFruitStore } from '@/stores/fruitStore';
 import type { Order, ProductItem } from '@/types/fruit_app';
 import { calculateItemSubtotal } from '@/utils/pricing';
+import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
 
 const router = useRouter();
 const fruitStore = useFruitStore();

@@ -179,7 +179,7 @@
 
 <script setup lang="ts">
 // Admin parent layout script managing light theme, authentication state, and AppSheet-style fixed bottom navigation
-import { onMounted } from 'vue';
+import { onMounted, onBeforeUnmount, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import { useUserStore } from '@/stores/userStore';
@@ -206,9 +206,35 @@ async function handleLogout() {
   $q.notify({ type: 'info', message: 'ออกจากระบบแล้ว' });
 }
 
-onMounted(() => {
-  fruitStore.subscribeToAllRounds();
-  fruitStore.subscribeToOrders(fruitStore.activeRoundId);
-  userStore.subscribeUsers();
+// Start admin subscriptions only when authenticated as admin
+function startAdminSubscriptions() {
+  if (fruitStore.authUser && fruitStore.isAdmin) {
+    fruitStore.subscribeToAllRounds();
+    fruitStore.subscribeToOrders(fruitStore.activeRoundId);
+    userStore.subscribeUsers();
+  }
+}
+
+// Tear down all admin subscriptions and reset store caches
+function stopAdminSubscriptions() {
+  fruitStore.unsubscribeAll();
+  userStore.cleanupStore();
+}
+
+// Watch authentication status so subscriptions start immediately on login and stop on logout
+watch(
+  [() => fruitStore.authUser, () => fruitStore.isAdmin],
+  ([user, admin]) => {
+    if (user && admin) {
+      startAdminSubscriptions();
+    } else {
+      stopAdminSubscriptions();
+    }
+  },
+  { immediate: true }
+);
+
+onBeforeUnmount(() => {
+  stopAdminSubscriptions();
 });
 </script>

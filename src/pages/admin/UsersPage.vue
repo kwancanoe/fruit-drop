@@ -324,27 +324,16 @@ function openEditDialog(user: AppUser) {
   showUserDialog.value = true;
 }
 
-// Edit permission check
-function canEdit(targetUser: AppUser): boolean {
-  if (userStore.isSystemAdmin) {
-    return true;
-  }
-  if (userStore.isShopOwner) {
-    return targetUser.role === 'SELLER';
-  }
+// Permission check: System Admin can manage all; Shop Owner can only manage Sellers
+function canManageTargetUser(targetUser: AppUser): boolean {
+  if (userStore.isSystemAdmin) return true;
+  if (userStore.isShopOwner) return targetUser.role === 'SELLER';
   return false;
 }
 
-// Delete permission check
-function canDelete(targetUser: AppUser): boolean {
-  if (userStore.isSystemAdmin) {
-    return true;
-  }
-  if (userStore.isShopOwner) {
-    return targetUser.role === 'SELLER';
-  }
-  return false;
-}
+// Deduplicated aliases for template action gating
+const canEdit = canManageTargetUser;
+const canDelete = canManageTargetUser;
 
 // Save User (Create or Update)
 async function handleSaveUser() {

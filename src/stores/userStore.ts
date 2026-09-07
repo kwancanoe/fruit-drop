@@ -20,7 +20,7 @@ export const useUserStore = defineStore('user', () => {
   const users = ref<AppUser[]>([]);
   const currentAppUser = ref<AppUser | null>(null);
   const isLoading = ref<boolean>(false);
-  let unsubscribeUsers: Unsubscribe | null = null;
+  let usersUnsub: Unsubscribe | null = null;
 
   // Compute current user role
   const currentUserRole = computed<UserRole | null>(() => {
@@ -55,12 +55,27 @@ export const useUserStore = defineStore('user', () => {
     return [];
   });
 
+  // Unsubscribe from Users collection listener
+  function unsubscribeUsers() {
+    if (usersUnsub) {
+      usersUnsub();
+      usersUnsub = null;
+    }
+  }
+
+  // Cleanup store state and listeners
+  function cleanupStore() {
+    unsubscribeUsers();
+    users.value = [];
+    currentAppUser.value = null;
+  }
+
   // Subscribe to all users in Firestore
   function subscribeUsers() {
-    if (unsubscribeUsers) unsubscribeUsers();
+    unsubscribeUsers();
 
     const usersRef = collection(db, 'users');
-    unsubscribeUsers = onSnapshot(usersRef, (snapshot) => {
+    usersUnsub = onSnapshot(usersRef, (snapshot) => {
       users.value = snapshot.docs.map((docSnap) => {
         const data = docSnap.data() as AppUser;
         return {
@@ -250,6 +265,8 @@ export const useUserStore = defineStore('user', () => {
     canManageUsers,
     allowedAssignableRoles,
     subscribeUsers,
+    unsubscribeUsers,
+    cleanupStore,
     bindAuthUser,
     addUser,
     updateUser,

@@ -190,8 +190,9 @@
 
         <!-- Open / Closed Status Toggle -->
         <div class="row items-center justify-between q-mt-md bg-grey-1 q-pa-sm rounded-borders">
-          <div class="text-caption text-grey-9">
-            สถานะรอบ: <strong :class="form.isOpen ? 'text-positive' : 'text-grey-6'">{{ form.isOpen ? '🟢 เปิดรับจองออนไลน์' : '⚪ ปิดรับจองชั่วคราว' }}</strong>
+          <div class="row items-center no-wrap">
+            <span class="text-caption text-grey-9 q-mr-xs">สถานะรอบ:</span>
+            <RoundStatusBadge :is-open="form.isOpen" />
           </div>
           <q-toggle
             v-model="form.isOpen"
@@ -430,13 +431,14 @@
 
 <script setup lang="ts">
 // Full-page Round Edit / Create Form in clean Light Theme with interactive Thai Date Picker & Time Slot Selector
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useFruitStore, DEFAULT_MASTER_FRUITS } from '@/stores/fruitStore';
 import type { RoundCreationFruitConfig, MasterFruit } from '@/types/fruit_app';
 import { generateTimeSlots } from '@/utils/timeSlots';
 import { getFruitMascotUrl } from '@/utils/fruitMascots';
+import RoundStatusBadge from '@/components/common/RoundStatusBadge.vue';
 import FruitEditDialog from '@/components/admin/FruitEditDialog.vue';
 
 const route = useRoute();
@@ -824,5 +826,9 @@ onMounted(() => {
   if (isEditMode.value) {
     void loadRoundData(roundId.value);
   }
+});
+
+onBeforeUnmount(() => {
+  fruitStore.unsubscribeMasterFruits();
 });
 </script>

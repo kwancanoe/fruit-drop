@@ -157,7 +157,7 @@
 
 <script setup lang="ts">
 // 1-line: Admin Master Fruit Catalog Management Page displaying master cards with active toggles and editor dialog
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import type { MasterFruit } from '@/types/fruit_app';
@@ -211,6 +211,10 @@ function onFruitSaved() {
 
 onMounted(() => {
   fruitStore.subscribeToMasterFruits();
+});
+
+onBeforeUnmount(() => {
+  fruitStore.unsubscribeMasterFruits();
 });
 </script>
 
