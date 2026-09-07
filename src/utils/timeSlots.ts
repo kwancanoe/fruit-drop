@@ -41,16 +41,17 @@ export function generateTimeSlots(startStr: string, endStr: string, stepMinutes:
   const endMin = parseTimeToMinutes(endStr);
   const slots: string[] = [];
 
-  if (startMin <= endMin && startMin < 9999 && endMin < 9999) {
-    for (let m = startMin; m <= endMin; m += stepMinutes) {
-      const h = Math.floor(m / 60).toString().padStart(2, '0');
-      const min = (m % 60).toString().padStart(2, '0');
-      slots.push(`${h}:${min} น.`);
-    }
+  if (startMin >= 9999 || endMin >= 9999 || stepMinutes <= 0) {
+    return slots;
   }
 
-  if (slots.length === 0) {
-    return ['19:00 น.', '19:30 น.', '20:00 น.', '20:30 น.', '21:00 น.'];
+  const effectiveEndMin = startMin <= endMin ? endMin : endMin + 1440;
+
+  for (let m = startMin; m <= effectiveEndMin; m += stepMinutes) {
+    const wrappedMin = m % 1440;
+    const h = Math.floor(wrappedMin / 60).toString().padStart(2, '0');
+    const min = (wrappedMin % 60).toString().padStart(2, '0');
+    slots.push(`${h}:${min} น.`);
   }
 
   return slots;

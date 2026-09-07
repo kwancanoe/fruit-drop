@@ -211,8 +211,16 @@ const availableSlots = computed<string[]>(() => {
     }
   }
 
-  // Sort chronologically
-  return Array.from(slotsSet).sort((a, b) => parseTimeToMinutes(a) - parseTimeToMinutes(b));
+  // Sort chronologically relative to standby start time (handles overnight)
+  const startMin = parseTimeToMinutes(start);
+  return Array.from(slotsSet).sort((a, b) => {
+    const ma = parseTimeToMinutes(a);
+    const mb = parseTimeToMinutes(b);
+    if (startMin >= 9999) return ma - mb;
+    const diffA = (ma - startMin + 1440) % 1440;
+    const diffB = (mb - startMin + 1440) % 1440;
+    return diffA - diffB;
+  });
 });
 
 // Slot counts for single-time tabs

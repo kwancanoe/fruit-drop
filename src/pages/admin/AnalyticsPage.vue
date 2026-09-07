@@ -379,28 +379,25 @@ const paymentOptions = [
   { label: 'โอนล่วงหน้าพร้อมเพย์', value: 'PROMPTPAY_PREPAID' }
 ];
 
-// Product Cost Lookup Map (productId -> costPerKg)
+// Product & Master Fruit Cost Lookup Map for legacy orders lacking costPerKg snapshot
 const productCostMap = computed<Map<string, number>>(() => {
   const map = new Map<string, number>();
 
-  // Default fallback costs
-  map.set('PROD-NGO', 20);
-  map.set('PROD-ROUND-001-NGO', 20);
-  map.set('PROD-THURIAN', 110);
-  map.set('PROD-ROUND-001-THURIAN', 110);
-  map.set('PROD-MANGKUT', 30);
-  map.set('PROD-ROUND-001-MANGKUT', 30);
-  map.set('PROD-LONGKONG', 25);
-  map.set('PROD-ROUND-001-LONGKONG', 25);
-  map.set('PROD-LANGSAT', 20);
-  map.set('PROD-SOM', 35);
-  map.set('PROD-MAMUANG', 30);
+  // 1. Map master fruit catalog suggested costs (as base lookup)
+  for (const mf of fruitStore.masterFruits) {
+    if (typeof mf.defaultCostPerKg === 'number' && mf.defaultCostPerKg > 0) {
+      map.set(mf.id, mf.defaultCostPerKg);
+      if (mf.fruitKey) map.set(mf.fruitKey, mf.defaultCostPerKg);
+      if (mf.name) map.set(mf.name, mf.defaultCostPerKg);
+    }
+  }
 
-  // Read actual products from fruitStore
+  // 2. Map actual round product items (takes precedence over master catalog defaults)
   for (const p of fruitStore.products) {
-    if (p.costPerKg !== undefined && p.costPerKg > 0) {
+    if (typeof p.costPerKg === 'number' && p.costPerKg > 0) {
       map.set(p.id, p.costPerKg);
-      map.set(p.mascotKey, p.costPerKg);
+      if (p.mascotKey) map.set(p.mascotKey, p.costPerKg);
+      if (p.name) map.set(p.name, p.costPerKg);
     }
   }
 
@@ -410,9 +407,9 @@ const productCostMap = computed<Map<string, number>>(() => {
 // Helper: Estimate weight for an order item
 function getItemWeightKg(item: Order['items'][0]): number {
   if (item.productType === 'FIXED_WEIGHT') {
-    return item.orderedKg || 1;
+    return typeof item.orderedKg === 'number' ? Math.max(0, item.orderedKg) : (Number(item.orderedKg) || 0);
   }
-  if (item.actualWeighedKg) {
+  if (typeof item.actualWeighedKg === 'number' && item.actualWeighedKg > 0) {
     return item.actualWeighedKg;
   }
   if (item.selectedTierId?.includes('SMALL')) return 1.9;
@@ -421,25 +418,29 @@ function getItemWeightKg(item: Order['items'][0]): number {
   return 2.5;
 }
 
-// Helper: Get cost per kg for an item
+// Helper: Get cost per kg for an item (Strict Snapshot Isolation with Dynamic Fallback)
 function getItemCostPerKg(item: Order['items'][0]): number {
+  // 1. Primary: Immutable snapshot stored in OrderItem at order placement
+  if (typeof item.costPerKg === 'number' && !isNaN(item.costPerKg) && item.costPerKg >= 0) {
+    return item.costPerKg;
+  }
+
+  // 2. Secondary fallback for legacy orders: lookup by productId
   const byId = productCostMap.value.get(item.productId);
   if (byId !== undefined) return byId;
 
+  // 3. Tertiary fallback for legacy orders: lookup by mascotKey
   if (item.mascotKey) {
     const byMascot = productCostMap.value.get(item.mascotKey);
     if (byMascot !== undefined) return byMascot;
   }
 
-  // Name fallback
-  if (item.productName.includes('เงาะ')) return 20;
-  if (item.productName.includes('ทุเรียน')) return 110;
-  if (item.productName.includes('มังคุด')) return 30;
-  if (item.productName.includes('ลองกอง')) return 25;
-  if (item.productName.includes('ลางสาด')) return 20;
-  if (item.productName.includes('ส้ม')) return 35;
-  if (item.productName.includes('มะม่วง')) return 30;
-  return 20;
+  // 4. Quaternary fallback for legacy orders: lookup by productName
+  const byName = productCostMap.value.get(item.productName);
+  if (byName !== undefined) return byName;
+
+  // 5. Default zero cost (no hardcoded guessing)
+  return 0;
 }
 
 // Filtered Orders

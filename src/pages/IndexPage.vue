@@ -221,7 +221,7 @@ const isSlotValid = ref<boolean>(true);
 // Available pickup slots (single times e.g. 19:00 น., 19:30 น.)
 const availablePickupSlots = computed<string[]>(() => {
   const round = currentRound.value;
-  if (!round) return ['19:00 น.', '19:30 น.', '20:00 น.', '20:30 น.', '21:00 น.'];
+  if (!round) return [];
   const start = round.standbyStartTime || '19:00';
   const end = round.standbyEndTime || '23:00';
   return generateTimeSlots(start, end, 30);
@@ -270,10 +270,15 @@ async function checkActiveCustomerOrder() {
     activeCustomerOrder.value = null;
     return;
   }
-  const ord = await fruitStore.getOrderByOrderId(storedId);
-  if (ord && ord.orderStatus !== 'COMPLETED') {
-    activeCustomerOrder.value = ord;
-  } else {
+  try {
+    const ord = await fruitStore.getOrderByOrderId(storedId);
+    if (ord && ord.orderStatus === 'WAITING_PICKUP') {
+      activeCustomerOrder.value = ord;
+    } else {
+      activeCustomerOrder.value = null;
+    }
+  } catch (err) {
+    console.error('Failed to check active customer order:', err);
     activeCustomerOrder.value = null;
   }
 }

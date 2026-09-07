@@ -952,6 +952,11 @@ async function doRevert() {
     $q.notify({ type: 'info', message: 'ยกเลิกสถานะส่งมอบเรียบร้อย', position: 'top', timeout: 1500 });
   } catch (err) {
     console.error('Revert error:', err);
+    $q.notify({
+      type: 'negative',
+      message: 'เกิดข้อผิดพลาดในการยกเลิกสถานะส่งมอบ',
+      position: 'top'
+    });
   } finally {
     isSubmittingAction.value = false;
   }

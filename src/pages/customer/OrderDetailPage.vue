@@ -31,6 +31,41 @@
       <div class="text-caption text-grey-7 q-mt-sm">กำลังโหลดข้อมูลคำสั่งซื้อ...</div>
     </div>
 
+    <!-- Load Error State (Network / Server Error with Retry) -->
+    <q-card
+      v-else-if="loadError"
+      id="card-order-load-error"
+      data-audit-id="card-order-load-error"
+      class="bg-white q-pa-xl text-center shadow-1"
+    >
+      <q-icon name="wifi_off" size="56px" color="warning" class="q-mb-sm" />
+      <div class="text-h6 text-weight-bold text-grey-9">ไม่สามารถโหลดข้อมูลคำสั่งซื้อได้</div>
+      <div class="text-caption text-grey-6 q-mb-md">{{ loadError }}</div>
+      <div class="row justify-center items-center" style="gap: 12px;">
+        <q-btn
+          id="btn-retry-load-order"
+          data-audit-id="btn-retry-load-order"
+          color="primary"
+          icon="refresh"
+          label="ลองใหม่อีกครั้ง"
+          no-caps
+          rounded
+          class="text-weight-bold q-px-md"
+          @click="loadOrder"
+        />
+        <q-btn
+          id="btn-error-back-home"
+          data-audit-id="btn-error-back-home"
+          flat
+          color="grey-8"
+          label="กลับไปหน้าร้าน"
+          no-caps
+          rounded
+          to="/"
+        />
+      </div>
+    </q-card>
+
     <!-- Not Found State -->
     <q-card v-else-if="!order" class="bg-white q-pa-xl text-center shadow-1">
       <q-icon name="error_outline" size="56px" color="negative" class="q-mb-sm" />
@@ -75,6 +110,7 @@ const fruitStore = useFruitStore();
 const orderId = computed(() => String(route.params.orderId || ''));
 const order = ref<Order | null>(null);
 const isLoading = ref<boolean>(true);
+const loadError = ref<string | null>(null);
 
 // Load Order from memory store or Firestore
 async function loadOrder() {
@@ -83,11 +119,13 @@ async function loadOrder() {
     return;
   }
   isLoading.value = true;
+  loadError.value = null;
   try {
     const fetched = await fruitStore.getOrderByOrderId(orderId.value);
     order.value = fetched;
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Error loading order detail:', err);
+    loadError.value = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการโหลดข้อมูลคำสั่งซื้อ กรุณาลองใหม่อีกครั้ง';
   } finally {
     isLoading.value = false;
   }

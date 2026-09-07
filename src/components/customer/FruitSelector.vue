@@ -201,8 +201,11 @@ function updateFixedQty(prod: ProductItem, qty: number) {
       productName: prod.name,
       productType: 'FIXED_WEIGHT',
       pricePerKg: prod.pricePerKg,
+      costPerKg: prod.costPerKg ?? 0,
       orderedKg: qty,
       orderedBundle: matchingBundle?.label,
+      bundleQtyKg: matchingBundle?.qtyKg,
+      bundlePrice: matchingBundle?.price,
       itemFinalPrice,
       mascotKey: prod.mascotKey
     });
@@ -239,6 +242,7 @@ function setTierSelection(productId: string, tierId: string) {
       productName: prod.name,
       productType: 'VARIABLE_WHOLE_FRUIT',
       pricePerKg: prod.pricePerKg,
+      costPerKg: prod.costPerKg ?? 0,
       selectedTierId: tierId,
       selectedTierLabel: tier?.label || '',
       mascotKey: prod.mascotKey

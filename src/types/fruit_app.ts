@@ -186,6 +186,11 @@ export interface OrderItem {
   pricePerKg: number;
   mascotKey?: string | undefined;
 
+  // COGS & Bundle Snapshots (Isolated from subsequent catalog edits)
+  costPerKg?: number | undefined;           // Cost price per kg (ต้นทุน) snapshot at order placement
+  bundleQtyKg?: number | undefined;         // Bundle quantity in kg (e.g. 3)
+  bundlePrice?: number | undefined;         // Bundle price in THB (e.g. 100)
+
   // FIXED_WEIGHT selection
   orderedBundle?: string | undefined;       // e.g. "3 กิโล 100 บาท"
   orderedKg?: number | undefined;           // e.g. 3
