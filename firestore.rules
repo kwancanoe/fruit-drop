@@ -90,6 +90,12 @@ service cloud.firestore {
       allow write: if isStaff();
     }
 
+    // Master Fruits catalog: Public can read, staff can manage
+    match /master_fruits/{fruitId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
     // Orders:
     // - Customers can create orders and look up order details
     // - Staff can read, update status, weigh fruits, or attach payment proof

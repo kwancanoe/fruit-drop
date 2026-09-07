@@ -1,41 +1,79 @@
-import { register } from "register-service-worker";
+import { register } from 'register-service-worker';
+import { Notify } from 'quasar';
 
-// The ready(), registered(), cached(), updatefound() and updated()
-// events passes a ServiceWorkerRegistration instance in their arguments.
-// ServiceWorkerRegistration: https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration
+// Proactive SW update triggers and reload prompt
+let refreshing = false;
+function triggerReload() {
+  if (!refreshing) {
+    refreshing = true;
+    window.location.reload();
+  }
+}
+
+function promptOrReload(registration: ServiceWorkerRegistration) {
+  Notify.create({
+    message: 'มีเวอร์ชันใหม่พร้อมใช้งาน',
+    caption: 'แตะเพื่ออัปเดตเวอร์ชันล่าสุด',
+    icon: 'system_update',
+    timeout: 0,
+    position: 'top',
+    color: 'positive',
+    textColor: 'white',
+    classes: 'rounded-borders text-weight-bold shadow-4',
+    actions: [
+      {
+        label: 'อัปเดตเลย',
+        color: 'white',
+        handler: () => {
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+          triggerReload();
+        },
+      },
+    ],
+  });
+}
 
 register(import.meta.env.QUASAR_SERVICE_WORKER_FILE, {
-  // The registrationOptions object will be passed as the second argument
-  // to ServiceWorkerContainer.register()
-  // https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerContainer/register#Parameter
-
-  // registrationOptions: { scope: './' },
-
-  ready(/* registration */) {
-    // console.log('Service worker is active.')
+  ready() {
+    // Service worker is active
   },
 
-  registered(/* registration */) {
-    // console.log('Service worker has been registered.')
+  registered(registration) {
+    // 1. Immediate check on startup
+    registration.update().catch(() => {});
+
+    // 2. Mobile tab return (User unlocks phone or switches back to tab)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        registration.update().catch(() => {});
+      }
+    });
+
+    // 3. Window focus check
+    window.addEventListener('focus', () => {
+      registration.update().catch(() => {});
+    });
   },
 
-  cached(/* registration */) {
-    // console.log('Content has been cached for offline use.')
+  cached() {
+    // Content cached for offline use
   },
 
-  updatefound(/* registration */) {
-    // console.log('New content is downloading.')
+  updatefound() {
+    // New content downloading
   },
 
-  updated(/* registration */) {
-    // console.log('New content is available; please refresh.')
+  updated(registration) {
+    promptOrReload(registration);
   },
 
   offline() {
-    // console.log('No internet connection found. App is running in offline mode.')
+    // App running in offline mode
   },
 
-  error(/* err */) {
-    // console.error('Error during service worker registration:', err)
-  }
+  error(err) {
+    console.error('Error during service worker registration:', err);
+  },
 });

@@ -1,7 +1,13 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    // Slip and payment proof uploads
     match /payment_proofs/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    // Fruit custom mascot and photo uploads
+    match /fruits/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null;
     }

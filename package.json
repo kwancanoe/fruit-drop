@@ -1,6 +1,6 @@
 {
   "name": "fruit-drop",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Fruit Drop - Zero-Friction Pre-order & Car Park Tailgate Dispatch Engine",
   "productName": "Fruit Drop",
   "author": "kwancanoe <53270254+kwancanoe@users.noreply.github.com>",
@@ -8,7 +8,9 @@
   "private": true,
   "scripts": {
     "dev": "quasar dev",
-    "build": "quasar build",
+    "build": "quasar build -m pwa",
+    "build:spa": "quasar build",
+    "build:pwa": "quasar build -m pwa",
     "typecheck": "vue-tsc --noEmit",
     "postinstall": "quasar prepare --silent"
   },
