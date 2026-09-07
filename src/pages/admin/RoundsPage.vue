@@ -86,7 +86,7 @@
         <div class="text-caption text-grey-7 q-mb-sm">
           <div class="row items-center no-wrap q-mb-xs">
             <q-icon name="event" size="15px" class="q-mr-xs text-primary flex-shrink-0" />
-            <div class="col text-weight-medium ellipsis text-grey-8">{{ round.pickupDate }}</div>
+            <div class="col text-weight-medium ellipsis text-grey-8">{{ formatThaiPickupDate(round.pickupDate) }}</div>
           </div>
 
           <div class="row items-center no-wrap q-mb-xs">
@@ -129,16 +129,25 @@
         <!-- Actions Row: Customer Booking Toggle & Edit Button -->
         <div class="row items-center justify-between">
           <!-- Toggle Open / Closed Switch -->
-          <q-toggle
-            :model-value="round.isOpen"
-            color="positive"
-            dense
-            label="เปิดรับจอง"
-            left-label
-            class="text-caption text-weight-bold text-grey-8"
-            :data-audit-id="`toggle-round-status-${round.roundId}`"
-            @update:model-value="val => handleToggleStatus(round.roundId, val)"
-          />
+          <div class="row items-center">
+            <q-toggle
+              :model-value="round.isOpen && !isRoundPastCutoff(round)"
+              :disable="isRoundPastCutoff(round)"
+              color="positive"
+              dense
+              label="เปิดรับจอง"
+              left-label
+              class="text-caption text-weight-bold text-grey-8"
+              :data-audit-id="`toggle-round-status-${round.roundId}`"
+              @update:model-value="val => handleToggleStatus(round.roundId, val)"
+            />
+            <q-badge
+              v-if="isRoundPastCutoff(round)"
+              color="grey-6"
+              class="q-ml-xs text-caption"
+              label="สิ้นสุดรอบ (ผ่าน 24:00 น.)"
+            />
+          </div>
 
           <!-- Edit Button -->
           <q-btn
@@ -164,6 +173,7 @@ import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
 import FruitMascotAvatar from '@/components/common/FruitMascotAvatar.vue';
+import { formatThaiPickupDate, isRoundPastCutoff } from '@/utils/roundDate';
 
 const router = useRouter();
 const $q = useQuasar();

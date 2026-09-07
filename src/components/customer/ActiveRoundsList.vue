@@ -48,7 +48,7 @@
           <div class="q-mb-sm text-body2 text-grey-9">
             <div class="row items-center q-mb-xs">
               <q-icon name="event" color="primary" size="18px" class="q-mr-xs" />
-              <span><strong>วันที่นัดรับ:</strong> {{ round.pickupDate }}</span>
+              <span><strong>วันที่นัดรับ:</strong> {{ formatThaiPickupDate(round.pickupDate) }}</span>
             </div>
             <div class="row items-center q-mb-xs">
               <q-icon name="schedule" color="primary" size="18px" class="q-mr-xs" />
@@ -97,6 +97,7 @@
 import type { PreorderRound } from '@/types/fruit_app';
 import RoundStatusBadge from '@/components/common/RoundStatusBadge.vue';
 import FruitMascotAvatar from '@/components/common/FruitMascotAvatar.vue';
+import { formatThaiPickupDate } from '@/utils/roundDate';
 
 defineProps<{
   rounds: PreorderRound[];

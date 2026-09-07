@@ -119,7 +119,7 @@
       <div class="text-subtitle2 text-weight-bold text-grey-9 q-mb-xs">เวลานัดรับสินค้า:</div>
       <div class="bg-green-1 q-pa-sm rounded-borders text-body2 text-primary text-weight-bold q-mb-md row items-center">
         <q-icon name="schedule" size="20px" class="q-mr-xs" />
-        <span>รอบเวลา {{ order.pickupSlot }}</span>
+        <span>รอบเวลา {{ normalizeSlotLabel(order.pickupSlot) }}</span>
       </div>
 
       <!-- Payment Summary -->
@@ -159,6 +159,7 @@ import type { Order } from '@/types/fruit_app';
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
 import { useFruitStore } from '@/stores/fruitStore';
 import { exportOrderTicket } from '@/utils/orderTicketCanvas';
+import { normalizeSlotLabel } from '@/utils/timeSlots';
 
 const props = defineProps<{
   order: Order;

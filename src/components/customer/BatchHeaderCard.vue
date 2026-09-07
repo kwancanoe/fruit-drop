@@ -13,7 +13,7 @@
       <div class="row items-center justify-center text-body2 text-grey-9 q-mt-xs">
         <div class="col-12 col-sm-auto row items-center justify-center q-px-sm q-py-xs">
           <q-icon name="event" color="primary" size="20px" class="q-mr-xs" />
-          <span class="text-weight-medium">{{ round?.pickupDate || 'วันอังคารที่ 8 ก.ย.' }}</span>
+          <span class="text-weight-medium">{{ formatThaiPickupDate(round?.pickupDate) }}</span>
         </div>
         <div class="col-12 col-sm-auto row items-center justify-center q-px-sm q-py-xs">
           <q-icon name="local_shipping" color="primary" size="20px" class="q-mr-xs" />
@@ -34,6 +34,7 @@
 
 <script setup lang="ts">
 import type { PreorderRound } from '@/types/fruit_app';
+import { formatThaiPickupDate } from '@/utils/roundDate';
 
 defineProps<{
   round: PreorderRound | null;

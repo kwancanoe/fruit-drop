@@ -18,7 +18,7 @@
             #{{ order.orderId }}
           </span>
           <q-badge color="grey-3" text-color="grey-9" class="text-weight-bold" rounded>
-            {{ order.pickupSlot }}
+            {{ normalizeSlotLabel(order.pickupSlot) }}
           </q-badge>
         </div>
 
@@ -106,6 +106,7 @@ import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import type { Order } from '@/types/fruit_app';
 import { orderHasUnweighedFruit } from '@/constants/status';
+import { normalizeSlotLabel } from '@/utils/timeSlots';
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
 
 const props = defineProps<{

@@ -1,3 +1,5 @@
+import type { Timestamp, FieldValue } from 'firebase/firestore';
+
 // Polymorphic Firestore Data Contracts & System Types for Fruit Drop
 
 export type ProductType = 'FIXED_WEIGHT' | 'VARIABLE_WHOLE_FRUIT';
@@ -66,7 +68,9 @@ export interface PreorderRound {
   id?: string | undefined;
   roundId: string;
   title: string;
-  pickupDate: string;           // e.g. "วันอังคารที่ 8 กันยายน 2569"
+  pickupDate: Timestamp | string | number; // Firestore Timestamp, string or epoch ms
+  pickupDateIso?: string | undefined;      // e.g. "2026-09-08" (Standard ISO date)
+  pickupDateTimestamp?: number | undefined;// Epoch milliseconds
   pickupLocation: string;       // e.g. "ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B"
   standbyTime?: string | undefined;         // e.g. "19:00 - 23:00" (single standby window)
   standbyStartTime?: string | undefined;    // e.g. "19:00"
@@ -80,7 +84,7 @@ export interface PreorderRound {
   isOpen: boolean;              // Open for customer pre-orders
   fruitSummary?: string[] | undefined; // Quick preview list e.g. ["เงาะโรงเรียน", "ทุเรียนหมอนทอง"]
   createdAt: number;
-  updatedAt?: number | undefined;
+  updatedAt?: Timestamp | FieldValue | number | undefined;
 }
 
 // 0. Master Fruit Catalog Document (Centralized fruit types master table)
@@ -116,7 +120,9 @@ export interface RoundCreationFruitConfig {
 
 export interface RoundCreationPayload {
   title: string;
-  pickupDate: string;
+  pickupDate: Timestamp | string | number;
+  pickupDateIso?: string | undefined;
+  pickupDateTimestamp?: number | undefined;
   pickupLocation: string;
   standbyTime?: string | undefined;
   standbyStartTime?: string | undefined;
@@ -133,7 +139,9 @@ export interface RoundCreationPayload {
 
 export interface RoundUpdatePayload {
   title: string;
-  pickupDate: string;
+  pickupDate: Timestamp | string | number;
+  pickupDateIso?: string | undefined;
+  pickupDateTimestamp?: number | undefined;
   pickupLocation: string;
   standbyTime?: string | undefined;
   standbyStartTime?: string | undefined;

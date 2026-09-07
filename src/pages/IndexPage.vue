@@ -104,7 +104,7 @@
           <span class="text-h5 text-weight-bolder text-primary">{{ totalEstimatedPrice }} บาท</span>
         </div>
         <div class="text-caption text-grey-7 q-mb-md">
-          เลือกไว้ {{ totalItemCount }} รายการ • นัดรับ: {{ currentRound.pickupDate }} ({{ selectedSlot }})
+          เลือกไว้ {{ totalItemCount }} รายการ • นัดรับ: {{ formatThaiPickupDate(currentRound.pickupDate) }} ({{ normalizeSlotLabel(selectedSlot) }})
         </div>
 
         <q-btn
@@ -181,7 +181,8 @@ import { useFruitStore } from '@/stores/fruitStore';
 import { useCustomerStorage } from '@/composables/useCustomerStorage';
 import type { OrderItem, CustomerInfo, Order, PreorderRound } from '@/types/fruit_app';
 import { calculateItemSubtotal } from '@/utils/pricing';
-import { generateTimeSlots } from '@/utils/timeSlots';
+import { generateTimeSlots, normalizeSlotLabel } from '@/utils/timeSlots';
+import { formatThaiPickupDate } from '@/utils/roundDate';
 import ActiveRoundsList from '@/components/customer/ActiveRoundsList.vue';
 import BatchHeaderCard from '@/components/customer/BatchHeaderCard.vue';
 import FruitSelector from '@/components/customer/FruitSelector.vue';

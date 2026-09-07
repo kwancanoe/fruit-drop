@@ -2,6 +2,7 @@
 // Supports 1:1 pixel-perfect DOM capture via html-to-image and canvas fallback
 import { toBlob } from 'html-to-image';
 import type { Order } from '@/types/fruit_app';
+import { normalizeSlotLabel } from '@/utils/timeSlots';
 
 // Options passed to order ticket export engine
 export interface ExportTicketOptions {
@@ -290,7 +291,7 @@ export async function generateOrderTicketCanvas(options: ExportTicketOptions): P
 
   ctx.fillStyle = '#2E7D32';
   ctx.font = `bold 21px ${fontRegular}`;
-  ctx.fillText(`รอบเวลา ${order.pickupSlot}`, blockX + 22, currentY + 68);
+  ctx.fillText(`รอบเวลา ${normalizeSlotLabel(order.pickupSlot)}`, blockX + 22, currentY + 68);
 
   ctx.fillStyle = '#388E3C';
   ctx.font = `17px ${fontRegular}`;

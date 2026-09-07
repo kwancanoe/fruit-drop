@@ -21,7 +21,7 @@
         @click="handleBack"
       />
       <div v-if="order" class="text-caption text-grey-7">
-        รอบเวลานัดรับ: <strong>{{ order.pickupSlot }}</strong>
+        รอบเวลานัดรับ: <strong>{{ normalizeSlotLabel(order.pickupSlot) }}</strong>
       </div>
     </div>
 
@@ -101,6 +101,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useFruitStore } from '@/stores/fruitStore';
 import type { Order } from '@/types/fruit_app';
+import { normalizeSlotLabel } from '@/utils/timeSlots';
 import OrderQueueCard from '@/components/customer/OrderQueueCard.vue';
 
 const route = useRoute();

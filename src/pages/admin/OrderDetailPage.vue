@@ -47,7 +47,7 @@
               <div class="text-caption text-grey-7">รอบเวลานัดรับ</div>
               <q-badge color="grey-3" text-color="grey-9" class="text-subtitle2 text-weight-bold q-px-sm q-py-xs" rounded>
                 <q-icon name="schedule" size="16px" class="q-mr-xs" />
-                {{ order.pickupSlot }}
+                {{ normalizeSlotLabel(order.pickupSlot) }}
               </q-badge>
             </div>
           </div>
@@ -549,6 +549,8 @@ import { generatePromptPayQRDataUrl } from '@/utils/promptpay';
 import { calculateItemSubtotal, calculateOrderFinalTotal } from '@/utils/pricing';
 import { orderHasUnweighedFruit } from '@/constants/status';
 import { compressImage } from '@/utils/imageCompressor';
+import { toRoundDate } from '@/utils/roundDate';
+import { normalizeSlotLabel } from '@/utils/timeSlots';
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
 
 const route = useRoute();
@@ -989,8 +991,10 @@ function handleBack() {
   }
 }
 
-function formatTimestamp(ts: number): string {
-  const d = new Date(ts);
+function formatTimestamp(ts: unknown): string {
+  if (!ts) return '';
+  const d = toRoundDate(ts);
+  if (!d) return '';
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')} น.`;
 }
 

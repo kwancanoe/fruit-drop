@@ -16,8 +16,10 @@ import {
   limit,
   onSnapshot,
   serverTimestamp,
+  Timestamp,
   type Unsubscribe
 } from 'firebase/firestore';
+import { isRoundPastCutoff, toRoundDate, toIsoDateString, createRoundTimestamp } from '@/utils/roundDate';
 
 /**
  * Recursively removes all keys whose value is undefined from an object.
@@ -30,8 +32,8 @@ export function sanitizeFirestoreData<T>(obj: T): T {
   if (Array.isArray(obj)) {
     return obj.map(sanitizeFirestoreData) as unknown as T;
   }
-  // Preserve Firestore FieldValue instances (serverTimestamp, deleteField, etc.)
-  if (obj.constructor && obj.constructor.name === 'FieldValue') {
+  // Preserve Firestore Timestamp and FieldValue instances (serverTimestamp, deleteField, etc.)
+  if (obj instanceof Timestamp || (obj.constructor && (obj.constructor.name === 'FieldValue' || obj.constructor.name === 'Timestamp'))) {
     return obj;
   }
   const result: Record<string, any> = {};
@@ -197,7 +199,9 @@ export const useFruitStore = defineStore('fruit', () => {
         id: docSnap.id
       }));
       fetched.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
-      openRounds.value = fetched;
+
+      // Cutoff Rule: Filter out any round where isRoundPastCutoff(r) is true (past 24:00 cutoff)
+      openRounds.value = fetched.filter(r => r.isOpen && !isRoundPastCutoff(r));
 
       // Automatically select first open round if none selected
       const firstOpenRound = openRounds.value[0];
@@ -232,6 +236,16 @@ export const useFruitStore = defineStore('fruit', () => {
         ...docSnap.data() as PreorderRound,
         id: docSnap.id
       }));
+
+      // Background Sync: If staff/admin is authenticated, auto-close expired rounds in Firestore
+      if (isAdmin.value) {
+        for (const r of allRounds.value) {
+          if (r.isOpen && isRoundPastCutoff(r)) {
+            console.log(`[AutoClose] Round ${r.roundId} passed 24:00 cutoff. Auto-closing in Firestore...`);
+            toggleRoundStatus(r.roundId, false).catch(err => console.warn('Auto-close error:', err));
+          }
+        }
+      }
 
       // Auto-select saved round or latest OPEN round
       if (allRounds.value.length > 0) {
@@ -329,6 +343,14 @@ export const useFruitStore = defineStore('fruit', () => {
   }): Promise<string> {
     isLoading.value = true;
     try {
+      // 24:00 Cutoff Enforcement Guard: Reject order submission for expired round
+      const targetRound = openRounds.value.find(r => r.roundId === payload.roundId)
+        || allRounds.value.find(r => r.roundId === payload.roundId)
+        || activeRound.value;
+      if (targetRound && isRoundPastCutoff(targetRound)) {
+        throw new Error('รอบการจองนี้ปิดรับคำสั่งซื้อแล้วเนื่องจากสิ้นสุดวันนัดรับ (หลัง 24:00 น.)');
+      }
+
       // Human-readable Order ID e.g. "FD-8421"
       const randomSuffix = Math.floor(1000 + Math.random() * 9000);
       const orderId = `FD-${randomSuffix}`;
@@ -556,10 +578,16 @@ export const useFruitStore = defineStore('fruit', () => {
       const enabledFruits = payload.fruits.filter(f => f.isEnabled);
       const fruitNames = enabledFruits.map(f => f.name);
 
+      const pickupDateObj = createRoundTimestamp(payload.pickupDate);
+      const isoDateStr = payload.pickupDateIso || toIsoDateString(payload.pickupDate);
+      const epochMs = toRoundDate(payload.pickupDate)?.getTime() || timestamp;
+
       const newRound: PreorderRound = {
         roundId,
-        title: payload.title || `รอบส่งผลไม้ ${payload.pickupDate}`,
-        pickupDate: payload.pickupDate,
+        title: payload.title || `รอบส่งผลไม้ ${isoDateStr}`,
+        pickupDate: pickupDateObj,
+        pickupDateIso: isoDateStr,
+        pickupDateTimestamp: epochMs,
         pickupLocation: payload.pickupLocation,
         pickupSlots: payload.pickupSlots,
         standbyTime: payload.standbyTime,
@@ -572,7 +600,8 @@ export const useFruitStore = defineStore('fruit', () => {
         bankAccountName: payload.bankAccountName || payload.promptPayName || 'นาตยา บุญณะ',
         isOpen: true,
         fruitSummary: fruitNames,
-        createdAt: timestamp
+        createdAt: timestamp,
+        updatedAt: serverTimestamp()
       };
 
       // 1. Save round document
@@ -633,9 +662,15 @@ export const useFruitStore = defineStore('fruit', () => {
       const enabledFruits = payload.fruits.filter(f => f.isEnabled);
       const fruitNames = enabledFruits.map(f => f.name);
 
+      const pickupDateObj = createRoundTimestamp(payload.pickupDate);
+      const isoDateStr = payload.pickupDateIso || toIsoDateString(payload.pickupDate);
+      const epochMs = toRoundDate(payload.pickupDate)?.getTime() || Date.now();
+
       const roundUpdates = {
         title: payload.title,
-        pickupDate: payload.pickupDate,
+        pickupDate: pickupDateObj,
+        pickupDateIso: isoDateStr,
+        pickupDateTimestamp: epochMs,
         pickupLocation: payload.pickupLocation,
         pickupSlots: payload.pickupSlots,
         standbyTime: payload.standbyTime,
@@ -820,12 +855,14 @@ export const useFruitStore = defineStore('fruit', () => {
     const defaultRound: PreorderRound = {
       roundId: 'ROUND-001',
       title: 'รอบส่งผลไม้ Fruit Drop',
-      pickupDate: 'วันอังคารที่ 8 กันยายน 2569',
+      pickupDate: createRoundTimestamp('2026-09-08'),
+      pickupDateIso: '2026-09-08',
+      pickupDateTimestamp: new Date('2026-09-08T00:00:00+07:00').getTime(),
       pickupLocation: 'ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B',
       standbyStartTime: '19:00',
       standbyEndTime: '23:00',
       standbyTime: '19:00 - 23:00',
-      pickupSlots: ['19:00 น.', '19:30 น.', '20:00 น.', '20:30 น.', '21:00 น.', '21:30 น.', '22:00 น.', '22:30 น.', '23:00 น.'],
+      pickupSlots: ['19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00'],
       promptPayNumber: '0878902935',
       promptPayName: 'นาตยา บุญณะ',
       bankName: 'KBANK (กสิกรไทย)',

@@ -117,6 +117,7 @@ import TimeSlotTabs from '@/components/admin/TimeSlotTabs.vue';
 import TailgateOrderCard from '@/components/admin/TailgateOrderCard.vue';
 import { generateTimeSlots, normalizeSlotLabel, isRangeSlot, parseTimeToMinutes } from '@/utils/timeSlots';
 import { calculateCashInHandTotal, calculatePrepaidTransferTotal } from '@/utils/pricing';
+import { formatThaiPickupDate, isRoundPastCutoff } from '@/utils/roundDate';
 
 const $q = useQuasar();
 const fruitStore = useFruitStore();
@@ -139,13 +140,18 @@ const selectedRoundId = computed<string>({
 });
 
 const roundOptions = computed(() => {
-  return fruitStore.allRounds.map(r => ({
-    label: `${r.title} (${r.pickupDate || 'ไม่ระบุวันที่'})${r.isOpen ? '' : ' [ปิดรับแล้ว]'}`,
-    value: r.roundId,
-    title: r.title,
-    date: r.pickupDate || 'ไม่ระบุวันที่',
-    isOpen: r.isOpen
-  }));
+  return fruitStore.allRounds.map(r => {
+    const formattedDate = formatThaiPickupDate(r.pickupDate);
+    const expired = isRoundPastCutoff(r);
+    const statusText = expired ? ' [หมดรอบ]' : (r.isOpen ? '' : ' [ปิดรับแล้ว]');
+    return {
+      label: `${r.title} (${formattedDate})${statusText}`,
+      value: r.roundId,
+      title: r.title,
+      date: formattedDate,
+      isOpen: r.isOpen && !expired
+    };
+  });
 });
 
 // Handle changing active dispatch round

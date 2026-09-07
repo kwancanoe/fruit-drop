@@ -58,7 +58,7 @@
         <!-- 1. Pickup Date Picker (Clean, No Shortcut Chips) -->
         <div class="q-mb-sm">
           <q-input
-            v-model="form.pickupDate"
+            :model-value="formatThaiPickupDate(calendarDate || form.pickupDateIso || form.pickupDate)"
             outlined
             dense
             readonly
@@ -440,6 +440,7 @@ import { generateTimeSlots } from '@/utils/timeSlots';
 import { getFruitMascotUrl } from '@/utils/fruitMascots';
 import RoundStatusBadge from '@/components/common/RoundStatusBadge.vue';
 import FruitEditDialog from '@/components/admin/FruitEditDialog.vue';
+import { formatThaiPickupDate, toIsoDateString, createRoundTimestamp } from '@/utils/roundDate';
 
 const route = useRoute();
 const router = useRouter();
@@ -453,32 +454,12 @@ const isEditMode = computed<boolean>(() => !!roundId.value && roundId.value !== 
 const isLoadingData = ref<boolean>(false);
 const calendarDate = ref<string>('');
 
-// Thai Date Formatters
-const THAI_DAYS = ['วันอาทิตย์ที่', 'วันจันทร์ที่', 'วันอังคารที่', 'วันพุธที่', 'วันพฤหัสบดีที่', 'วันศุกร์ที่', 'วันเสาร์ที่'];
-const THAI_MONTHS = [
-  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-];
-
-function formatThaiDateFromIso(isoStr: string): string {
-  const parts = isoStr.replace(/-/g, '/').split('/');
-  const p0 = parts[0];
-  const p1 = parts[1];
-  const p2 = parts[2];
-  if (!p0 || !p1 || !p2) return isoStr;
-  const year = parseInt(p0, 10);
-  const month = parseInt(p1, 10) - 1;
-  const day = parseInt(p2, 10);
-  const d = new Date(year, month, day);
-  const dayName = THAI_DAYS[d.getDay()] || '';
-  const monthName = THAI_MONTHS[month] || '';
-  const thaiYear = year + 543;
-  return `${dayName} ${day} ${monthName} ${thaiYear}`;
-}
-
 function onCalendarDatePicked(val: string) {
   if (!val) return;
-  form.value.pickupDate = formatThaiDateFromIso(val);
+  const iso = val.replace(/\//g, '-');
+  calendarDate.value = iso;
+  form.value.pickupDateIso = iso;
+  form.value.pickupDate = iso;
 }
 
 // Default Master 7 Fruits (Template catalog for rounds)
@@ -552,7 +533,8 @@ function getDefaultFruitConfigs(): RoundCreationFruitConfig[] {
 
 const form = ref({
   title: 'รอบส่งผลไม้ วันอังคาร 8 ก.ย.',
-  pickupDate: 'วันอังคารที่ 8 กันยายน 2569',
+  pickupDate: '2026-09-08',
+  pickupDateIso: '2026-09-08',
   pickupLocation: 'ท้ายรถลานจอดรถห้าง เสา B12 ชั้น 1B',
   standbyStartTime: '19:00',
   standbyEndTime: '23:00',
@@ -574,7 +556,7 @@ const computedStandbyTime = computed<string>(() => {
 
 const isFormValid = computed<boolean>(() => {
   const hasTitle = !!form.value.title.trim();
-  const hasDate = !!form.value.pickupDate.trim();
+  const hasDate = !!(calendarDate.value || form.value.pickupDateIso || form.value.pickupDate);
   const hasLocation = !!form.value.pickupLocation.trim();
   const hasStandbyStart = !!form.value.standbyStartTime?.trim();
   const hasStandbyEnd = !!form.value.standbyEndTime?.trim();
@@ -657,7 +639,10 @@ async function loadRoundData(id: string) {
     }
 
     form.value.title = roundData.title;
-    form.value.pickupDate = roundData.pickupDate;
+    const isoDate = roundData.pickupDateIso || toIsoDateString(roundData.pickupDate) || '2026-09-08';
+    calendarDate.value = isoDate.replace(/-/g, '/');
+    form.value.pickupDateIso = isoDate;
+    form.value.pickupDate = isoDate;
     form.value.pickupLocation = roundData.pickupLocation;
 
     // Load Standby Window
@@ -766,11 +751,17 @@ async function handleSubmit() {
   if (!isFormValid.value) return;
 
   const standbyTimeStr = computedStandbyTime.value;
+  const effectiveIsoDate = form.value.pickupDateIso || toIsoDateString(calendarDate.value) || '2026-09-08';
+  const pickupTimestampObj = createRoundTimestamp(effectiveIsoDate);
+  const pickupEpochMs = pickupTimestampObj.toMillis();
+
   try {
     if (isEditMode.value) {
       await fruitStore.updateRound(roundId.value, {
         title: form.value.title.trim(),
-        pickupDate: form.value.pickupDate.trim(),
+        pickupDate: pickupTimestampObj,
+        pickupDateIso: effectiveIsoDate,
+        pickupDateTimestamp: pickupEpochMs,
         pickupLocation: form.value.pickupLocation.trim(),
         standbyTime: standbyTimeStr,
         standbyStartTime: form.value.standbyStartTime.trim(),
@@ -793,7 +784,9 @@ async function handleSubmit() {
     } else {
       const newRoundId = await fruitStore.createRound({
         title: form.value.title.trim(),
-        pickupDate: form.value.pickupDate.trim(),
+        pickupDate: pickupTimestampObj,
+        pickupDateIso: effectiveIsoDate,
+        pickupDateTimestamp: pickupEpochMs,
         pickupLocation: form.value.pickupLocation.trim(),
         standbyTime: standbyTimeStr,
         standbyStartTime: form.value.standbyStartTime.trim(),

@@ -278,7 +278,7 @@
               <!-- Row 2: Customer Location & Slot (Left) | Revenue & Margin (Right) -->
               <div class="row items-center justify-between no-wrap full-width text-caption text-grey-7 q-mt-xs">
                 <div class="col ellipsis q-mr-xs">
-                  {{ order.customer.shop }} ({{ order.customer.floor }}) | {{ order.pickupSlot }}
+                  {{ order.customer.shop }} ({{ order.customer.floor }}) | {{ normalizeSlotLabel(order.pickupSlot) }}
                 </div>
                 <div class="text-no-wrap text-right" style="font-size: 11px;">
                   ขาย ฿{{ order.revenue.toLocaleString() }} ({{ order.marginPercent }}%)
@@ -333,6 +333,8 @@ import { useFruitStore } from '@/stores/fruitStore';
 import type { Order, ProductItem } from '@/types/fruit_app';
 import { calculateItemSubtotal } from '@/utils/pricing';
 import OrderStatusBadge from '@/components/common/OrderStatusBadge.vue';
+import { formatThaiPickupDate } from '@/utils/roundDate';
+import { normalizeSlotLabel } from '@/utils/timeSlots';
 
 const router = useRouter();
 const fruitStore = useFruitStore();
@@ -355,7 +357,7 @@ function handleBack() {
 const roundOptions = computed(() => {
   const opts = [{ label: 'ทุกรอบการจอง', value: 'ALL' }];
   for (const r of fruitStore.allRounds) {
-    opts.push({ label: `${r.title} (${r.pickupDate})`, value: r.roundId });
+    opts.push({ label: `${r.title} (${formatThaiPickupDate(r.pickupDate)})`, value: r.roundId });
   }
   return opts;
 });
