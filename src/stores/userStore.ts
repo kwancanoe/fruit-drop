@@ -137,6 +137,15 @@ export const useUserStore = defineStore('user', () => {
           isActive: true,
           createdAt: Date.now()
         };
+      } else if (normalizedEmail === 'kwancanoe@gmail.com') {
+        found = {
+          email: normalizedEmail,
+          displayName: 'Kwan Canoe',
+          phone: '',
+          role: 'SYSTEM_ADMIN',
+          isActive: true,
+          createdAt: Date.now()
+        };
       }
     }
 
@@ -147,12 +156,13 @@ export const useUserStore = defineStore('user', () => {
       try {
         const fingerprint = await collectDeviceFingerprint();
         const userDocRef = doc(db, 'users', found.id || normalizedEmail);
-        await updateDoc(userDocRef, {
+        await setDoc(userDocRef, {
+          ...found,
           uid: uid || found.uid || '',
           lastLoginAt: Date.now(),
           lastLoginDevice: fingerprint,
           updatedAt: serverTimestamp()
-        });
+        }, { merge: true });
       } catch (e) {
         // Ignore telemetry update error if permissions or offline
       }

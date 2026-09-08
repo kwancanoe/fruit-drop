@@ -18,9 +18,24 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
     children: [
       { path: '', name: 'admin-dispatch', component: () => import('@/pages/admin/DispatchPage.vue') },
-      { path: 'rounds', name: 'admin-rounds', component: () => import('@/pages/admin/RoundsPage.vue') },
-      { path: 'rounds/new', name: 'admin-round-new', component: () => import('@/pages/admin/RoundEditPage.vue') },
-      { path: 'rounds/:roundId/edit', name: 'admin-round-edit', component: () => import('@/pages/admin/RoundEditPage.vue') },
+      {
+        path: 'rounds',
+        name: 'admin-rounds',
+        component: () => import('@/pages/admin/RoundsPage.vue'),
+        meta: { disallowedRoles: ['SELLER'] }
+      },
+      {
+        path: 'rounds/new',
+        name: 'admin-round-new',
+        component: () => import('@/pages/admin/RoundEditPage.vue'),
+        meta: { disallowedRoles: ['SELLER'] }
+      },
+      {
+        path: 'rounds/:roundId/edit',
+        name: 'admin-round-edit',
+        component: () => import('@/pages/admin/RoundEditPage.vue'),
+        meta: { disallowedRoles: ['SELLER'] }
+      },
       { path: 'orders/:orderId', name: 'admin-order-detail', component: () => import('@/pages/admin/OrderDetailPage.vue') },
       { path: 'scan', name: 'admin-scan', component: () => import('@/pages/admin/QrScannerPage.vue') },
       {

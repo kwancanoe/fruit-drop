@@ -30,9 +30,24 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       { path: '', name: 'admin-dispatch', component: { template: '<div>Dispatch</div>' } },
-      { path: 'rounds', name: 'admin-rounds', component: { template: '<div>Rounds</div>' } },
-      { path: 'rounds/new', name: 'admin-round-new', component: { template: '<div>RoundNew</div>' } },
-      { path: 'rounds/:roundId/edit', name: 'admin-round-edit', component: { template: '<div>RoundEdit</div>' } },
+      {
+        path: 'rounds',
+        name: 'admin-rounds',
+        component: { template: '<div>Rounds</div>' },
+        meta: { disallowedRoles: ['SELLER'] }
+      },
+      {
+        path: 'rounds/new',
+        name: 'admin-round-new',
+        component: { template: '<div>RoundNew</div>' },
+        meta: { disallowedRoles: ['SELLER'] }
+      },
+      {
+        path: 'rounds/:roundId/edit',
+        name: 'admin-round-edit',
+        component: { template: '<div>RoundEdit</div>' },
+        meta: { disallowedRoles: ['SELLER'] }
+      },
       { path: 'orders/:orderId', name: 'admin-order-detail', component: { template: '<div>OrderDetail</div>' } },
       { path: 'scan', name: 'admin-scan', component: { template: '<div>QrScanner</div>' } },
       {
@@ -99,13 +114,13 @@ function createNavigationGuard({ auth, userStore, Notify }) {
       return true;
     }
 
-    // 5. Seller role restrictions: block /admin/analytics, /admin/fruits, /admin/users
+    // 5. Seller role restrictions: block /admin/analytics, /admin/fruits, /admin/users, /admin/rounds
     const userRole = userStore.currentUserRole || (ADMIN_WHITELIST_EMAILS.includes(email) ? 'SYSTEM_ADMIN' : 'SELLER');
     const isSeller = userRole === 'SELLER';
 
     const isRestrictedForSeller =
       to.matched.some(record => record.meta.disallowedRoles?.includes('SELLER')) ||
-      ['/admin/analytics', '/admin/fruits', '/admin/users'].some(prefix => to.path.startsWith(prefix));
+      ['/admin/analytics', '/admin/fruits', '/admin/users', '/admin/rounds'].some(prefix => to.path.startsWith(prefix));
 
     if (isSeller && isRestrictedForSeller) {
       Notify.create({
@@ -300,10 +315,29 @@ describe('Feature 4: Router Guard Empirical Test Suite', () => {
       assert.equal(router.currentRoute.value.path, '/admin');
     });
 
-    it('allows /admin/rounds (view rounds)', async () => {
+    it('BLOCKS /admin/rounds and redirects to /admin with warning notification', async () => {
       const { router } = setupRouter(SELLER_STAFF);
       await router.push('/admin/rounds');
-      assert.equal(router.currentRoute.value.path, '/admin/rounds');
+      assert.equal(router.currentRoute.value.path, '/admin');
+      assert.equal(notifications.length, 1);
+      assert.equal(notifications[0].type, 'warning');
+      assert.match(notifications[0].message, /คุณไม่มีสิทธิ์เข้าถึงหน้านี้/);
+    });
+
+    it('BLOCKS /admin/rounds/new and redirects to /admin with warning notification', async () => {
+      const { router } = setupRouter(SELLER_STAFF);
+      await router.push('/admin/rounds/new');
+      assert.equal(router.currentRoute.value.path, '/admin');
+      assert.equal(notifications.length, 1);
+      assert.equal(notifications[0].type, 'warning');
+    });
+
+    it('BLOCKS /admin/rounds/ROUND-001/edit and redirects to /admin with warning notification', async () => {
+      const { router } = setupRouter(SELLER_STAFF);
+      await router.push('/admin/rounds/ROUND-001/edit');
+      assert.equal(router.currentRoute.value.path, '/admin');
+      assert.equal(notifications.length, 1);
+      assert.equal(notifications[0].type, 'warning');
     });
 
     it('allows /admin/orders/123 (tailgate order fulfillment)', async () => {
@@ -380,6 +414,18 @@ describe('Feature 4: Router Guard Empirical Test Suite', () => {
   });
 
   describe('5. Authenticated SHOP_OWNER User Behavior', () => {
+    it('allows /admin/rounds for Shop Owner', async () => {
+      const { router } = setupRouter(SHOP_OWNER);
+      await router.push('/admin/rounds');
+      assert.equal(router.currentRoute.value.path, '/admin/rounds');
+    });
+
+    it('allows /admin/rounds/new for Shop Owner', async () => {
+      const { router } = setupRouter(SHOP_OWNER);
+      await router.push('/admin/rounds/new');
+      assert.equal(router.currentRoute.value.path, '/admin/rounds/new');
+    });
+
     it('allows /admin/analytics for Shop Owner', async () => {
       const { router } = setupRouter(SHOP_OWNER);
       await router.push('/admin/analytics');

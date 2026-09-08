@@ -197,6 +197,26 @@ class FirestoreRulesSimulator {
       }
     };
   }
+
+  canWriteRound() {
+    return this.isSystemAdmin() || this.isShopOwner();
+  }
+
+  canWriteProduct() {
+    return this.isSystemAdmin() || this.isShopOwner();
+  }
+
+  canWriteMasterFruit() {
+    return this.isSystemAdmin() || this.isShopOwner();
+  }
+
+  canUpdateOrder() {
+    return this.isStaff();
+  }
+
+  canDeleteOrder() {
+    return this.isSystemAdmin() || this.isShopOwner();
+  }
 }
 
 describe('Feature 3: Firestore Security Rules & affectedKeys() Empirical Test Suite', () => {
@@ -613,6 +633,75 @@ describe('Feature 3: Firestore Security Rules & affectedKeys() Empirical Test Su
         path: 'payment_proofs/slip.jpg'
       });
       assert.equal(allowed, false);
+    });
+  });
+
+  describe('7. Role Restrictions for Rounds, Products, Master Fruits and Orders', () => {
+    const database = {
+      'users/seller_somchai@fruitdrop.local': {
+        role: 'SELLER',
+        isActive: true
+      },
+      'users/natyabuyna089@gmail.com': {
+        role: 'SHOP_OWNER',
+        isActive: true
+      },
+      'users/wittinunt.k@gmail.com': {
+        role: 'SYSTEM_ADMIN',
+        isActive: true
+      }
+    };
+
+    const sellerSim = new FirestoreRulesSimulator({
+      auth: { uid: 'uid_seller', token: { email: 'seller_somchai@fruitdrop.local' } },
+      database
+    });
+
+    const ownerSim = new FirestoreRulesSimulator({
+      auth: { uid: 'uid_owner', token: { email: 'natyabuyna089@gmail.com' } },
+      database
+    });
+
+    const adminSim = new FirestoreRulesSimulator({
+      auth: { uid: 'uid_admin', token: { email: 'wittinunt.k@gmail.com' } },
+      database
+    });
+
+    it('DENIES SELLER from creating/updating/deleting rounds', () => {
+      assert.equal(sellerSim.canWriteRound(), false);
+    });
+
+    it('ALLOWS SHOP_OWNER to create/update/delete rounds', () => {
+      assert.equal(ownerSim.canWriteRound(), true);
+    });
+
+    it('ALLOWS SYSTEM_ADMIN to create/update/delete rounds', () => {
+      assert.equal(adminSim.canWriteRound(), true);
+    });
+
+    it('DENIES SELLER from creating/updating/deleting products and master_fruits', () => {
+      assert.equal(sellerSim.canWriteProduct(), false);
+      assert.equal(sellerSim.canWriteMasterFruit(), false);
+    });
+
+    it('ALLOWS SHOP_OWNER and SYSTEM_ADMIN to manage products and master_fruits', () => {
+      assert.equal(ownerSim.canWriteProduct(), true);
+      assert.equal(ownerSim.canWriteMasterFruit(), true);
+      assert.equal(adminSim.canWriteProduct(), true);
+      assert.equal(adminSim.canWriteMasterFruit(), true);
+    });
+
+    it('ALLOWS SELLER to update orders (status, weighing, proof)', () => {
+      assert.equal(sellerSim.canUpdateOrder(), true);
+    });
+
+    it('DENIES SELLER from deleting orders', () => {
+      assert.equal(sellerSim.canDeleteOrder(), false);
+    });
+
+    it('ALLOWS SHOP_OWNER and SYSTEM_ADMIN to delete orders', () => {
+      assert.equal(ownerSim.canDeleteOrder(), true);
+      assert.equal(adminSim.canDeleteOrder(), true);
     });
   });
 });
