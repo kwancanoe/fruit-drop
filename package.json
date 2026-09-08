@@ -1,6 +1,6 @@
 {
   "name": "fruit-drop",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "description": "Fruit Drop - Zero-Friction Pre-order & Car Park Tailgate Dispatch Engine",
   "productName": "Fruit Drop",
   "author": "kwancanoe <53270254+kwancanoe@users.noreply.github.com>",
@@ -23,6 +23,7 @@
     "promptpay-qr": "^0.5.0",
     "qrcode": "^1.5.4",
     "quasar": "^2.29.0",
+    "register-service-worker": "^1.7.2",
     "vue": "^3.5.22",
     "vue-router": "^5.0.6"
   },
