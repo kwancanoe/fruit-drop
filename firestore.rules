@@ -81,31 +81,33 @@ service cloud.firestore {
       );
     }
 
-    // Preorder rounds: Public can read, staff can manage
+    // Preorder rounds: Public can read, System Admin and Shop Owner can manage
     match /rounds/{roundId} {
       allow read: if true;
-      allow write: if isStaff();
+      allow write: if isSystemAdmin() || isShopOwner();
     }
 
-    // Products catalog: Public can read, staff can manage
+    // Products catalog: Public can read, System Admin and Shop Owner can manage
     match /products/{productId} {
       allow read: if true;
-      allow write: if isStaff();
+      allow write: if isSystemAdmin() || isShopOwner();
     }
 
-    // Master Fruits catalog: Public can read, staff can manage
+    // Master Fruits catalog: Public can read, System Admin and Shop Owner can manage
     match /master_fruits/{fruitId} {
       allow read: if true;
-      allow write: if isStaff();
+      allow write: if isSystemAdmin() || isShopOwner();
     }
 
     // Orders:
     // - Customers can create orders and look up order details
-    // - Staff can read, update status, weigh fruits, or attach payment proof
+    // - Staff (including Sellers) can read, update status, weigh fruits, or attach payment proof
+    // - Only System Admin and Shop Owner can delete orders
     match /orders/{orderId} {
       allow create: if true;
       allow read: if true;
-      allow update, delete: if isStaff();
+      allow update: if isStaff();
+      allow delete: if isSystemAdmin() || isShopOwner();
     }
   }
 }

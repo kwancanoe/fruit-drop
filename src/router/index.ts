@@ -72,13 +72,13 @@ export default defineRouter((/* { store, ssrContext } */) => {
       return true;
     }
 
-    // 5. Seller role restrictions: block /admin/analytics, /admin/fruits, /admin/users
+    // 5. Seller role restrictions: block /admin/analytics, /admin/fruits, /admin/users, /admin/rounds
     const userRole = userStore.currentUserRole || (ADMIN_WHITELIST_EMAILS.includes(email) ? 'SYSTEM_ADMIN' : 'SELLER');
     const isSeller = userRole === 'SELLER';
 
     const isRestrictedForSeller =
       to.matched.some(record => (record.meta.disallowedRoles as string[] | undefined)?.includes('SELLER')) ||
-      ['/admin/analytics', '/admin/fruits', '/admin/users'].some(prefix => to.path.startsWith(prefix));
+      ['/admin/analytics', '/admin/fruits', '/admin/users', '/admin/rounds'].some(prefix => to.path.startsWith(prefix));
 
     if (isSeller && isRestrictedForSeller) {
       Notify.create({

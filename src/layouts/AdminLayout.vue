@@ -153,6 +153,7 @@
           data-audit-id="tab-admin-dispatch"
         />
         <q-route-tab
+          v-if="userStore.isSystemAdmin || userStore.isShopOwner"
           to="/admin/rounds"
           icon="event_note"
           label="รอบส่ง"

@@ -384,8 +384,8 @@
               </div>
             </div>
 
-            <!-- Secondary Danger Command: Cancel Order (No-show / Customer Cancellation) -->
-            <div class="row justify-center q-mt-md">
+            <!-- Secondary Danger Command: Cancel Order (No-show / Customer Cancellation) - Admin/Owner Only -->
+            <div v-if="userStore.isSystemAdmin || userStore.isShopOwner" class="row justify-center q-mt-md">
               <q-btn
                 flat
                 dense
@@ -414,7 +414,7 @@
               </div>
             </div>
 
-            <div class="row justify-center">
+            <div v-if="userStore.isSystemAdmin || userStore.isShopOwner" class="row justify-center">
               <q-btn
                 flat
                 dense
@@ -444,7 +444,7 @@
               </div>
             </div>
 
-            <div class="row justify-center">
+            <div v-if="userStore.isSystemAdmin || userStore.isShopOwner" class="row justify-center">
               <q-btn
                 flat
                 dense
@@ -544,6 +544,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import { useFruitStore } from '@/stores/fruitStore';
+import { useUserStore } from '@/stores/userStore';
 import type { Order } from '@/types/fruit_app';
 import { generatePromptPayQRDataUrl } from '@/utils/promptpay';
 import { calculateItemSubtotal, calculateOrderFinalTotal } from '@/utils/pricing';
@@ -555,6 +556,7 @@ const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
 const fruitStore = useFruitStore();
+const userStore = useUserStore();
 
 const orderId = computed<string>(() => (route.params.orderId as string) || '');
 const order = ref<Order | null>(null);
