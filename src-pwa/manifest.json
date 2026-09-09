@@ -1,7 +1,7 @@
 {
   "name": "Fruit Drop",
   "short_name": "Fruit Drop",
-  "description": "Fruit Drop - ระบบสั่งจองผลไม้สด นัดรับท้ายรถ",
+  "description": "Fruit Drop - ผลไม้สด ส่งตรงจากสวน",
   "orientation": "portrait",
   "background_color": "#1E1E1E",
   "theme_color": "#2E7D32",
